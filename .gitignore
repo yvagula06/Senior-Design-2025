@@ -1,0 +1,87 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.env
+.env
+.env.*
+*.sqlite3
+*.db
+*.log
+*.pot
+*.mo
+*.mypy_cache/
+*.coverage
+.coverage
+.cache/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# VS Code
+.vscode/
+
+# Docker
+*.pid
+*.pid.lock
+
+# Alembic
+alembic/versions/*.pyc
+alembic/versions/*.pyo
+alembic/versions/*.pyd
+
+# Data
+/data/
+*.csv
+*.tsv
+*.xlsx
+*.xls
+*.parquet
+*.feather
+*.h5
+*.hdf5
+*.jsonl
+*.json
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test
+htmlcov/
+
+# Node
+node_modules/
+
+# Misc
+*.bak
+*.swp
+*.swo
+*.tmp
+*.orig
+
+# Ignore secrets
+secrets.*
+
+# Ignore local dev files
+*.local
+*.dev
+
+# Ignore docker-compose override
+*docker-compose.override.yml
+
+# Ignore build
+build/
+dist/
+*.egg-info/
+
+# Ignore Python virtual environments
+venv/
+.venv/
+ENV/
+env/
