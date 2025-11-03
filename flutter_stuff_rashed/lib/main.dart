@@ -1,7 +1,6 @@
 // This is the main entry point of the Flutter application.
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'dart:io';
 import 'Api.dart'; // <-- ADD THIS
 import 'nutrition_model.dart'; // <-- ADD THIS
 
@@ -183,7 +182,7 @@ class _MainAppTabsState extends State<MainAppTabs> {
                 const SizedBox(height: 10),
                 ...ingredients
                     .map((ingredient) => Text('- $ingredient'))
-                    .toList(),
+                    ,
                 const SizedBox(height: 20),
                 Text('Estimated Calories: ${calories.toStringAsFixed(0)} kcal'),
                 Text('Estimated Protein: ${protein.toStringAsFixed(1)} g'),
