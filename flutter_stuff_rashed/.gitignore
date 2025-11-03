@@ -43,3 +43,13 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+# Flutter / Dart generated plugin files
+**/generated_plugin_registrant.*
+**/generated_plugins.cmake
+# Ignore Flutter build artifacts
+/build/
+/android/app/build/
+/ios/Runner.build/
+/macos/Flutter/ephemeral/
+/linux/flutter/ephemeral/
+/windows/flutter/ephemeral/
