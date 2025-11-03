@@ -15,3 +15,7 @@ def embed_text(text: str) -> np.ndarray:
     model = get_model()
     v = model.encode([text], normalize_embeddings=False)[0]
     return np.asarray(v, dtype=np.float32)
+
+def warm():
+    model = get_model()
+    model.encode(["warmup"], normalize_embeddings=False)
