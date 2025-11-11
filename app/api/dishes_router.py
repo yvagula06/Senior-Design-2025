@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, HTTPException, Query
 from typing import List
 from app.schemas.label import Candidate
 from app.services.retrieval_service import retrieve_candidates
