@@ -1,6 +1,5 @@
 from app.db.session import engine
 from sqlalchemy import text
-import random
 
 # Sample data
 data = [

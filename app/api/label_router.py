@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 from app.schemas.label import LabelRequest, LabelResponse, Nutrients, Candidate
 from app.services.retrieval_service import retrieve_candidates
 from app.services.scaling_service import scale_nutrients

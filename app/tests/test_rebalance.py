@@ -1,4 +1,3 @@
-import pytest
 from app.services.rebalance_service import macro_rebalance
 
 def test_macro_rebalance():
