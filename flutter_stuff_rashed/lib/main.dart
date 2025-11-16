@@ -1,4 +1,33 @@
 // This is the main entry point of the Flutter application.
+
+// put this near the top of main.dart, under the imports
+
+class AppColors {
+  static const background = Color(0xFFF9FBE7); // pale green/cream
+  static const primary = Color(0xFF81C784);    // soft green
+  static const accent = Color(0xFF4CAF50);     // darker green
+  static const text = Color(0xFF2E2E2E);       // dark gray
+}
+
+class AppTextStyles {
+  static const heading = TextStyle(
+    fontSize: 24,
+    fontWeight: FontWeight.bold,
+    color: AppColors.text,
+  );
+
+  static const label = TextStyle(
+    fontSize: 16,
+    fontWeight: FontWeight.w600,
+    color: AppColors.text,
+  );
+
+  static const body = TextStyle(
+    fontSize: 14,
+    color: AppColors.text,
+  );
+}
+
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'Api.dart'; // <-- ADD THIS
