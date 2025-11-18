@@ -50,10 +50,7 @@ const styles = {
     section: {
         marginTop: 8,
     },
-    list: {
-        margin: 0,
-        paddingLeft: 20,
-    },
+   
     footer: {
         marginTop: 24,
         color: "#666",
