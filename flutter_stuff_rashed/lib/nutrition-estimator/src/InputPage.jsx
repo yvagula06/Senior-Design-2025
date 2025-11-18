@@ -101,14 +101,20 @@ export default function InputPage({ onSaveEntry, onAnalyzeImage, isAnalyzing }) 
           Save Food Entry
         </button>
 
-        <label className="icon-button">
-          {isAnalyzing ? "Analyzing..." : "📷 Take Photo"}
+        <label className="icon-button"
+          style={{ 
+            opacity: isAnalyzing ? 0.7 : 1, 
+            cursor: isAnalyzing ? 'not-allowed' : 'pointer' 
+          }}
+          >
+          {isAnalyzing ? "⏳Analyzing..." : "📷 Take Photo"}
           <input
             type="file"
             accept="image/*"
             capture="environment"
             onChange={handleFileChange}
             style={{ display: "none" }}
+            disabled={isAnalyzing}
           />
         </label>
       </div>

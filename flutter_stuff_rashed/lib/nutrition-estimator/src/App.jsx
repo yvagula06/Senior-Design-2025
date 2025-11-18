@@ -5,6 +5,7 @@ import DailyConsumerPage from "./DailyConsumerPage.jsx";
 import { analyzeImage } from "./api.js";
 import { nutritionFromJson } from "./nutritionModel.js";
 import "./styles.css";
+import AboutPage from './AboutPage'; 
 
 export default function App() {
   const [selectedTab, setSelectedTab] = useState("add"); // "add" or "daily"
@@ -87,42 +88,59 @@ export default function App() {
       setIsAnalyzing(false);
     }
   }
-
+  const renderContent = () => {
+    if (selectedTab === "add") {
+      return (
+        <InputPage
+          onSaveEntry={handleSaveEntry}
+          onAnalyzeImage={handleAnalyzeImage}
+          isAnalyzing={isAnalyzing}
+        />
+      );
+    } else if (selectedTab === "daily") {
+      return (
+        <DailyConsumerPage
+          foodEntries={foodEntries}
+          onDeleteEntry={handleDeleteEntry}
+        />
+      );
+    } else if (selectedTab === "about") {
+      return <AboutPage />;
+    }
+    // Fallback if selectedTab state is invalid
+    return <InputPage onSaveEntry={handleSaveEntry} onAnalyzeImage={handleAnalyzeImage} isAnalyzing={isAnalyzing} />; 
+  };
   const isAddTab = selectedTab === "add";
 
   return (
     <div className="app-root">
       <header className="app-bar">
-        <h1>Nutrition Estimator</h1>
+        <h1>MacroVerify</h1>
       </header>
 
       <div className="app-body">
-        {isAddTab ? (
-          <InputPage
-            onSaveEntry={handleSaveEntry}
-            onAnalyzeImage={handleAnalyzeImage}
-            isAnalyzing={isAnalyzing}
-          />
-        ) : (
-          <DailyConsumerPage
-            foodEntries={foodEntries}
-            onDeleteEntry={handleDeleteEntry}
-          />
-        )}
+        {renderContent()} {/* <-- Using the new function to render content */}
       </div>
 
       <nav className="bottom-nav">
         <button
-          className={isAddTab ? "nav-btn active" : "nav-btn"}
+          className={selectedTab === "add" ? "nav-btn active" : "nav-btn"}
           onClick={() => setSelectedTab("add")}
         >
           ➕ Add Entry
         </button>
         <button
-          className={!isAddTab ? "nav-btn active" : "nav-btn"}
+          className={selectedTab === "daily" ? "nav-btn active" : "nav-btn"}
           onClick={() => setSelectedTab("daily")}
         >
           📋 Daily Consumer
+          </button>
+        {/* Tab 3: About Page */}
+        <button
+          className={selectedTab === "about" ? "nav-btn active" : "nav-btn"}
+          onClick={() => setSelectedTab("about")}
+        >
+          ℹ️ About
         </button>
       </nav>
     </div>
