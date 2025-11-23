@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   StyleSheet,
@@ -6,9 +6,12 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  Animated,
+  Pressable,
 } from 'react-native';
-import { TextInput, Button, Card, Text, IconButton } from 'react-native-paper';
+import { TextInput, Button, Card, Text, IconButton, ActivityIndicator } from 'react-native-paper';
 import * as ImagePicker from 'expo-image-picker';
+import * as Animatable from 'react-native-animatable';
 import { useFoodContext } from '../context/FoodContext';
 import { apiService } from '../services/api';
 import { AppColors } from '../theme/colors';
@@ -21,6 +24,25 @@ export const AddEntryScreen: React.FC = () => {
   const [carbs, setCarbs] = useState('');
   const [fats, setFats] = useState('');
   const [loading, setLoading] = useState(false);
+  const [successAnimation, setSuccessAnimation] = useState(false);
+  
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+  const cardRef = useRef<any>(null);
+
+  const animateButton = () => {
+    Animated.sequence([
+      Animated.timing(scaleAnim, {
+        toValue: 0.95,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.timing(scaleAnim, {
+        toValue: 1,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
 
   const handleSave = () => {
     const caloriesNum = parseFloat(calories);
@@ -29,10 +51,12 @@ export const AddEntryScreen: React.FC = () => {
     const fatsNum = parseFloat(fats) || 0;
 
     if (!foodName.trim() || !calories || caloriesNum <= 0) {
+      cardRef.current?.shake(800);
       Alert.alert('Error', 'Please enter a valid food name and calorie count.');
       return;
     }
 
+    animateButton();
     addFoodEntry({
       foodName: foodName.trim(),
       calories: caloriesNum,
@@ -41,14 +65,21 @@ export const AddEntryScreen: React.FC = () => {
       fats: fatsNum,
     });
 
-    // Clear form
-    setFoodName('');
-    setCalories('');
-    setProtein('');
-    setCarbs('');
-    setFats('');
+    // Success animation
+    setSuccessAnimation(true);
+    cardRef.current?.pulse(600);
+    
+    setTimeout(() => {
+      // Clear form
+      setFoodName('');
+      setCalories('');
+      setProtein('');
+      setCarbs('');
+      setFats('');
+      setSuccessAnimation(false);
+    }, 1000);
 
-    Alert.alert('Success', `Saved entry for "${foodName}"`);
+    Alert.alert('Success', `Saved entry for "${foodName}"`, [{ text: 'OK' }]);
   };
 
   const handleTakePhoto = async () => {
@@ -109,83 +140,140 @@ export const AddEntryScreen: React.FC = () => {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <Card style={styles.card}>
-          <Card.Content>
-            <Text style={styles.title}>Add Food Entry</Text>
-            
-            <TextInput
-              label="Food Name"
-              value={foodName}
-              onChangeText={setFoodName}
-              mode="outlined"
-              style={styles.input}
-              left={<TextInput.Icon icon="food" />}
-            />
-
-            <TextInput
-              label="Total Calories (kcal)"
-              value={calories}
-              onChangeText={setCalories}
-              keyboardType="numeric"
-              mode="outlined"
-              style={styles.input}
-              left={<TextInput.Icon icon="fire" />}
-            />
-
-            <TextInput
-              label="Protein (g)"
-              value={protein}
-              onChangeText={setProtein}
-              keyboardType="numeric"
-              mode="outlined"
-              style={styles.input}
-              left={<TextInput.Icon icon="dumbbell" />}
-            />
-
-            <TextInput
-              label="Carbohydrates (g)"
-              value={carbs}
-              onChangeText={setCarbs}
-              keyboardType="numeric"
-              mode="outlined"
-              style={styles.input}
-              left={<TextInput.Icon icon="bread-slice" />}
-            />
-
-            <TextInput
-              label="Fats (g)"
-              value={fats}
-              onChangeText={setFats}
-              keyboardType="numeric"
-              mode="outlined"
-              style={styles.input}
-              left={<TextInput.Icon icon="water" />}
-            />
-
-            <View style={styles.buttonRow}>
-              <Button
-                mode="contained"
-                onPress={handleSave}
-                style={styles.saveButton}
-                contentStyle={styles.buttonContent}
-                disabled={loading}
-              >
-                Save Food Entry
-              </Button>
+      <ScrollView 
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <Animatable.View
+          animation="fadeInDown"
+          duration={800}
+          delay={200}
+        >
+          <Card style={styles.card} elevation={8}>
+            <Card.Content>
+              <Animatable.View animation="fadeIn" delay={400}>
+                <Text style={styles.title}>🍽️ Add Food Entry</Text>
+                <Text style={styles.subtitle}>Track your nutrition intake</Text>
+              </Animatable.View>
               
-              <IconButton
-                icon="camera"
-                mode="contained"
-                size={28}
-                onPress={handleTakePhoto}
-                disabled={loading}
-                style={styles.cameraButton}
-                iconColor={AppColors.white}
-              />
-            </View>
-          </Card.Content>
-        </Card>
+              <Animatable.View animation="fadeInUp" delay={500}>
+                <TextInput
+                  label="Food Name"
+                  value={foodName}
+                  onChangeText={setFoodName}
+                  mode="outlined"
+                  style={styles.input}
+                  outlineStyle={styles.inputOutline}
+                  activeOutlineColor={AppColors.accent}
+                  left={<TextInput.Icon icon="food" />}
+                />
+              </Animatable.View>
+
+              <Animatable.View animation="fadeInUp" delay={600}>
+                <TextInput
+                  label="Total Calories (kcal)"
+                  value={calories}
+                  onChangeText={setCalories}
+                  keyboardType="numeric"
+                  mode="outlined"
+                  style={styles.input}
+                  outlineStyle={styles.inputOutline}
+                  activeOutlineColor={AppColors.accent}
+                  left={<TextInput.Icon icon="fire" />}
+                />
+              </Animatable.View>
+
+              <View style={styles.macrosContainer}>
+                <Animatable.View animation="fadeInUp" delay={700} style={styles.macroInput}>
+                  <TextInput
+                    label="Protein (g)"
+                    value={protein}
+                    onChangeText={setProtein}
+                    keyboardType="numeric"
+                    mode="outlined"
+                    style={styles.input}
+                    outlineStyle={styles.inputOutline}
+                    activeOutlineColor={AppColors.accent}
+                    left={<TextInput.Icon icon="dumbbell" />}
+                  />
+                </Animatable.View>
+
+                <Animatable.View animation="fadeInUp" delay={750} style={styles.macroInput}>
+                  <TextInput
+                    label="Carbs (g)"
+                    value={carbs}
+                    onChangeText={setCarbs}
+                    keyboardType="numeric"
+                    mode="outlined"
+                    style={styles.input}
+                    outlineStyle={styles.inputOutline}
+                    activeOutlineColor={AppColors.accent}
+                    left={<TextInput.Icon icon="bread-slice" />}
+                  />
+                </Animatable.View>
+              </View>
+
+              <Animatable.View animation="fadeInUp" delay={800}>
+                <TextInput
+                  label="Fats (g)"
+                  value={fats}
+                  onChangeText={setFats}
+                  keyboardType="numeric"
+                  mode="outlined"
+                  style={styles.input}
+                  outlineStyle={styles.inputOutline}
+                  activeOutlineColor={AppColors.accent}
+                  left={<TextInput.Icon icon="water" />}
+                />
+              </Animatable.View>
+
+              <Animatable.View 
+                ref={cardRef}
+                animation="fadeInUp" 
+                delay={900}
+              >
+                <View style={styles.buttonRow}>
+                  <Animated.View style={[styles.saveButtonContainer, { transform: [{ scale: scaleAnim }] }]}>
+                    <Button
+                      mode="contained"
+                      onPress={handleSave}
+                      style={[
+                        styles.saveButton,
+                        successAnimation && styles.successButton
+                      ]}
+                      contentStyle={styles.buttonContent}
+                      disabled={loading}
+                      icon={successAnimation ? "check-circle" : "content-save"}
+                      labelStyle={styles.buttonLabel}
+                    >
+                      {successAnimation ? 'Saved!' : 'Save Entry'}
+                    </Button>
+                  </Animated.View>
+                  
+                  <Pressable
+                    onPress={handleTakePhoto}
+                    disabled={loading}
+                    style={({ pressed }) => [
+                      styles.cameraButton,
+                      pressed && styles.cameraButtonPressed
+                    ]}
+                  >
+                    {loading ? (
+                      <ActivityIndicator size="small" color={AppColors.white} />
+                    ) : (
+                      <IconButton
+                        icon="camera"
+                        size={28}
+                        iconColor={AppColors.white}
+                        style={styles.cameraIcon}
+                      />
+                    )}
+                  </Pressable>
+                </View>
+              </Animatable.View>
+            </Card.Content>
+          </Card>
+        </Animatable.View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -197,39 +285,87 @@ const styles = StyleSheet.create({
     backgroundColor: AppColors.background,
   },
   scrollContent: {
-    padding: 16,
+    padding: 20,
+    paddingTop: 24,
   },
   card: {
     backgroundColor: AppColors.white,
-    elevation: 4,
-    borderRadius: 12,
+    borderRadius: 20,
+    shadowColor: AppColors.accent,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
   },
   title: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
     color: AppColors.text,
-    marginBottom: 20,
+    marginBottom: 4,
     textAlign: 'center',
+  },
+  subtitle: {
+    fontSize: 14,
+    color: AppColors.mediumGray,
+    textAlign: 'center',
+    marginBottom: 24,
   },
   input: {
     marginBottom: 16,
     backgroundColor: AppColors.white,
   },
+  inputOutline: {
+    borderRadius: 12,
+    borderWidth: 2,
+  },
+  macrosContainer: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  macroInput: {
+    flex: 1,
+  },
   buttonRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 12,
-    gap: 10,
+    marginTop: 8,
+    gap: 12,
+  },
+  saveButtonContainer: {
+    flex: 1,
   },
   saveButton: {
-    flex: 1,
     backgroundColor: AppColors.accent,
+    borderRadius: 12,
+    elevation: 4,
+  },
+  successButton: {
+    backgroundColor: '#4CAF50',
   },
   buttonContent: {
-    paddingVertical: 8,
+    paddingVertical: 10,
+  },
+  buttonLabel: {
+    fontSize: 16,
+    fontWeight: '600',
   },
   cameraButton: {
+    backgroundColor: AppColors.primary,
+    borderRadius: 12,
+    width: 56,
+    height: 56,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 4,
+    shadowColor: AppColors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+  },
+  cameraButtonPressed: {
     backgroundColor: AppColors.accent,
+    transform: [{ scale: 0.95 }],
+  },
+  cameraIcon: {
     margin: 0,
   },
 });

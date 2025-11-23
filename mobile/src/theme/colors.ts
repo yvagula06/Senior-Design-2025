@@ -1,16 +1,20 @@
 import { MD3LightTheme as DefaultTheme } from 'react-native-paper';
 
 export const AppColors = {
-  background: '#F9FBE7',     // pale green/cream
-  primary: '#81C784',        // soft green
-  accent: '#4CAF50',         // darker green
-  text: '#2E2E2E',           // dark gray
+  background: '#F0F4F8',     // soft blue-gray
+  primary: '#66BB6A',        // vibrant green
+  accent: '#4CAF50',         // material green
+  text: '#1A202C',           // deep blue-gray
   white: '#FFFFFF',
-  error: '#F44336',
+  error: '#EF5350',          // modern red
   shadow: '#000000',
-  lightGray: '#F5F5F5',
-  mediumGray: '#9E9E9E',
-  darkGray: '#424242',
+  lightGray: '#F7FAFC',
+  mediumGray: '#A0AEC0',
+  darkGray: '#2D3748',
+  success: '#48BB78',        // success green
+  cardBackground: '#FFFFFF',
+  gradientStart: '#E8F5E9',  // light green
+  gradientEnd: '#F1F8E9',    // pale yellow-green
 };
 
 export const theme = {
@@ -28,6 +32,7 @@ export const theme = {
     placeholder: AppColors.mediumGray,
     backdrop: 'rgba(0, 0, 0, 0.5)',
     notification: AppColors.accent,
+    surfaceVariant: AppColors.lightGray,
   },
-  roundness: 12,
+  roundness: 16,
 };
