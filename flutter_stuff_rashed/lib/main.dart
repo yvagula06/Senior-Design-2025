@@ -1,5 +1,10 @@
 // This is the main entry point of the Flutter application.
 
+import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'Api.dart';
+import 'nutrition_model.dart';
+
 // put this near the top of main.dart, under the imports
 
 class AppColors {
@@ -28,11 +33,6 @@ class AppTextStyles {
   );
 }
 
-import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
-import 'Api.dart'; // <-- ADD THIS
-import 'nutrition_model.dart'; // <-- ADD THIS
-
 // The main function where app execution begins.
 void main() {
   runApp(const MyApp());
@@ -46,9 +46,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: ' log Estimator',
-      // Set to false to remove the debug banner.
       debugShowCheckedModeBanner: false,
-      // Defines the theme of the application using Material 3 design.
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
           seedColor: const Color.fromARGB(255, 23, 182, 84),
@@ -71,10 +69,8 @@ class MainAppTabs extends StatefulWidget {
 class _MainAppTabsState extends State<MainAppTabs> {
   int _selectedIndex = 0;
 
-  // A list to store the food entries. This is the main application state.
   final List<Map<String, dynamic>> _foodEntries = [];
 
-  // Controllers for the text input fields.
   final TextEditingController _foodNameController = TextEditingController();
   final TextEditingController _caloriesController = TextEditingController();
   final TextEditingController _proteinController = TextEditingController();
@@ -83,7 +79,7 @@ class _MainAppTabsState extends State<MainAppTabs> {
 
   final ImagePicker _picker = ImagePicker();
   final ApiService _apiService = ApiService();
-  // This function saves a new food entry to the list.
+
   void _saveFoodEntry() {
     String foodName = _foodNameController.text;
     double calories = double.tryParse(_caloriesController.text) ?? 0.0;
@@ -100,7 +96,6 @@ class _MainAppTabsState extends State<MainAppTabs> {
       return;
     }
 
-    // Create a new entry and add it to the list.
     final newEntry = {
       'foodName': foodName,
       'calories': calories,
@@ -113,68 +108,53 @@ class _MainAppTabsState extends State<MainAppTabs> {
       _foodEntries.add(newEntry);
     });
 
-    // Clear the text fields after saving.
     _foodNameController.clear();
     _caloriesController.clear();
     _proteinController.clear();
     _carbsController.clear();
     _fatsController.clear();
 
-    // Show confirmation and navigate to the "Daily Consumer" tab.
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text('Saved entry for "$foodName"')));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Saved entry for "$foodName"')),
+    );
     _onItemTapped(1);
   }
-  // Add this function inside the _MainAppTabsState class
 
   void _deleteFoodEntry(int index) {
-    // Store the name for the confirmation message before deleting.
     final String foodName = _foodEntries[index]['foodName'];
 
     setState(() {
       _foodEntries.removeAt(index);
     });
 
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text('Deleted entry for "$foodName"')));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Deleted entry for "$foodName"')),
+    );
   }
 
-  // This new function handles taking a photo and simulating analysis.
-  // This function replaces your old version in main.dart
   Future<void> _takePhotoAndAnalyze() async {
     try {
       final XFile? photo = await _picker.pickImage(source: ImageSource.camera);
 
       if (photo != null) {
-        // Show a loading message
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Uploading and analyzing photo...')),
         );
 
-        // Call the API service
-        final Map<String, dynamic>? result = await _apiService.analyzeImage(
-          photo,
-        );
+        final Map<String, dynamic>? result =
+            await _apiService.analyzeImage(photo);
 
         if (result != null && mounted) {
-          // 'mounted' checks if the widget is still in the tree
-          // Convert the JSON map into our NutritionInfo object
           final nutritionData = NutritionInfo.fromJson(result);
 
-          // Ask the user to verify the ingredients and add to the list.
           await _showVerificationDialog(
-            ingredients: [
-              nutritionData.foodName,
-            ], // The API returns one aggregated name
+            ingredients: [nutritionData.foodName],
             calories: nutritionData.calories,
             protein: nutritionData.protein,
             carbs: nutritionData.carbs,
             fats: nutritionData.fats,
           );
         } else {
-          // Handle API error
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Failed to analyze photo. Please try again.'),
@@ -183,13 +163,12 @@ class _MainAppTabsState extends State<MainAppTabs> {
         }
       }
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Failed to take a photo: $e")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Failed to take a photo: $e")),
+      );
     }
   }
 
-  // This function displays a dialog for user verification.
   Future<void> _showVerificationDialog({
     required List<String> ingredients,
     required double calories,
@@ -209,9 +188,7 @@ class _MainAppTabsState extends State<MainAppTabs> {
                   'The app identified the following ingredients. Please verify and confirm:',
                 ),
                 const SizedBox(height: 10),
-                ...ingredients
-                    .map((ingredient) => Text('- $ingredient'))
-                    ,
+                ...ingredients.map((ingredient) => Text('- $ingredient')),
                 const SizedBox(height: 20),
                 Text('Estimated Calories: ${calories.toStringAsFixed(0)} kcal'),
                 Text('Estimated Protein: ${protein.toStringAsFixed(1)} g'),
@@ -251,14 +228,13 @@ class _MainAppTabsState extends State<MainAppTabs> {
         _foodEntries.add(newEntry);
       });
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Entry added from photo!')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Entry added from photo!')),
+      );
       _onItemTapped(1);
     }
   }
 
-  // A list of widgets to display for each tab.
   late final List<Widget> _pages;
 
   @override
@@ -274,7 +250,10 @@ class _MainAppTabsState extends State<MainAppTabs> {
         onSave: _saveFoodEntry,
         onTakePhoto: _takePhotoAndAnalyze,
       ),
-      _DailyConsumerPage(foodEntries: _foodEntries, onDelete: _deleteFoodEntry),
+      _DailyConsumerPage(
+        foodEntries: _foodEntries,
+        onDelete: _deleteFoodEntry,
+      ),
     ];
   }
 
@@ -361,7 +340,6 @@ class _MainAppTabsState extends State<MainAppTabs> {
   }
 }
 
-// A widget for the input page.
 class _InputPage extends StatelessWidget {
   final TextEditingController foodNameController;
   final TextEditingController caloriesController;
@@ -388,7 +366,6 @@ class _InputPage extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
-          // Input fields for food name and macronutrients.
           TextField(
             controller: foodNameController,
             decoration: const InputDecoration(
@@ -438,7 +415,6 @@ class _InputPage extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 30),
-          // Row of buttons for saving and taking a photo.
           Row(
             children: [
               Expanded(
@@ -454,8 +430,6 @@ class _InputPage extends StatelessWidget {
               const SizedBox(width: 10),
               ElevatedButton(
                 onPressed: () {
-                  // Call the async handler without awaiting so this closure
-                  // matches the expected VoidCallback (void Function()).
                   onTakePhoto();
                 },
                 style: ElevatedButton.styleFrom(
@@ -472,12 +446,14 @@ class _InputPage extends StatelessWidget {
   }
 }
 
-// A widget for the daily consumer page.
-// A widget for the daily consumer page.
 class _DailyConsumerPage extends StatelessWidget {
   final List<Map<String, dynamic>> foodEntries;
   final Function(int) onDelete;
-  const _DailyConsumerPage({required this.foodEntries, required this.onDelete});
+
+  const _DailyConsumerPage({
+    required this.foodEntries,
+    required this.onDelete,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -485,7 +461,6 @@ class _DailyConsumerPage extends StatelessWidget {
       return const Center(child: Text("No entries saved yet."));
     }
 
-    // Use the fold method to sum up the values from the list of maps.
     final double totalCalories = foodEntries.fold(
       0.0,
       (sum, entry) => sum + entry['calories'],
@@ -502,11 +477,9 @@ class _DailyConsumerPage extends StatelessWidget {
       0.0,
       (sum, entry) => sum + entry['fats'],
     );
-    // CALCULATION LOGIC ---
 
     return Column(
       children: [
-        // --- SUMMARY CARD WIDGET ---
         Card(
           margin: const EdgeInsets.all(16.0),
           elevation: 4,
@@ -517,15 +490,14 @@ class _DailyConsumerPage extends StatelessWidget {
               children: [
                 Text(
                   'Daily Totals',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleLarge
+                      ?.copyWith(fontWeight: FontWeight.bold),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 12),
-                Text(
-                  'Total Calories: ${totalCalories.toStringAsFixed(0)} kcal',
-                ),
+                Text('Total Calories: ${totalCalories.toStringAsFixed(0)} kcal'),
                 const SizedBox(height: 4),
                 Text('Total Protein: ${totalProtein.toStringAsFixed(1)} g'),
                 const SizedBox(height: 4),
@@ -536,30 +508,17 @@ class _DailyConsumerPage extends StatelessWidget {
             ),
           ),
         ),
-
-        // This makes the ListView take up the remaining space and be scrollable.
         Expanded(
           child: ListView.builder(
-            padding: const EdgeInsets.fromLTRB(
-              16.0,
-              0,
-              16.0,
-              16.0,
-            ), // Adjusted padding
+            padding: const EdgeInsets.fromLTRB(16.0, 0, 16.0, 16.0),
             itemCount: foodEntries.length,
             itemBuilder: (context, index) {
               final entry = foodEntries[index];
               return Dismissible(
-                // A unique key is required for Flutter to identify the widget.
                 key: UniqueKey(),
-
-                // This function is called when the item is successfully swiped away.
                 onDismissed: (direction) {
-                  // Call the callback function passed from the parent.
                   onDelete(index);
                 },
-
-                // This is the background that appears behind the item when swiping.
                 background: Container(
                   color: Colors.red,
                   padding: const EdgeInsets.symmetric(horizontal: 20),
