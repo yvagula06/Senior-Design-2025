@@ -5,13 +5,12 @@ import 'package:image_picker/image_picker.dart';
 import 'Api.dart';
 import 'nutrition_model.dart';
 
-// put this near the top of main.dart, under the imports
-
+// App-level colors and text styles
 class AppColors {
   static const background = Color(0xFFF9FBE7); // pale green/cream
-  static const primary = Color(0xFF81C784);    // soft green
-  static const accent = Color(0xFF4CAF50);     // darker green
-  static const text = Color(0xFF2E2E2E);       // dark gray
+  static const primary = Color(0xFF81C784); // soft green
+  static const accent = Color(0xFF4CAF50); // darker green
+  static const text = Color(0xFF2E2E2E); // dark gray
 }
 
 class AppTextStyles {
@@ -45,12 +44,13 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: ' log Estimator',
+      title: 'Nutrition Estimator',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color.fromARGB(255, 23, 182, 84),
+          seedColor: AppColors.primary,
         ),
+        scaffoldBackgroundColor: AppColors.background,
         useMaterial3: true,
       ),
       home: const MainAppTabs(),
@@ -69,8 +69,10 @@ class MainAppTabs extends StatefulWidget {
 class _MainAppTabsState extends State<MainAppTabs> {
   int _selectedIndex = 0;
 
+  // A list to store the food entries. This is the main application state.
   final List<Map<String, dynamic>> _foodEntries = [];
 
+  // Controllers for the text input fields.
   final TextEditingController _foodNameController = TextEditingController();
   final TextEditingController _caloriesController = TextEditingController();
   final TextEditingController _proteinController = TextEditingController();
@@ -80,6 +82,41 @@ class _MainAppTabsState extends State<MainAppTabs> {
   final ImagePicker _picker = ImagePicker();
   final ApiService _apiService = ApiService();
 
+  // Holds the most recently generated label for the Label tab UI
+  final ValueNotifier<Map<String, dynamic>?> _lastGeneratedLabel =
+      ValueNotifier<Map<String, dynamic>?>(null);
+
+  // Pages for each bottom tab
+  late final List<Widget> _pages;
+
+  @override
+  void initState() {
+    super.initState();
+    _pages = <Widget>[
+      // TAB 0: Label (input page)
+      _InputPage(
+        foodNameController: _foodNameController,
+        caloriesController: _caloriesController,
+        proteinController: _proteinController,
+        carbsController: _carbsController,
+        fatsController: _fatsController,
+        onSave: _saveFoodEntry,
+        onTakePhoto: _takePhotoAndAnalyze,
+        lastGeneratedLabel: _lastGeneratedLabel,
+      ),
+      // TAB 1: History
+      _DailyConsumerPage(
+        foodEntries: _foodEntries,
+        onDelete: _deleteFoodEntry,
+      ),
+      // TAB 2: Explore (placeholder for now)
+      const _ExplorePage(),
+      // TAB 3: Profile (placeholder for now)
+      const _ProfilePage(),
+    ];
+  }
+
+  // This function saves a new food entry to the list.
   void _saveFoodEntry() {
     String foodName = _foodNameController.text;
     double calories = double.tryParse(_caloriesController.text) ?? 0.0;
@@ -108,6 +145,9 @@ class _MainAppTabsState extends State<MainAppTabs> {
       _foodEntries.add(newEntry);
     });
 
+    // Update the "latest generated label" for the Label tab
+    _lastGeneratedLabel.value = newEntry;
+
     _foodNameController.clear();
     _caloriesController.clear();
     _proteinController.clear();
@@ -117,7 +157,8 @@ class _MainAppTabsState extends State<MainAppTabs> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('Saved entry for "$foodName"')),
     );
-    _onItemTapped(1);
+
+    // We keep the user on the Label tab
   }
 
   void _deleteFoodEntry(int index) {
@@ -228,33 +269,12 @@ class _MainAppTabsState extends State<MainAppTabs> {
         _foodEntries.add(newEntry);
       });
 
+      _lastGeneratedLabel.value = newEntry;
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Entry added from photo!')),
       );
-      _onItemTapped(1);
     }
-  }
-
-  late final List<Widget> _pages;
-
-  @override
-  void initState() {
-    super.initState();
-    _pages = <Widget>[
-      _InputPage(
-        foodNameController: _foodNameController,
-        caloriesController: _caloriesController,
-        proteinController: _proteinController,
-        carbsController: _carbsController,
-        fatsController: _fatsController,
-        onSave: _saveFoodEntry,
-        onTakePhoto: _takePhotoAndAnalyze,
-      ),
-      _DailyConsumerPage(
-        foodEntries: _foodEntries,
-        onDelete: _deleteFoodEntry,
-      ),
-    ];
   }
 
   void _onItemTapped(int index) {
@@ -268,7 +288,7 @@ class _MainAppTabsState extends State<MainAppTabs> {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          ' Nutrition Estimator',
+          'Nutrition Estimator',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
@@ -299,7 +319,7 @@ class _MainAppTabsState extends State<MainAppTabs> {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text(
-                      'This is a seniordesign project app.\nAuthors: Raj, Harry, Matthew, and Rached',
+                      'This is a senior design project app.\nAuthors: Raj, Harry, Matthew, and Rached',
                     ),
                   ),
                 );
@@ -322,14 +342,23 @@ class _MainAppTabsState extends State<MainAppTabs> {
       ),
       body: _pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
-            icon: Icon(Icons.add_box),
-            label: 'Add Entry',
+            icon: Icon(Icons.label_outline),
+            label: 'Label',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.list),
-            label: 'Daily Consumer',
+            icon: Icon(Icons.history),
+            label: 'History',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.explore),
+            label: 'Explore',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: 'Profile',
           ),
         ],
         currentIndex: _selectedIndex,
@@ -340,6 +369,8 @@ class _MainAppTabsState extends State<MainAppTabs> {
   }
 }
 
+// ------------------ LABEL TAB (INPUT PAGE) ------------------
+
 class _InputPage extends StatelessWidget {
   final TextEditingController foodNameController;
   final TextEditingController caloriesController;
@@ -349,6 +380,9 @@ class _InputPage extends StatelessWidget {
   final VoidCallback onSave;
   final Future<void> Function() onTakePhoto;
 
+  // Listen to the last generated label
+  final ValueNotifier<Map<String, dynamic>?> lastGeneratedLabel;
+
   const _InputPage({
     required this.foodNameController,
     required this.caloriesController,
@@ -357,6 +391,7 @@ class _InputPage extends StatelessWidget {
     required this.fatsController,
     required this.onSave,
     required this.onTakePhoto,
+    required this.lastGeneratedLabel,
   });
 
   @override
@@ -366,85 +401,229 @@ class _InputPage extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
-          TextField(
-            controller: foodNameController,
-            decoration: const InputDecoration(
-              labelText: 'Food Name',
-              border: OutlineInputBorder(),
-              prefixIcon: Icon(Icons.fastfood),
-            ),
+          Text(
+            'Describe your dish',
+            style: AppTextStyles.heading,
           ),
-          const SizedBox(height: 20),
-          TextField(
-            controller: caloriesController,
-            keyboardType: TextInputType.number,
-            decoration: const InputDecoration(
-              labelText: 'Total Calories (kcal)',
-              border: OutlineInputBorder(),
-              prefixIcon: Icon(Icons.local_fire_department),
-            ),
+          const SizedBox(height: 6),
+          const Text(
+            'Type a dish name and rough macros, or use the camera to estimate them.',
+            style: AppTextStyles.body,
           ),
-          const SizedBox(height: 20),
-          TextField(
-            controller: proteinController,
-            keyboardType: TextInputType.number,
-            decoration: const InputDecoration(
-              labelText: 'Protein (g)',
-              border: OutlineInputBorder(),
-              prefixIcon: Icon(Icons.fitness_center),
+          const SizedBox(height: 16),
+
+          // Main input card
+          Card(
+            elevation: 3,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
             ),
-          ),
-          const SizedBox(height: 20),
-          TextField(
-            controller: carbsController,
-            keyboardType: TextInputType.number,
-            decoration: const InputDecoration(
-              labelText: 'Carbohydrates (g)',
-              border: OutlineInputBorder(),
-              prefixIcon: Icon(Icons.bakery_dining),
-            ),
-          ),
-          const SizedBox(height: 20),
-          TextField(
-            controller: fatsController,
-            keyboardType: TextInputType.number,
-            decoration: const InputDecoration(
-              labelText: 'Fats (g)',
-              border: OutlineInputBorder(),
-              prefixIcon: Icon(Icons.oil_barrel),
-            ),
-          ),
-          const SizedBox(height: 30),
-          Row(
-            children: [
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: onSave,
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    textStyle: const TextStyle(fontSize: 18),
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const Text(
+                    'Dish name',
+                    style: AppTextStyles.label,
                   ),
-                  child: const Text('Save Food Entry'),
-                ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: foodNameController,
+                    decoration: const InputDecoration(
+                      hintText: 'e.g. Grilled chicken bowl with rice',
+                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.fastfood),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  const Text(
+                    'Macros',
+                    style: AppTextStyles.label,
+                  ),
+                  const SizedBox(height: 8),
+
+                  // First row: Calories & Protein
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: caloriesController,
+                          keyboardType: TextInputType.number,
+                          decoration: const InputDecoration(
+                            labelText: 'Calories (kcal)',
+                            border: OutlineInputBorder(),
+                            prefixIcon: Icon(Icons.local_fire_department),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: TextField(
+                          controller: proteinController,
+                          keyboardType: TextInputType.number,
+                          decoration: const InputDecoration(
+                            labelText: 'Protein (g)',
+                            border: OutlineInputBorder(),
+                            prefixIcon: Icon(Icons.fitness_center),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Second row: Carbs & Fats
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: carbsController,
+                          keyboardType: TextInputType.number,
+                          decoration: const InputDecoration(
+                            labelText: 'Carbs (g)',
+                            border: OutlineInputBorder(),
+                            prefixIcon: Icon(Icons.bakery_dining),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: TextField(
+                          controller: fatsController,
+                          keyboardType: TextInputType.number,
+                          decoration: const InputDecoration(
+                            labelText: 'Fats (g)',
+                            border: OutlineInputBorder(),
+                            prefixIcon: Icon(Icons.oil_barrel),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Camera button in the middle
+                  Column(
+                    children: [
+                      const Text(
+                        'Or capture a photo of the dish',
+                        style: AppTextStyles.body,
+                      ),
+                      const SizedBox(height: 10),
+                      Center(
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(40),
+                          onTap: () => onTakePhoto(),
+                          child: Container(
+                            width: 72,
+                            height: 72,
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withOpacity(0.15),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.camera_alt,
+                              size: 32,
+                              color: AppColors.accent,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-              const SizedBox(width: 10),
-              ElevatedButton(
-                onPressed: () {
-                  onTakePhoto();
-                },
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.all(16),
-                  textStyle: const TextStyle(fontSize: 18),
-                ),
-                child: const Icon(Icons.camera_alt),
+            ),
+          ),
+
+          const SizedBox(height: 20),
+
+          // Save / generate button
+          ElevatedButton(
+            onPressed: onSave,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              textStyle: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
               ),
-            ],
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: const Text('Generate & Save Label'),
+          ),
+
+          const SizedBox(height: 16),
+
+          // "Latest generated label" card
+          ValueListenableBuilder<Map<String, dynamic>?>(
+            valueListenable: lastGeneratedLabel,
+            builder: (context, label, _) {
+              if (label == null) return const SizedBox.shrink();
+
+              final String name = label['foodName'] as String;
+              final double calories = label['calories'] as double;
+              final double protein = label['protein'] as double;
+              final double carbs = label['carbs'] as double;
+              final double fats = label['fats'] as double;
+
+              return Card(
+                elevation: 3,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                margin: const EdgeInsets.only(top: 4),
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const Text(
+                        'Latest generated label',
+                        style: AppTextStyles.label,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        name,
+                        style: AppTextStyles.heading.copyWith(fontSize: 18),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Calories: ${calories.toStringAsFixed(0)} kcal',
+                        style: AppTextStyles.body,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Protein: ${protein.toStringAsFixed(1)} g  ·  '
+                        'Carbs: ${carbs.toStringAsFixed(1)} g  ·  '
+                        'Fats: ${fats.toStringAsFixed(1)} g',
+                        style: AppTextStyles.body,
+                      ),
+                      const SizedBox(height: 12),
+                      MacroBreakdownBar(
+                        protein: protein,
+                        carbs: carbs,
+                        fats: fats,
+                        height: 8,
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
           ),
         ],
       ),
     );
   }
 }
+
+// ------------------ HISTORY TAB ------------------
 
 class _DailyConsumerPage extends StatelessWidget {
   final List<Map<String, dynamic>> foodEntries;
@@ -461,91 +640,331 @@ class _DailyConsumerPage extends StatelessWidget {
       return const Center(child: Text("No entries saved yet."));
     }
 
-    final double totalCalories = foodEntries.fold(
-      0.0,
-      (sum, entry) => sum + entry['calories'],
-    );
-    final double totalProtein = foodEntries.fold(
-      0.0,
-      (sum, entry) => sum + entry['protein'],
-    );
-    final double totalCarbs = foodEntries.fold(
-      0.0,
-      (sum, entry) => sum + entry['carbs'],
-    );
-    final double totalFats = foodEntries.fold(
-      0.0,
-      (sum, entry) => sum + entry['fats'],
-    );
+    // --- DAILY TOTALS ---
+    final double totalCalories =
+        foodEntries.fold(0.0, (sum, entry) => sum + (entry['calories'] as double));
+    final double totalProtein =
+        foodEntries.fold(0.0, (sum, entry) => sum + (entry['protein'] as double));
+    final double totalCarbs =
+        foodEntries.fold(0.0, (sum, entry) => sum + (entry['carbs'] as double));
+    final double totalFats =
+        foodEntries.fold(0.0, (sum, entry) => sum + (entry['fats'] as double));
 
-    return Column(
+    return ListView(
+      padding: const EdgeInsets.all(16),
       children: [
+        // ---------- TOP SUMMARY CARD ----------
         Card(
-          margin: const EdgeInsets.all(16.0),
-          elevation: 4,
+          elevation: 3,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           child: Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(20),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Daily Totals',
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleLarge
-                      ?.copyWith(fontWeight: FontWeight.bold),
-                  textAlign: TextAlign.center,
+                const Center(
+                  child: Text(
+                    "Today's Summary",
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 12),
-                Text('Total Calories: ${totalCalories.toStringAsFixed(0)} kcal'),
+                Text("Total Calories: ${totalCalories.toStringAsFixed(0)} kcal"),
                 const SizedBox(height: 4),
-                Text('Total Protein: ${totalProtein.toStringAsFixed(1)} g'),
-                const SizedBox(height: 4),
-                Text('Total Carbs: ${totalCarbs.toStringAsFixed(1)} g'),
-                const SizedBox(height: 4),
-                Text('Total Fats: ${totalFats.toStringAsFixed(1)} g'),
+                Text(
+                  'Protein: ${totalProtein.toStringAsFixed(1)} g  ·  '
+                  'Carbs: ${totalCarbs.toStringAsFixed(1)} g  ·  '
+                  'Fats: ${totalFats.toStringAsFixed(1)} g',
+                ),
+                const SizedBox(height: 16),
+
+                // Macro bar + legend handled INSIDE MacroBreakdownBar
+                MacroBreakdownBar(
+                  protein: totalProtein,
+                  carbs: totalCarbs,
+                  fats: totalFats,
+                  height: 8,
+                ),
               ],
             ),
           ),
         ),
-        Expanded(
-          child: ListView.builder(
-            padding: const EdgeInsets.fromLTRB(16.0, 0, 16.0, 16.0),
-            itemCount: foodEntries.length,
-            itemBuilder: (context, index) {
-              final entry = foodEntries[index];
-              return Dismissible(
-                key: UniqueKey(),
-                onDismissed: (direction) {
-                  onDelete(index);
-                },
-                background: Container(
-                  color: Colors.red,
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  alignment: Alignment.centerRight,
-                  child: const Icon(Icons.delete, color: Colors.white),
+
+        const SizedBox(height: 20),
+
+        // ---------- INDIVIDUAL ENTRIES (NO MACRO BAR) ----------
+        ...foodEntries.asMap().entries.map((entry) {
+          final index = entry.key;
+          final item = entry.value;
+
+          final String name = item['foodName'] as String;
+          final double calories = item['calories'] as double;
+          final double protein = item['protein'] as double;
+          final double carbs = item['carbs'] as double;
+          final double fats = item['fats'] as double;
+
+          return Dismissible(
+            key: UniqueKey(),
+            onDismissed: (direction) => onDelete(index),
+            background: Container(
+              color: Colors.red,
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              alignment: Alignment.centerRight,
+              child: const Icon(Icons.delete, color: Colors.white),
+            ),
+            child: Card(
+              elevation: 2,
+              margin: const EdgeInsets.only(bottom: 16),
+              child: ListTile(
+                title: Text(
+                  name,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
-                child: Card(
-                  elevation: 4,
-                  margin: const EdgeInsets.symmetric(vertical: 8),
-                  child: ListTile(
-                    title: Text(
-                      entry['foodName'],
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18,
-                      ),
-                    ),
-                    subtitle: Text(
-                      "Calories: ${entry['calories']} kcal\n"
-                      "Protein: ${entry['protein']} g\n"
-                      "Carbs: ${entry['carbs']} g\n"
-                      "Fats: ${entry['fats']} g",
-                    ),
+                subtitle: Text(
+                  'Protein: ${protein.toStringAsFixed(1)} g  ·  '
+                  'Carbs: ${carbs.toStringAsFixed(1)} g  ·  '
+                  'Fats: ${fats.toStringAsFixed(1)} g',
+                ),
+                trailing: Text(
+                  '${calories.toStringAsFixed(0)} kcal',
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+              ),
+            ),
+          );
+        }).toList(),
+      ],
+    );
+  }
+}
+
+// ------------------ SIMPLE MACRO "CHART" WIDGET ------------------
+
+class MacroBreakdownBar extends StatelessWidget {
+  final double protein;
+  final double carbs;
+  final double fats;
+  final double height;
+
+  const MacroBreakdownBar({
+    super.key,
+    required this.protein,
+    required this.carbs,
+    required this.fats,
+    this.height = 10,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final double total = protein + carbs + fats;
+
+    if (total <= 0) {
+      return const SizedBox.shrink();
+    }
+
+    final int protFlex = (protein / total * 100).round().clamp(1, 100);
+    final int carbFlex = (carbs / total * 100).round().clamp(1, 100);
+    final int fatFlex = (fats / total * 100).round().clamp(1, 100);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // colored bar
+        Container(
+          height: height,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(999),
+            color: Colors.grey.shade200,
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(999),
+            child: Row(
+              children: [
+                Expanded(
+                  flex: protFlex,
+                  child: Container(
+                    color: Colors.deepPurpleAccent.withOpacity(0.9),
                   ),
                 ),
-              );
-            },
+                Expanded(
+                  flex: carbFlex,
+                  child: Container(
+                    color: Colors.orangeAccent.withOpacity(0.9),
+                  ),
+                ),
+                Expanded(
+                  flex: fatFlex,
+                  child: Container(
+                    color: Colors.teal.withOpacity(0.9),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 6),
+        // legend pushed to the RIGHT side
+        Align(
+          alignment: Alignment.centerRight,
+          child: Wrap(
+            spacing: 12,
+            children: const [
+              MacroLegendDot(
+                color: Colors.deepPurpleAccent,
+                label: 'Protein',
+              ),
+              MacroLegendDot(
+                color: Colors.orangeAccent,
+                label: 'Carbs',
+              ),
+              MacroLegendDot(
+                color: Colors.teal,
+                label: 'Fats',
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class MacroLegendDot extends StatelessWidget {
+  final Color color;
+  final String label;
+
+  const MacroLegendDot({
+    super.key,
+    required this.color,
+    required this.label,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+          ),
+        ),
+        const SizedBox(width: 4),
+        Text(
+          label,
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
+      ],
+    );
+  }
+}
+
+// ------------------ EXPLORE TAB ------------------
+
+class _ExplorePage extends StatelessWidget {
+  const _ExplorePage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: const [
+        Text(
+          'Explore dishes',
+          style: AppTextStyles.heading,
+        ),
+        SizedBox(height: 12),
+        Text(
+          'Quick presets to showcase the system in your demo.',
+          style: AppTextStyles.body,
+        ),
+        SizedBox(height: 16),
+        _ExploreCard(title: 'Chipotle chicken bowl'),
+        _ExploreCard(title: 'Butter chicken (restaurant style)'),
+        _ExploreCard(title: 'Margherita pizza'),
+      ],
+    );
+  }
+}
+
+class _ExploreCard extends StatelessWidget {
+  final String title;
+
+  const _ExploreCard({super.key, required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      elevation: 3,
+      child: ListTile(
+        title: Text(title),
+        subtitle: const Text('Tap to prefill the label input (coming soon)'),
+        trailing: const Icon(Icons.chevron_right),
+        onTap: () {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Preset "$title" tapped (to be wired up).'),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+// ------------------ PROFILE TAB ------------------
+
+class _ProfilePage extends StatelessWidget {
+  const _ProfilePage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: const [
+        Text(
+          'Profile & Settings',
+          style: AppTextStyles.heading,
+        ),
+        SizedBox(height: 16),
+        ListTile(
+          leading: Icon(Icons.straighten),
+          title: Text('Units'),
+          subtitle: Text('Imperial / Metric (UI only for now)'),
+        ),
+        ListTile(
+          leading: Icon(Icons.restaurant),
+          title: Text('Default style'),
+          subtitle: Text('Home / Restaurant / Ask every time'),
+        ),
+        Divider(),
+        ListTile(
+          leading: Icon(Icons.info_outline),
+          title: Text('About NutriLabelAI'),
+          subtitle: Text(
+            'This app estimates nutrition labels from dish names. '
+            'Values are approximate and not medical advice.',
+          ),
+        ),
+        ListTile(
+          leading: Icon(Icons.code),
+          title: Text('Model & Tech (for demo)'),
+          subtitle: Text(
+            'Built with Flutter frontend and a Python backend using embeddings '
+            'and PostgreSQL + pgvector.',
           ),
         ),
       ],
