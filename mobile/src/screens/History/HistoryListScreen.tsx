@@ -338,13 +338,14 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.xl,
+    paddingTop: Spacing.xxxl,
     paddingBottom: Spacing.md,
     backgroundColor: AppColors.cardBackground,
     borderBottomWidth: 1,
     borderBottomColor: AppColors.border,
   },
   headerTitle: {
+    fontFamily: 'CrimsonPro_700Bold',
     fontSize: Typography.fontSize.xxxl,
     fontWeight: Typography.fontWeight.bold,
     color: AppColors.text,
@@ -442,6 +443,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.xl,
   },
   emptyTitle: {
+    fontFamily: 'CrimsonPro_600SemiBold',
     fontSize: Typography.fontSize.lg,
     fontWeight: Typography.fontWeight.semibold,
     color: AppColors.text,

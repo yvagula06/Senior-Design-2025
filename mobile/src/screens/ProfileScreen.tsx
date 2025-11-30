@@ -273,7 +273,7 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: 'center',
-    paddingTop: Spacing.xl,
+    paddingTop: Spacing.xxxl,
     paddingBottom: Spacing.lg,
     backgroundColor: AppColors.cardBackground,
     borderBottomWidth: 1,
@@ -283,6 +283,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
   },
   userName: {
+    fontFamily: 'CrimsonPro_700Bold',
     fontSize: Typography.fontSize.xxl,
     fontWeight: Typography.fontWeight.bold,
     color: AppColors.text,

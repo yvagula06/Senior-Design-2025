@@ -23,12 +23,14 @@ export const LabelStackNavigator: React.FC = () => {
         contentStyle: {
           backgroundColor: AppColors.background,
         },
+        animation: 'slide_from_right',
+        animationDuration: 300,
       }}
     >
       <Stack.Screen
         name="LabelHome"
         component={LabelHomeScreen}
-        options={{ title: 'Label' }}
+        options={{ headerShown: false }}
       />
       <Stack.Screen
         name="LabelResult"

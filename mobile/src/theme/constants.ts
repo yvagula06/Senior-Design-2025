@@ -17,16 +17,22 @@ export const Spacing = {
 /**
  * Typography Constants
  * Use these for consistent font sizes and line heights
- * Font family uses Inter (similar to Claude/Anthropic)
+ * Font family: Space Grotesk (body) and Crimson Pro (headings)
+ * Creates a unique blend of modern geometric and classic elegance
  */
 export const Typography = {
   fontFamily: {
-    light: 'Inter_300Light',
-    regular: 'Inter_400Regular',
-    medium: 'Inter_500Medium',
-    semibold: 'Inter_600SemiBold',
-    bold: 'Inter_700Bold',
-    extrabold: 'Inter_800ExtraBold',
+    // Space Grotesk for body text - modern, geometric, highly readable
+    light: 'SpaceGrotesk_300Light',
+    regular: 'SpaceGrotesk_400Regular',
+    medium: 'SpaceGrotesk_500Medium',
+    semibold: 'SpaceGrotesk_600SemiBold',
+    bold: 'SpaceGrotesk_700Bold',
+    // Crimson Pro for headings - elegant serif with personality
+    displayLight: 'CrimsonPro_300Light',
+    displayRegular: 'CrimsonPro_400Regular',
+    displaySemiBold: 'CrimsonPro_600SemiBold',
+    displayBold: 'CrimsonPro_700Bold',
   },
   fontSize: {
     xs: 11,

@@ -130,6 +130,7 @@ const styles = StyleSheet.create({
     padding: Spacing.md,
   },
   dishName: {
+    fontFamily: 'CrimsonPro_600SemiBold',
     fontSize: Typography.fontSize.md,
     fontWeight: Typography.fontWeight.bold,
     color: AppColors.text,

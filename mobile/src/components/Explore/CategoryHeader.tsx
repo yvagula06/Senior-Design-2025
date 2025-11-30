@@ -80,6 +80,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   title: {
+    fontFamily: 'CrimsonPro_700Bold',
     fontSize: Typography.fontSize.lg,
     fontWeight: Typography.fontWeight.bold,
     color: AppColors.text,

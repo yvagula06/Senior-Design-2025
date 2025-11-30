@@ -1,11 +1,12 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Platform, Easing } from 'react-native';
 import { RootTabParamList } from './types';
 import { LabelStackNavigator } from './LabelStackNavigator';
 import { HistoryStackNavigator } from './HistoryStackNavigator';
 import { ExploreScreen, ProfileScreen } from '../screens';
-import { AppColors } from '../theme/colors';
+import { AppColors, Spacing } from '../theme';
 
 const Tab = createBottomTabNavigator<RootTabParamList>();
 
@@ -20,14 +21,24 @@ export const RootTabNavigator: React.FC = () => {
           backgroundColor: AppColors.cardBackground,
           borderTopColor: AppColors.border,
           borderTopWidth: 1,
-          paddingBottom: 8,
-          paddingTop: 8,
-          height: 65,
+          paddingBottom: Platform.OS === 'ios' ? Spacing.lg : Spacing.sm,
+          paddingTop: Spacing.sm,
+          height: Platform.OS === 'ios' ? 85 : 65,
+          elevation: 8,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: -2 },
+          shadowOpacity: 0.1,
+          shadowRadius: 8,
         },
         tabBarLabelStyle: {
-          fontSize: 12,
+          fontSize: 11,
           fontWeight: '600',
+          marginTop: 4,
         },
+        tabBarIconStyle: {
+          marginTop: 4,
+        },
+        animation: 'fade',
       }}
     >
       <Tab.Screen
@@ -58,17 +69,7 @@ export const RootTabNavigator: React.FC = () => {
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="compass" size={size} color={color} />
           ),
-          headerShown: true,
-          headerStyle: {
-            backgroundColor: AppColors.cardBackground,
-            borderBottomColor: AppColors.border,
-            borderBottomWidth: 1,
-          },
-          headerTintColor: AppColors.text,
-          headerTitleStyle: {
-            fontWeight: 'bold',
-            color: AppColors.text,
-          },
+          headerShown: false,
         }}
       />
       <Tab.Screen
@@ -79,17 +80,7 @@ export const RootTabNavigator: React.FC = () => {
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="account" size={size} color={color} />
           ),
-          headerShown: true,
-          headerStyle: {
-            backgroundColor: AppColors.cardBackground,
-            borderBottomColor: AppColors.border,
-            borderBottomWidth: 1,
-          },
-          headerTintColor: AppColors.text,
-          headerTitleStyle: {
-            fontWeight: 'bold',
-            color: AppColors.text,
-          },
+          headerShown: false,
         }}
       />
     </Tab.Navigator>

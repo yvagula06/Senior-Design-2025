@@ -50,6 +50,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   title: {
+    fontFamily: 'CrimsonPro_600SemiBold',
     fontSize: Typography.fontSize.md,
     fontWeight: Typography.fontWeight.semibold,
     color: AppColors.text,

@@ -23,12 +23,14 @@ export const HistoryStackNavigator: React.FC = () => {
         contentStyle: {
           backgroundColor: AppColors.background,
         },
+        animation: 'slide_from_right',
+        animationDuration: 300,
       }}
     >
       <Stack.Screen
         name="HistoryList"
         component={HistoryListScreen}
-        options={{ title: 'History' }}
+        options={{ headerShown: false }}
       />
       <Stack.Screen
         name="HistoryDetail"

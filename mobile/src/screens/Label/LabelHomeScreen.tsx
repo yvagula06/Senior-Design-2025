@@ -6,6 +6,7 @@ import {
   ScrollView,
   Alert,
   Animated,
+  TouchableOpacity,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { RouteProp } from '@react-navigation/native';
@@ -17,6 +18,17 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 type LabelHomeRouteProp = RouteProp<LabelStackParamList, 'LabelHome'>;
 
+const PRO_TIPS = [
+  'Be specific: "Grilled chicken breast with steamed broccoli"',
+  'Include cooking method: grilled, fried, steamed',
+  'Mention portions: "2 cups rice" or "6 oz salmon"',
+  'Add target calories for better estimates',
+  'Describe sauces and toppings for accuracy',
+  'Include side dishes: "with rice" or "with fries"',
+  'Specify preparation: homemade vs restaurant style',
+  'Mention ingredients: "with cheese" or "extra vegetables"',
+];
+
 export const LabelHomeScreen: React.FC = () => {
   const navigation = useNavigation<LabelStackNavigationProp>();
   const route = useRoute<LabelHomeRouteProp>();
@@ -24,12 +36,14 @@ export const LabelHomeScreen: React.FC = () => {
   const [targetCalories, setTargetCalories] = useState('');
   const [prepStyle, setPrepStyle] = useState<StyleOption>('home');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [currentTipIndex, setCurrentTipIndex] = useState(0);
 
   // Animation values
   const headerFade = useRef(new Animated.Value(0)).current;
   const headerSlide = useRef(new Animated.Value(-50)).current;
   const cardScale = useRef(new Animated.Value(0.9)).current;
   const infoFade = useRef(new Animated.Value(0)).current;
+  const tipScale = useRef(new Animated.Value(1)).current;
 
   // Initialize animations on mount
   useEffect(() => {
@@ -116,6 +130,25 @@ export const LabelHomeScreen: React.FC = () => {
     }
   };
 
+  const handleTipPress = () => {
+    // Animate out
+    Animated.sequence([
+      Animated.timing(tipScale, {
+        toValue: 0.95,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.timing(tipScale, {
+        toValue: 1,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    // Change tip
+    setCurrentTipIndex((prev) => (prev + 1) % PRO_TIPS.length);
+  };
+
   return (
     <ScrollView 
       style={styles.container}
@@ -143,6 +176,10 @@ export const LabelHomeScreen: React.FC = () => {
             </Text>
           </View>
         </View>
+      </Animated.View>
+
+      {/* Stats Row - Moved outside header */}
+      <Animated.View style={[styles.statsRowContainer, { opacity: headerFade }]}>
         <View style={styles.statsRow}>
           <View style={styles.statItem}>
             <Text style={styles.statNumber}>10k+</Text>
@@ -162,7 +199,7 @@ export const LabelHomeScreen: React.FC = () => {
       </Animated.View>
 
       {/* Animated Input Card */}
-      <Animated.View style={{ transform: [{ scale: cardScale }] }}>
+      <Animated.View style={[{ transform: [{ scale: cardScale }] }, styles.inputSection]}>
         <DishSearchInput
           dishName={dishName}
           onDishNameChange={setDishName}
@@ -179,32 +216,22 @@ export const LabelHomeScreen: React.FC = () => {
       <Animated.View style={[styles.infoSection, { opacity: infoFade }]}>
         <View style={styles.infoHeader}>
           <MaterialCommunityIcons name="lightbulb-on" size={24} color={AppColors.accent} />
-          <Text style={styles.infoTitle}>Pro Tips</Text>
+          <Text style={styles.infoTitle}>Pro Tip</Text>
+          <Text style={styles.tipCounter}>{currentTipIndex + 1}/{PRO_TIPS.length}</Text>
         </View>
-        <View style={styles.tipCard}>
-          <MaterialCommunityIcons name="check-circle" size={18} color={AppColors.accent} />
-          <Text style={styles.infoText}>
-            Be specific: "Grilled chicken breast with steamed broccoli"
-          </Text>
-        </View>
-        <View style={styles.tipCard}>
-          <MaterialCommunityIcons name="check-circle" size={18} color={AppColors.accent} />
-          <Text style={styles.infoText}>
-            Include cooking method: grilled, fried, steamed
-          </Text>
-        </View>
-        <View style={styles.tipCard}>
-          <MaterialCommunityIcons name="check-circle" size={18} color={AppColors.accent} />
-          <Text style={styles.infoText}>
-            Mention portions: "2 cups rice" or "6 oz salmon"
-          </Text>
-        </View>
-        <View style={styles.tipCard}>
-          <MaterialCommunityIcons name="check-circle" size={18} color={AppColors.accent} />
-          <Text style={styles.infoText}>
-            Add target calories for better estimates
-          </Text>
-        </View>
+        <TouchableOpacity 
+          style={styles.tipCard}
+          onPress={handleTipPress}
+          activeOpacity={0.8}
+        >
+          <Animated.View style={[styles.tipContent, { transform: [{ scale: tipScale }] }]}>
+            <MaterialCommunityIcons name="gesture-tap" size={20} color={AppColors.accent} />
+            <Text style={styles.infoText}>{PRO_TIPS[currentTipIndex]}</Text>
+          </Animated.View>
+          <View style={styles.tapHint}>
+            <Text style={styles.tapHintText}>Tap for next tip</Text>
+          </View>
+        </TouchableOpacity>
       </Animated.View>
     </ScrollView>
   );
@@ -216,11 +243,23 @@ const styles = StyleSheet.create({
     backgroundColor: AppColors.background,
   },
   scrollContent: {
-    padding: Spacing.xl,
     paddingBottom: Spacing.xxxl,
   },
   header: {
+    paddingHorizontal: Spacing.xl,
+    paddingTop: Spacing.xxxl,
+    paddingBottom: Spacing.md,
+    backgroundColor: AppColors.cardBackground,
+    borderBottomWidth: 1,
+    borderBottomColor: AppColors.border,
+  },
+  statsRowContainer: {
+    paddingHorizontal: Spacing.xl,
+    marginTop: Spacing.xl,
     marginBottom: Spacing.xl,
+  },
+  inputSection: {
+    paddingHorizontal: Spacing.xl,
   },
   titleRow: {
     flexDirection: 'row',
@@ -243,6 +282,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   title: {
+    fontFamily: 'CrimsonPro_700Bold',
     fontSize: Typography.fontSize.xxxl,
     fontWeight: Typography.fontWeight.extrabold,
     color: AppColors.text,
@@ -270,6 +310,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   statNumber: {
+    fontFamily: 'CrimsonPro_700Bold',
     fontSize: Typography.fontSize.xl,
     fontWeight: Typography.fontWeight.extrabold,
     color: AppColors.accent,
@@ -289,6 +330,7 @@ const styles = StyleSheet.create({
   },
   infoSection: {
     marginTop: Spacing.xl,
+    marginHorizontal: Spacing.xl,
     backgroundColor: AppColors.cardBackground,
     borderRadius: BorderRadius.xl,
     padding: Spacing.lg,
@@ -303,20 +345,46 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   infoTitle: {
+    fontFamily: 'CrimsonPro_600SemiBold',
     fontSize: Typography.fontSize.lg,
     fontWeight: Typography.fontWeight.bold,
     color: AppColors.text,
+    flex: 1,
+  },
+  tipCounter: {
+    fontSize: Typography.fontSize.xs,
+    fontWeight: Typography.fontWeight.semibold,
+    color: AppColors.accent,
+    backgroundColor: AppColors.background,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xs,
+    borderRadius: BorderRadius.full,
+    borderWidth: 1,
+    borderColor: AppColors.accent,
   },
   tipCard: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
     backgroundColor: AppColors.background,
     borderRadius: BorderRadius.md,
     padding: Spacing.md,
-    marginBottom: Spacing.sm,
-    gap: Spacing.sm,
     borderWidth: 1,
     borderColor: AppColors.border,
+  },
+  tipContent: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: Spacing.sm,
+    marginBottom: Spacing.sm,
+  },
+  tapHint: {
+    alignItems: 'center',
+    paddingTop: Spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: AppColors.border,
+  },
+  tapHintText: {
+    fontSize: Typography.fontSize.xs,
+    color: AppColors.textTertiary,
+    fontWeight: Typography.fontWeight.medium,
   },
   infoText: {
     flex: 1,
