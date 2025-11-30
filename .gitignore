@@ -42,7 +42,7 @@ alembic/versions/*.pyd
 *.h5
 *.hdf5
 *.jsonl
-*.json
+#*.json
 
 # Logs
 *.log

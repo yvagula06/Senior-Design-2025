@@ -1,0 +1,28 @@
+{
+  "name": "senior-design-2025",
+  "version": "1.0.0",
+  "description": "A comprehensive nutrition tracking system with AI-powered image analysis, consisting of a **React Native mobile app** and a **FastAPI backend** with PostgreSQL + pgvector.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yvagula06/Senior-Design-2025.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/yvagula06/Senior-Design-2025/issues"
+  },
+  "homepage": "https://github.com/yvagula06/Senior-Design-2025#readme",
+  "dependencies": {
+    "expo": "^54.0.25"
+  },
+  "devDependencies": {
+    "@types/react": "~19.1.10",
+    "typescript": "~5.9.2"
+  }
+}
