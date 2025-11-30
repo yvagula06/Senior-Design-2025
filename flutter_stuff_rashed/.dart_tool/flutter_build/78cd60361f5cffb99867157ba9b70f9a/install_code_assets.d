@@ -1,0 +1,1 @@
+ C:\\Users\\rashe\\OneDrive\\Desktop\\SD\\New\ folder\\Senior-Design-2025\\flutter_stuff_rashed\\.dart_tool\\flutter_build\\78cd60361f5cffb99867157ba9b70f9a\\native_assets.json: 
