@@ -11,7 +11,11 @@ export interface HistoryEntry {
   date: string;
   prepStyle: 'home' | 'restaurant' | 'unknown';
   isFavorite?: boolean;
+  protein?: number; // Protein in grams
+  carbs?: number; // Carbs in grams
+  fats?: number; // Fats in grams
   nutrition?: any; // Full nutrition data for detail view
+  timestamp?: number; // For sorting entries with same date
 }
 
 interface HistoryItemCardProps {
@@ -21,14 +25,20 @@ interface HistoryItemCardProps {
 
 export const HistoryItemCard: React.FC<HistoryItemCardProps> = ({ item, onPress }) => {
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
+    // Parse date in local timezone to avoid UTC conversion issues
+    const [year, month, day] = dateString.split('-').map(Number);
+    const date = new Date(year, month - 1, day);
     const today = new Date();
+    today.setHours(0, 0, 0, 0);
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
 
-    if (date.toDateString() === today.toDateString()) {
+    const compareDate = new Date(date);
+    compareDate.setHours(0, 0, 0, 0);
+
+    if (compareDate.getTime() === today.getTime()) {
       return 'Today';
-    } else if (date.toDateString() === yesterday.toDateString()) {
+    } else if (compareDate.getTime() === yesterday.getTime()) {
       return 'Yesterday';
     } else {
       return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });

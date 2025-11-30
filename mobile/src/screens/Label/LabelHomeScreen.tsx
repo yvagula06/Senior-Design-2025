@@ -167,7 +167,7 @@ export const LabelHomeScreen: React.FC = () => {
       >
         <View style={styles.titleRow}>
           <View style={styles.iconContainer}>
-            <MaterialCommunityIcons name="food-apple" size={36} color={AppColors.primary} />
+            <MaterialCommunityIcons name="food-apple" size={36} color={AppColors.accent} />
           </View>
           <View style={styles.titleContent}>
             <Text style={styles.title}>NutriLabelAI</Text>
@@ -276,7 +276,7 @@ const styles = StyleSheet.create({
     marginRight: Spacing.base,
     ...Shadows.md,
     borderWidth: 1,
-    borderColor: AppColors.primary,
+    borderColor: AppColors.accent,
   },
   titleContent: {
     flex: 1,

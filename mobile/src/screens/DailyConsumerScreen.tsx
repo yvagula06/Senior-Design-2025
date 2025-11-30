@@ -106,7 +106,7 @@ export const DailyConsumerScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       <Animatable.View animation="fadeInDown" duration={800}>
-        <Card style={styles.totalsCard} elevation={8}>
+        <Card style={styles.totalsCard} elevation={4}>
           <Card.Content>
             <Text style={styles.totalsTitle}>📊 Daily Totals</Text>
             <View style={styles.totalsGrid}>

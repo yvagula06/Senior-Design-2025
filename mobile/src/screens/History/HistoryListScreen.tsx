@@ -15,6 +15,7 @@ import { SwipeListView } from 'react-native-swipe-list-view';
 import type { HistoryStackNavigationProp } from '../../navigation/types';
 import { HistoryItemCard, type HistoryEntry } from '../../components/History';
 import { AppColors, Spacing, Typography, BorderRadius, Shadows } from '../../theme';
+import { MacroPieChart } from '../../components/MacroPieChart';
 import { 
   fetchHistoryEntries, 
   updateHistoryEntry, 
@@ -24,16 +25,19 @@ import {
   cacheHistoryEntries, 
   loadCachedHistory 
 } from '../../services/storage';
+import { useFoodContext } from '../../context/FoodContext';
 
 type FilterType = 'all' | 'home' | 'restaurant';
 
 export const HistoryListScreen: React.FC = () => {
   const navigation = useNavigation<HistoryStackNavigationProp>();
+  const { foodEntries, getTotals, deleteFoodEntry } = useFoodContext();
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState<FilterType>('all');
   const [historyData, setHistoryData] = useState<HistoryEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [deletedItemIds, setDeletedItemIds] = useState<Set<string>>(new Set());
 
   /**
    * Load history entries from backend or cache
@@ -47,7 +51,7 @@ export const HistoryListScreen: React.FC = () => {
    */
   useEffect(() => {
     loadHistory();
-  }, []);
+  }, [foodEntries]); // Re-load when foodEntries change
 
   const loadHistory = async () => {
     try {
@@ -71,6 +75,9 @@ export const HistoryListScreen: React.FC = () => {
           id: '1',
           dishName: 'Butter Chicken with Basmati Rice',
           calories: 520,
+          protein: 35,
+          carbs: 45,
+          fats: 18,
           confidence: 78,
           date: '2025-11-29',
           prepStyle: 'restaurant',
@@ -80,13 +87,45 @@ export const HistoryListScreen: React.FC = () => {
           id: '2',
           dishName: 'Chipotle Chicken Bowl',
           calories: 650,
+          protein: 42,
+          carbs: 58,
+          fats: 22,
           confidence: 85,
           date: '2025-11-28',
           prepStyle: 'restaurant',
           isFavorite: false,
         },
       ];
-      setHistoryData(mockData);
+
+      // Convert FoodContext entries to HistoryEntry format
+      // Reverse to get newest first (FoodContext adds to end of array)
+      const manualEntries: HistoryEntry[] = [...foodEntries].reverse().map((entry, index) => ({
+        id: entry.id,
+        dishName: entry.foodName,
+        calories: Math.round(entry.calories),
+        protein: entry.protein,
+        carbs: entry.carbs,
+        fats: entry.fats,
+        confidence: 100, // Manual entries have 100% confidence
+        date: new Date().toISOString().split('T')[0], // Today's date
+        prepStyle: 'home' as const, // Default to home for manual entries
+        isFavorite: false,
+        timestamp: Date.now() - index, // Ensure newest entries appear first
+      }));
+
+      // Merge manual entries with mock data, excluding deleted items
+      const allEntries = [...manualEntries, ...mockData];
+      const filteredEntries = allEntries.filter(entry => !deletedItemIds.has(entry.id));
+      
+      // Sort by date (newest first), then by timestamp if available
+      filteredEntries.sort((a, b) => {
+        const dateCompare = b.date.localeCompare(a.date);
+        if (dateCompare !== 0) return dateCompare;
+        // If dates are equal, use timestamp to maintain insertion order
+        return (b.timestamp || 0) - (a.timestamp || 0);
+      });
+      
+      setHistoryData(filteredEntries);
 
     } catch (error) {
       console.error('❌ [History] Failed to load history:', error);
@@ -139,6 +178,29 @@ export const HistoryListScreen: React.FC = () => {
     );
   };
 
+  // Calculate totals from all history entries (including mock data)
+  const calculateHistoryTotals = () => {
+    return historyData.reduce(
+      (acc, entry) => {
+        // Use actual macro values if available, otherwise estimate from calories
+        // Typical ratio: 40% carbs, 30% protein, 30% fats
+        const protein = entry.protein || ((entry.calories * 0.3) / 4); // 30% of cals ÷ 4 cal/g
+        const carbs = entry.carbs || ((entry.calories * 0.4) / 4); // 40% of cals ÷ 4 cal/g
+        const fats = entry.fats || ((entry.calories * 0.3) / 9); // 30% of cals ÷ 9 cal/g
+        
+        return {
+          protein: acc.protein + protein,
+          carbs: acc.carbs + carbs,
+          fats: acc.fats + fats,
+        };
+      },
+      { protein: 0, carbs: 0, fats: 0 }
+    );
+  };
+
+  // Calculate totals once to avoid multiple calls
+  const historyTotals = calculateHistoryTotals();
+
   // Handle delete
   const handleDelete = (itemId: string, dishName: string) => {
     Alert.alert(
@@ -153,7 +215,17 @@ export const HistoryListScreen: React.FC = () => {
           text: 'Delete',
           style: 'destructive',
           onPress: () => {
+            // Add to deleted items set
+            setDeletedItemIds(prev => new Set(prev).add(itemId));
+            
+            // Remove from local state
             setHistoryData((prevData) => prevData.filter((item) => item.id !== itemId));
+            
+            // If it's a FoodContext entry, also delete from there
+            const isFromContext = foodEntries.some(entry => entry.id === itemId);
+            if (isFromContext) {
+              deleteFoodEntry(itemId);
+            }
           },
         },
       ]
@@ -311,6 +383,19 @@ export const HistoryListScreen: React.FC = () => {
         swipeToOpenPercent={20}
         swipeToClosePercent={20}
         contentContainerStyle={styles.listContent}
+        ListHeaderComponent={
+          historyData.length > 0 ? (
+            <View style={styles.chartCard}>
+              <Text style={styles.chartTitle}>Total Macronutrient Breakdown</Text>
+              <MacroPieChart
+                protein={historyTotals.protein}
+                carbs={historyTotals.carbs}
+                fats={historyTotals.fats}
+                size={200}
+              />
+            </View>
+          ) : null
+        }
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <MaterialCommunityIcons
@@ -370,14 +455,30 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: Typography.fontSize.md,
-    color: AppColors.darkGray,
+    color: AppColors.text,
     paddingVertical: Spacing.xs,
   },
   filterContainer: {
     flexDirection: 'row',
-    paddingHorizontal: Spacing.lg,
+    paddingHorizontal: Spacing.md,
+    paddingBottom: Spacing.md,
+    gap: Spacing.xs,
+  },
+  chartCard: {
+    backgroundColor: AppColors.background,
+    marginHorizontal: Spacing.md,
     marginBottom: Spacing.md,
-    gap: Spacing.sm,
+    paddingVertical: Spacing.lg,
+    paddingHorizontal: Spacing.md,
+    borderRadius: BorderRadius.lg,
+    ...Shadows.md,
+    alignItems: 'center',
+  },
+  chartTitle: {
+    fontSize: Typography.fontSize.lg,
+    fontWeight: Typography.fontWeight.bold,
+    color: AppColors.white,
+    marginBottom: Spacing.md,
   },
   filterChip: {
     flexDirection: 'row',

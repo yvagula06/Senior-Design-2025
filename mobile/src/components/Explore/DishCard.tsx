@@ -78,19 +78,20 @@ export const DishCard: React.FC<DishCardProps> = ({ dish, onPress }) => {
         </View>
 
         {/* Quick Macros (if available) */}
-        {(dish.estimatedProtein || dish.estimatedCarbs || dish.estimatedFat) && (
-          <View style={styles.macrosRow}>
-            {dish.estimatedProtein && (
-              <Text style={styles.macroText}>P: {dish.estimatedProtein}g</Text>
-            )}
-            {dish.estimatedCarbs && (
-              <Text style={styles.macroText}>C: {dish.estimatedCarbs}g</Text>
-            )}
-            {dish.estimatedFat && (
-              <Text style={styles.macroText}>F: {dish.estimatedFat}g</Text>
-            )}
-          </View>
-        )}
+{(dish.estimatedProtein || dish.estimatedCarbs || dish.estimatedFat) && (
+  <View style={styles.macrosRow}>
+    {/* FIX: Use Boolean() to ensure 0 is treated as false, not rendered. */}
+    {Boolean(dish.estimatedProtein) && (
+      <Text style={styles.macroText}>P: {dish.estimatedProtein}g</Text>
+    )}
+    {Boolean(dish.estimatedCarbs) && (
+      <Text style={styles.macroText}>C: {dish.estimatedCarbs}g</Text>
+    )}
+    {Boolean(dish.estimatedFat) && (
+      <Text style={styles.macroText}>F: {dish.estimatedFat}g</Text>
+    )}
+  </View>
+)}
       </View>
     </TouchableOpacity>
   );

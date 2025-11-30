@@ -5,6 +5,7 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  Alert, // Added Alert for user feedback
 } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import type { RouteProp } from '@react-navigation/native';
@@ -21,6 +22,12 @@ import {
 } from '../../components/Label';
 import { AppColors, Spacing, Typography, BorderRadius, Shadows } from '../../theme';
 
+// Import API and type definitions
+// NOTE: saveHistoryEntry and deleteHistoryEntry must be implemented in '../../services/api.ts'
+import { saveHistoryEntry, deleteHistoryEntry } from '../../services/api';
+import { type HistoryEntry } from '../../components/History';
+import { useFoodContext } from '../../context/FoodContext';
+
 type LabelResultRouteProp = RouteProp<LabelStackParamList, 'LabelResult'>;
 
 export const LabelResultScreen: React.FC = () => {
@@ -29,8 +36,13 @@ export const LabelResultScreen: React.FC = () => {
   const { dishName, calories } = route.params;
   const [isSaved, setIsSaved] = useState(false);
   const bottomSheetRef = useRef<VariantBottomSheetRef>(null);
+  const { addFoodEntry } = useFoodContext();
 
-  // Mock nutrition data - replace with actual API response
+  // --- MOCK DATA (Should be replaced by data received from LabelHomeScreen API call) ---
+  // The full response structure needed to save to history
+  const prepStyle = 'restaurant'; // Mock preparation style from input screen
+  const savedHistoryId = useRef<string | null>(null); // To store the ID for deletion
+
   const nutritionData: NutritionData = {
     servingSize: '1 serving (approx. 350g)',
     calories: calories || 520,
@@ -50,10 +62,8 @@ export const LabelResultScreen: React.FC = () => {
     potassium: 650,
   };
 
-  // Mock confidence score - replace with actual API response
   const confidence = 78;
 
-  // Mock top recipes - replace with actual API response
   const topRecipes: CanonicalRecipe[] = [
     {
       id: '1',
@@ -75,10 +85,60 @@ export const LabelResultScreen: React.FC = () => {
     },
   ];
 
-  const handleSave = () => {
-    // TODO: Implement actual save functionality
-    setIsSaved(!isSaved);
+  // --- CORE FIX: History Save/Unsave Logic ---
+  const handleSave = async () => {
+    if (isSaved) {
+      // Logic for UNSAVING (Deleting the entry)
+      if (!savedHistoryId.current) {
+        setIsSaved(false);
+        return;
+      }
+      try {
+        // TODO: Implement deleteHistoryEntry when backend is ready
+        // await deleteHistoryEntry(savedHistoryId.current);
+        
+        setIsSaved(false);
+        savedHistoryId.current = null;
+        Alert.alert('Unsaved', `${dishName} removed from history.`);
+      } catch (error) {
+        console.error('❌ Failed to delete history entry:', error);
+        Alert.alert('Error', 'Failed to remove entry from history.');
+      }
+    } else {
+      // Logic for SAVING (Creating a new entry)
+      try {
+        // Add to FoodContext so it appears in History
+        addFoodEntry({
+          foodName: dishName,
+          calories: nutritionData.calories,
+          protein: nutritionData.protein,
+          carbs: nutritionData.totalCarbohydrate,
+          fats: nutritionData.totalFat,
+        });
+
+        // TODO: Also save to backend when ready
+        // const historyEntry: Partial<HistoryEntry> = {
+        //   dishName: dishName,
+        //   calories: nutritionData.calories,
+        //   confidence: confidence,
+        //   date: new Date().toISOString(),
+        //   prepStyle: prepStyle as HistoryEntry['prepStyle'],
+        //   nutrition: nutritionData,
+        //   isFavorite: false,
+        // };
+        // const savedEntry = await saveHistoryEntry(historyEntry);
+        // savedHistoryId.current = savedEntry.id;
+
+        setIsSaved(true);
+        Alert.alert('Saved', `${dishName} added to history!`);
+
+      } catch (error) {
+        console.error('❌ Failed to save history entry:', error);
+        Alert.alert('Error', 'Failed to save entry to history.');
+      }
+    }
   };
+  // --- END CORE FIX ---
 
   const handleViewVariants = () => {
     bottomSheetRef.current?.snapToIndex(0);
@@ -161,9 +221,18 @@ export const LabelResultScreen: React.FC = () => {
           </Text>
         </TouchableOpacity>
       </View>
+      
+      {/* Variant Bottom Sheet */}
+      <VariantBottomSheet
+        ref={bottomSheetRef}
+        assumedStyle={"Restaurant-style preparation with moderate cream and butter, served with basmati rice."}
+        topRecipes={topRecipes}
+        uncertaintyExplanation={"The nutritional values shown are estimates based on similar dishes in our database."}
+      />
     </ScrollView>
   );
 };
+// ... (styles remain the same)
 
 const styles = StyleSheet.create({
   container: {
@@ -187,7 +256,7 @@ const styles = StyleSheet.create({
   dishName: {
     fontSize: Typography.fontSize.xxl,
     fontWeight: Typography.fontWeight.bold,
-    color: AppColors.primary,
+    color: AppColors.darkGray,
     textAlign: 'center',
   },
   summaryPanel: {

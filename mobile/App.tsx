@@ -10,6 +10,7 @@ import { SpaceGrotesk_300Light, SpaceGrotesk_400Regular, SpaceGrotesk_500Medium,
 import * as SplashScreen from 'expo-splash-screen';
 import { RootTabNavigator } from './src/navigation/RootTabNavigator';
 import { theme, AppColors } from './src/theme/colors';
+import { FoodProvider } from './src/context/FoodContext';
 
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
@@ -83,12 +84,14 @@ export default function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <QueryClientProvider client={queryClient}>
-        <PaperProvider theme={theme}>
-          <NavigationContainer theme={navigationTheme}>
-            <RootTabNavigator />
-            <StatusBar style="light" backgroundColor="#0F0F0F" />
-          </NavigationContainer>
-        </PaperProvider>
+        <FoodProvider>
+          <PaperProvider theme={theme}>
+            <NavigationContainer theme={navigationTheme}>
+              <RootTabNavigator />
+              <StatusBar style="light" backgroundColor="#9c1818ff" />
+            </NavigationContainer>
+          </PaperProvider>
+        </FoodProvider>
       </QueryClientProvider>
     </GestureHandlerRootView>
   );
