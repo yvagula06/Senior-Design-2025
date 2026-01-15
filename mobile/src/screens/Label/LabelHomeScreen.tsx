@@ -13,8 +13,11 @@ import type { RouteProp } from '@react-navigation/native';
 import type { LabelStackNavigationProp, LabelStackParamList } from '../../navigation/types';
 import { DishSearchInput, StyleOption } from '../../components/Label';
 import { AppColors, Spacing, Typography, BorderRadius, Shadows, fadeIn, slideIn, scaleIn } from '../../theme';
-import { generateNutritionLabel } from '../../services/api';
+import { requestLabel } from '../../services/label';
+import type { LabelResponse } from '../../types/label';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { ActivityIndicator } from 'react-native';
+import { useFoodContext } from '../../context/FoodContext';
 
 type LabelHomeRouteProp = RouteProp<LabelStackParamList, 'LabelHome'>;
 
@@ -37,6 +40,14 @@ export const LabelHomeScreen: React.FC = () => {
   const [prepStyle, setPrepStyle] = useState<StyleOption>('home');
   const [isGenerating, setIsGenerating] = useState(false);
   const [currentTipIndex, setCurrentTipIndex] = useState(0);
+  
+  // API response state
+  const [labelResult, setLabelResult] = useState<LabelResponse | null>(null);
+  const [apiError, setApiError] = useState<string | null>(null);
+  const [isSaved, setIsSaved] = useState(false);
+  
+  // Food context for saving entries
+  const { addLabelEntry } = useFoodContext();
 
   // Animation values
   const headerFade = useRef(new Animated.Value(0)).current;
@@ -71,62 +82,73 @@ export const LabelHomeScreen: React.FC = () => {
 
   /**
    * Generate nutrition label using backend API
-   * 
-   * TODO: Backend Integration Steps:
-   * 1. Ensure backend is running at http://localhost:8000
-   * 2. Test endpoint: POST /api/label/generate
-   * 3. Verify response matches GenerateLabelResponse interface
-   * 4. Handle errors gracefully (network issues, invalid input, etc.)
-   * 5. Add loading states and retry logic
-   * 
-   * Backend endpoint: POST /api/label/generate
-   * Request body: { dish_name, target_calories?, prep_style, image_data? }
-   * Response: { dish_name, confidence_score, nutrition, top_recipes, assumptions, uncertainty_factors }
    */
   const handleGenerate = async () => {
     if (!dishName.trim()) return;
 
+    // Clear previous results/errors
+    setLabelResult(null);
+    setApiError(null);
+    setIsSaved(false);
     setIsGenerating(true);
 
     try {
-      // Call backend API to generate nutrition label
-      // TODO: Remove mock data from api.ts and enable real API calls
-      const response = await generateNutritionLabel(
+      // Call real backend API
+      const response = await requestLabel(
         dishName.trim(),
         targetCalories ? parseFloat(targetCalories) : undefined,
-        prepStyle === 'unknown' ? 'unknown' : prepStyle,
-        undefined // imageData - future feature for image upload
+        prepStyle === 'unknown' ? undefined : (prepStyle as 'home' | 'restaurant' | 'fast_food')
       );
 
       console.log('✅ [Label] Generated label:', response);
-
-      // Navigate to result screen with API response
-      navigation.navigate('LabelResult', {
-        dishName: response.dish_name,
-        calories: response.nutrition.calories,
-        style: 'standard',
-      });
-
-      // TODO: Save to history after successful generation
-      // await saveHistoryEntry({
-      //   dish_name: response.dish_name,
-      //   date: new Date().toISOString(),
-      //   calories: response.nutrition.calories,
-      //   confidence: response.confidence_score,
-      //   prep_style: prepStyle,
-      //   is_favorite: false,
-      //   nutrition_data: response.nutrition,
-      // });
+      
+      // Store result for display
+      setLabelResult(response);
 
     } catch (error) {
       console.error('❌ [Label] Failed to generate label:', error);
-      Alert.alert(
-        'Error',
-        'Failed to generate nutrition label. Please check your connection and try again.',
-        [{ text: 'OK' }]
-      );
+      
+      // Set user-friendly error message
+      setApiError(String(error));
     } finally {
       setIsGenerating(false);
+    }
+  };
+
+  /**
+   * Save label result to daily totals
+   */
+  const handleSave = () => {
+    if (!labelResult) return;
+
+    try {
+      addLabelEntry({
+        dishName: dishName,
+        matchedDish: labelResult.matched_dish,
+        calories: labelResult.nutrition.calories,
+        protein: labelResult.nutrition.protein_g,
+        carbs: labelResult.nutrition.carbs_g,
+        fats: labelResult.nutrition.fat_g,
+        confidence: labelResult.confidence,
+        fiber: labelResult.nutrition.fiber_g,
+        sugar: labelResult.nutrition.sugar_g,
+        sodium: labelResult.nutrition.sodium_mg,
+      });
+
+      setIsSaved(true);
+      Alert.alert(
+        'Saved!',
+        `Added "${labelResult.matched_dish}" to your daily totals.`,
+        [{ text: 'OK' }]
+      );
+      console.log('✅ [Label] Saved to daily totals');
+    } catch (error) {
+      console.error('❌ [Label] Failed to save:', error);
+      Alert.alert(
+        'Error',
+        'Failed to save entry. Please try again.',
+        [{ text: 'OK' }]
+      );
     }
   };
 
@@ -211,6 +233,158 @@ export const LabelHomeScreen: React.FC = () => {
           isGenerating={isGenerating}
         />
       </Animated.View>
+
+      {/* Loading Spinner */}
+      {isGenerating && (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={AppColors.accent} />
+          <Text style={styles.loadingText}>Analyzing nutrition...</Text>
+        </View>
+      )}
+
+      {/* Error Message */}
+      {apiError && !isGenerating && (
+        <View style={styles.errorContainer}>
+          <MaterialCommunityIcons name="alert-circle" size={24} color={AppColors.error} />
+          <Text style={styles.errorText}>{apiError}</Text>
+          <TouchableOpacity 
+            style={styles.retryButton}
+            onPress={handleGenerate}
+          >
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {/* Nutrition Label Result Card */}
+      {labelResult && !isGenerating && (
+        <View style={styles.resultContainer}>
+          {/* Matched Dish Header */}
+          <View style={styles.resultHeader}>
+            <MaterialCommunityIcons name="check-circle" size={28} color={AppColors.success} />
+            <View style={styles.resultHeaderText}>
+              <Text style={styles.resultTitle}>Matched Dish</Text>
+              <Text style={styles.matchedDish}>{labelResult.matched_dish}</Text>
+            </View>
+          </View>
+
+          {/* Confidence Score */}
+          <View style={styles.confidenceContainer}>
+            <View style={styles.confidenceHeader}>
+              <MaterialCommunityIcons name="speedometer" size={20} color={AppColors.accent} />
+              <Text style={styles.confidenceLabel}>Confidence Score</Text>
+            </View>
+            <View style={styles.confidenceBar}>
+              <View 
+                style={[
+                  styles.confidenceFill, 
+                  { 
+                    width: `${labelResult.confidence * 100}%`,
+                    backgroundColor: labelResult.confidence > 0.7 
+                      ? AppColors.success 
+                      : labelResult.confidence > 0.5 
+                        ? AppColors.warning 
+                        : AppColors.error
+                  }
+                ]} 
+              />
+            </View>
+            <Text style={styles.confidenceValue}>
+              {(labelResult.confidence * 100).toFixed(0)}% confidence
+            </Text>
+          </View>
+
+          {/* Macronutrients Card */}
+          <View style={styles.macrosCard}>
+            <Text style={styles.macrosTitle}>Nutrition Facts</Text>
+            
+            <View style={styles.caloriesRow}>
+              <Text style={styles.caloriesLabel}>Calories</Text>
+              <Text style={styles.caloriesValue}>{labelResult.nutrition.calories.toFixed(0)}</Text>
+            </View>
+
+            <View style={styles.macrosDivider} />
+
+            <View style={styles.macrosGrid}>
+              <View style={styles.macroItem}>
+                <MaterialCommunityIcons name="food-drumstick" size={20} color={AppColors.accent} />
+                <Text style={styles.macroLabel}>Protein</Text>
+                <Text style={styles.macroValue}>{labelResult.nutrition.protein_g.toFixed(1)}g</Text>
+              </View>
+
+              <View style={styles.macroItem}>
+                <MaterialCommunityIcons name="bread-slice" size={20} color={AppColors.accent} />
+                <Text style={styles.macroLabel}>Carbs</Text>
+                <Text style={styles.macroValue}>{labelResult.nutrition.carbs_g.toFixed(1)}g</Text>
+              </View>
+
+              <View style={styles.macroItem}>
+                <MaterialCommunityIcons name="butter" size={20} color={AppColors.accent} />
+                <Text style={styles.macroLabel}>Fat</Text>
+                <Text style={styles.macroValue}>{labelResult.nutrition.fat_g.toFixed(1)}g</Text>
+              </View>
+            </View>
+
+            <View style={styles.macrosDivider} />
+
+            <View style={styles.micronutrientsRow}>
+              {labelResult.nutrition.fiber_g !== null && (
+                <View style={styles.microItem}>
+                  <Text style={styles.microLabel}>Fiber</Text>
+                  <Text style={styles.microValue}>{labelResult.nutrition.fiber_g.toFixed(1)}g</Text>
+                </View>
+              )}
+              {labelResult.nutrition.sugar_g !== null && (
+                <View style={styles.microItem}>
+                  <Text style={styles.microLabel}>Sugar</Text>
+                  <Text style={styles.microValue}>{labelResult.nutrition.sugar_g.toFixed(1)}g</Text>
+                </View>
+              )}
+              {labelResult.nutrition.sodium_mg !== null && (
+                <View style={styles.microItem}>
+                  <Text style={styles.microLabel}>Sodium</Text>
+                  <Text style={styles.microValue}>{labelResult.nutrition.sodium_mg.toFixed(0)}mg</Text>
+                </View>
+              )}
+              {labelResult.nutrition.potassium_mg !== null && (
+                <View style={styles.microItem}>
+                  <Text style={styles.microLabel}>Potassium</Text>
+                  <Text style={styles.microValue}>{labelResult.nutrition.potassium_mg.toFixed(0)}mg</Text>
+                </View>
+              )}
+            </View>
+          </View>
+
+          {/* Explanation Card */}
+          <View style={styles.explanationCard}>
+            <View style={styles.explanationHeader}>
+              <MaterialCommunityIcons name="information" size={20} color={AppColors.accent} />
+              <Text style={styles.explanationTitle}>How We Calculated This</Text>
+            </View>
+            <Text style={styles.explanationText}>{labelResult.explanation}</Text>
+          </View>
+
+          {/* Save Button */}
+          <TouchableOpacity
+            style={[
+              styles.saveButton,
+              isSaved && styles.saveButtonSaved
+            ]}
+            onPress={handleSave}
+            disabled={isSaved}
+            activeOpacity={0.8}
+          >
+            <MaterialCommunityIcons 
+              name={isSaved ? "check-circle" : "content-save"} 
+              size={24} 
+              color="#FFF" 
+            />
+            <Text style={styles.saveButtonText}>
+              {isSaved ? 'Saved to Daily Totals' : 'Save to Daily Totals'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       {/* Animated Info Section */}
       <Animated.View style={[styles.infoSection, { opacity: infoFade }]}>
@@ -392,5 +566,248 @@ const styles = StyleSheet.create({
     color: AppColors.text,
     lineHeight: Typography.lineHeight.relaxed * Typography.fontSize.sm,
     fontWeight: Typography.fontWeight.regular,
+  },
+  // Loading styles
+  loadingContainer: {
+    marginHorizontal: Spacing.xl,
+    marginTop: Spacing.xl,
+    padding: Spacing.xxl,
+    backgroundColor: AppColors.cardBackground,
+    borderRadius: BorderRadius.xl,
+    alignItems: 'center',
+    ...Shadows.sm,
+    borderWidth: 1,
+    borderColor: AppColors.border,
+  },
+  loadingText: {
+    marginTop: Spacing.md,
+    fontSize: Typography.fontSize.base,
+    color: AppColors.textSecondary,
+    fontWeight: Typography.fontWeight.medium,
+  },
+  // Error styles
+  errorContainer: {
+    marginHorizontal: Spacing.xl,
+    marginTop: Spacing.xl,
+    padding: Spacing.lg,
+    backgroundColor: '#FEE',
+    borderRadius: BorderRadius.xl,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: AppColors.error,
+  },
+  errorText: {
+    marginTop: Spacing.sm,
+    fontSize: Typography.fontSize.sm,
+    color: AppColors.error,
+    textAlign: 'center',
+    fontWeight: Typography.fontWeight.medium,
+  },
+  retryButton: {
+    marginTop: Spacing.md,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm,
+    backgroundColor: AppColors.error,
+    borderRadius: BorderRadius.md,
+  },
+  retryButtonText: {
+    color: '#FFF',
+    fontSize: Typography.fontSize.sm,
+    fontWeight: Typography.fontWeight.semibold,
+  },
+  // Result styles
+  resultContainer: {
+    marginHorizontal: Spacing.xl,
+    marginTop: Spacing.xl,
+  },
+  resultHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: AppColors.cardBackground,
+    padding: Spacing.lg,
+    borderRadius: BorderRadius.xl,
+    marginBottom: Spacing.md,
+    ...Shadows.sm,
+    borderWidth: 1,
+    borderColor: AppColors.border,
+  },
+  resultHeaderText: {
+    marginLeft: Spacing.md,
+    flex: 1,
+  },
+  resultTitle: {
+    fontSize: Typography.fontSize.xs,
+    color: AppColors.textSecondary,
+    fontWeight: Typography.fontWeight.semibold,
+    textTransform: 'uppercase',
+    letterSpacing: Typography.letterSpacing.wide,
+  },
+  matchedDish: {
+    fontSize: Typography.fontSize.lg,
+    color: AppColors.text,
+    fontWeight: Typography.fontWeight.bold,
+    marginTop: 2,
+  },
+  confidenceContainer: {
+    backgroundColor: AppColors.cardBackground,
+    padding: Spacing.lg,
+    borderRadius: BorderRadius.xl,
+    marginBottom: Spacing.md,
+    ...Shadows.sm,
+    borderWidth: 1,
+    borderColor: AppColors.border,
+  },
+  confidenceHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: Spacing.sm,
+    gap: Spacing.xs,
+  },
+  confidenceLabel: {
+    fontSize: Typography.fontSize.sm,
+    color: AppColors.textSecondary,
+    fontWeight: Typography.fontWeight.semibold,
+  },
+  confidenceBar: {
+    height: 8,
+    backgroundColor: AppColors.background,
+    borderRadius: BorderRadius.full,
+    overflow: 'hidden',
+    marginVertical: Spacing.sm,
+  },
+  confidenceFill: {
+    height: '100%',
+    borderRadius: BorderRadius.full,
+  },
+  confidenceValue: {
+    fontSize: Typography.fontSize.sm,
+    color: AppColors.text,
+    fontWeight: Typography.fontWeight.semibold,
+    textAlign: 'right',
+  },
+  macrosCard: {
+    backgroundColor: AppColors.cardBackground,
+    padding: Spacing.lg,
+    borderRadius: BorderRadius.xl,
+    marginBottom: Spacing.md,
+    ...Shadows.sm,
+    borderWidth: 1,
+    borderColor: AppColors.border,
+  },
+  macrosTitle: {
+    fontSize: Typography.fontSize.lg,
+    fontWeight: Typography.fontWeight.bold,
+    color: AppColors.text,
+    marginBottom: Spacing.md,
+  },
+  caloriesRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: Spacing.sm,
+  },
+  caloriesLabel: {
+    fontSize: Typography.fontSize.base,
+    fontWeight: Typography.fontWeight.semibold,
+    color: AppColors.text,
+  },
+  caloriesValue: {
+    fontSize: Typography.fontSize.xxl,
+    fontWeight: Typography.fontWeight.extrabold,
+    color: AppColors.accent,
+    fontFamily: 'CrimsonPro_700Bold',
+  },
+  macrosDivider: {
+    height: 1,
+    backgroundColor: AppColors.border,
+    marginVertical: Spacing.md,
+  },
+  macrosGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginVertical: Spacing.sm,
+  },
+  macroItem: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  macroLabel: {
+    fontSize: Typography.fontSize.xs,
+    color: AppColors.textSecondary,
+    marginTop: Spacing.xs,
+    fontWeight: Typography.fontWeight.medium,
+  },
+  macroValue: {
+    fontSize: Typography.fontSize.lg,
+    color: AppColors.text,
+    fontWeight: Typography.fontWeight.bold,
+    marginTop: 2,
+  },
+  micronutrientsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    flexWrap: 'wrap',
+  },
+  microItem: {
+    alignItems: 'center',
+    minWidth: 80,
+    marginVertical: Spacing.xs,
+  },
+  microLabel: {
+    fontSize: Typography.fontSize.xs,
+    color: AppColors.textSecondary,
+    fontWeight: Typography.fontWeight.medium,
+  },
+  microValue: {
+    fontSize: Typography.fontSize.sm,
+    color: AppColors.text,
+    fontWeight: Typography.fontWeight.semibold,
+    marginTop: 2,
+  },
+  explanationCard: {
+    backgroundColor: AppColors.cardBackground,
+    padding: Spacing.lg,
+    borderRadius: BorderRadius.xl,
+    ...Shadows.sm,
+    borderWidth: 1,
+    borderColor: AppColors.border,
+  },
+  explanationHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: Spacing.sm,
+    gap: Spacing.xs,
+  },
+  explanationTitle: {
+    fontSize: Typography.fontSize.base,
+    fontWeight: Typography.fontWeight.semibold,
+    color: AppColors.text,
+  },
+  explanationText: {
+    fontSize: Typography.fontSize.sm,
+    color: AppColors.textSecondary,
+    lineHeight: Typography.lineHeight.relaxed * Typography.fontSize.sm,
+    fontWeight: Typography.fontWeight.regular,
+  },
+  // Save button
+  saveButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: AppColors.accent,
+    paddingVertical: Spacing.lg,
+    paddingHorizontal: Spacing.xl,
+    borderRadius: BorderRadius.xl,
+    marginTop: Spacing.md,
+    gap: Spacing.sm,
+    ...Shadows.md,
+  },
+  saveButtonSaved: {
+    backgroundColor: AppColors.success,
+  },
+  saveButtonText: {
+    color: '#FFF',
+    fontSize: Typography.fontSize.base,
+    fontWeight: Typography.fontWeight.bold,
   },
 });

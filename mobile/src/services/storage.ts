@@ -18,6 +18,7 @@ const STORAGE_KEYS = {
   HISTORY_CACHE: '@nutrilabel_history_cache',
   EXPLORE_CACHE: '@nutrilabel_explore_cache',
   ONBOARDING_COMPLETE: '@nutrilabel_onboarding_complete',
+  FOOD_ENTRIES: '@nutrilabel_food_entries',
 } as const;
 
 // ============================================================================
@@ -188,6 +189,83 @@ export async function clearHistoryCache(): Promise<void> {
     console.log('🗑️ [Storage] History cache cleared');
   } catch (error) {
     console.error('❌ [Storage] Failed to clear history cache:', error);
+  }
+}
+
+// ============================================================================
+// FOOD ENTRIES PERSISTENCE
+// ============================================================================
+
+export interface StoredFoodEntry {
+  id: string;
+  foodName: string;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fats: number;
+  timestamp: string;
+  // Extended fields from label API
+  matchedDish?: string;
+  confidence?: number;
+  fiber?: number | null;
+  sugar?: number | null;
+  sodium?: number | null;
+}
+
+/**
+ * Save food entries to AsyncStorage
+ * 
+ * @param entries - Array of food entries to persist
+ */
+export async function saveFoodEntries(entries: StoredFoodEntry[]): Promise<void> {
+  try {
+    await AsyncStorage.setItem(
+      STORAGE_KEYS.FOOD_ENTRIES,
+      JSON.stringify({
+        data: entries,
+        savedAt: new Date().toISOString(),
+      })
+    );
+    console.log('📦 [Storage] Food entries saved:', entries.length, 'entries');
+  } catch (error) {
+    console.error('❌ [Storage] Failed to save food entries:', error);
+    throw error;
+  }
+}
+
+/**
+ * Load food entries from AsyncStorage
+ * 
+ * @returns Saved entries or empty array if none found
+ */
+export async function loadFoodEntries(): Promise<StoredFoodEntry[]> {
+  try {
+    const stored = await AsyncStorage.getItem(STORAGE_KEYS.FOOD_ENTRIES);
+    if (!stored) {
+      console.log('📦 [Storage] No food entries found');
+      return [];
+    }
+    
+    const { data, savedAt } = JSON.parse(stored);
+    console.log('📦 [Storage] Food entries loaded:', data.length, 'entries');
+    console.log('📦 [Storage] Last saved:', savedAt);
+    return data;
+  } catch (error) {
+    console.error('❌ [Storage] Failed to load food entries:', error);
+    return [];
+  }
+}
+
+/**
+ * Clear all food entries from storage
+ */
+export async function clearFoodEntries(): Promise<void> {
+  try {
+    await AsyncStorage.removeItem(STORAGE_KEYS.FOOD_ENTRIES);
+    console.log('🗑️ [Storage] Food entries cleared');
+  } catch (error) {
+    console.error('❌ [Storage] Failed to clear food entries:', error);
+    throw error;
   }
 }
 

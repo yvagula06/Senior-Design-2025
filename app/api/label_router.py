@@ -1,102 +1,136 @@
-from fastapi import APIRouter, HTTPException
+"""Nutrition Label API Router
+
+Mobile app endpoint for nutrition label generation:
+- Dish-level retrieval with pgvector (source of truth)
+- Deterministic calorie-aware scaling
+- Optional top-k aggregation for better accuracy
+- Confidence score [0,1] with explanation
+"""
+
+from fastapi import APIRouter, HTTPException, status
+import traceback
+
 from app.schemas.label import LabelRequest, LabelResponse, Nutrients, Candidate
 from app.services.retrieval_service import retrieve_candidates
+from app.services.mixture_service import compute_mixture
 from app.services.scaling_service import scale_nutrients
-from app.services.mixture_service import blend_candidates
-from app.services.rebalance_service import macro_rebalance
-from app.services.mixture_service import solve_weights
-from app.services.confidence_service import confidence
+from app.services.confidence_service import compute_confidence
 
-router = APIRouter()
 
-@router.post("", response_model=LabelResponse)
-def create_label(req: LabelRequest):
+router = APIRouter(
+    prefix="/label",
+    tags=["nutrition-labels"]
+)
+
+
+@router.post("", response_model=LabelResponse, status_code=status.HTTP_200_OK)
+def create_label(req: LabelRequest) -> LabelResponse:
+    """
+    Generate nutrition label for mobile app.
+    
+    Pipeline:
+    1. Retrieval: pgvector semantic search for similar dishes (source of truth)
+    2. Mixture: Optional top-k aggregation using similarity weights
+    3. Scaling: Deterministic calorie-aware portion adjustment
+    4. Confidence: Multi-factor score [0,1] with explanation
+    
+    Args:
+        req: LabelRequest with dish_name, optional calories, optional style, optional top_k
+    
+    Returns:
+        LabelResponse with matched_dish, nutrition dict, confidence, explanation
+    
+    Example:
+        POST /label
+        {"dish_name": "chicken tikka masala", "calories": 600}
+        
+        Response:
+        {
+            "matched_dish": "Chicken Tikka Masala",
+            "nutrition": {"calories": 600.0, "protein_g": 35.2, ...},
+            "confidence": 0.87,
+            "explanation": "Excellent match with consistent candidates"
+        }
+    """
     try:
-        fallback_nutrients = Nutrients(
-            calories=req.calories,
-            protein_g=req.calories * 0.05,
-            carbs_g=req.calories * 0.10,
-            fat_g=req.calories * 0.03,
-            fiber_g=req.calories * 0.01,
-            sugar_g=req.calories * 0.02,
-            sodium_mg=req.calories * 1.6
+        # Step 1: Retrieval - Get top-k similar dishes from database
+        query_text = _build_query_text(req.dish_name, req.style)
+        candidates_with_nutrients = retrieve_candidates(
+            dish_name=query_text,
+            k=5,  # Always retrieve top 5
+            similarity_threshold=0.3
         )
-
-        cands = retrieve_candidates(req.dish_name, req.top_k)
-
-        if not cands:
-            fallback_candidate = Candidate(dish_id="fallback", name=req.dish_name, sim=0.5, weight=1.0)
-            return LabelResponse(
-                nutrients=fallback_nutrients,
-                confidence=0.5,
-                assumptions="Fallback response - no matching dishes found.",
-                candidates=[fallback_candidate]
+        
+        # Handle no matches - return 404
+        if not candidates_with_nutrients:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="No matching dish found"
             )
-
-        best_cand, base_nut = cands[0]
-        base_kcal = base_nut.calories
-        base_macros = (base_nut.protein_g, base_nut.carbs_g, base_nut.fat_g)
-
-        rebalanced_macros = macro_rebalance(req.calories, *base_macros, priors=None)
-
-        macros = [
-            macro_rebalance(
-                req.calories,
-                cand_nut.protein_g,
-                cand_nut.carbs_g,
-                cand_nut.fat_g,
-                priors=None
+        
+        # Step 2: Mixture - Aggregate candidates (if top_k > 1)
+        base_nutrients = compute_mixture(candidates_with_nutrients)
+        
+        # Step 3: Scaling - Adjust for target calories
+        if req.target_calories is not None:
+            final_nutrients = scale_nutrients(
+                canonical_nutrients=base_nutrients,
+                target_calories=req.target_calories,
+                clamp=True
             )
-            for _, cand_nut in cands
-        ]
-
-        if req.use_mixture and len(cands) >= 2:
-            try:
-                weights = solve_weights(macros, rebalanced_macros)
-            except Exception:
-                weights = [1.0] + [0.0] * (len(cands) - 1)
+            scaling_factor = req.target_calories / base_nutrients.calories
         else:
-            weights = [1.0] + [0.0] * (len(cands) - 1)
-
-        final_nutrients = Nutrients(
-            calories=req.calories,
-            protein_g=sum(w * m[0] for w, m in zip(weights, macros)),
-            carbs_g=sum(w * m[1] for w, m in zip(weights, macros)),
-            fat_g=sum(w * m[2] for w, m in zip(weights, macros)),
-            fiber_g=sum(w * cand_nut.fiber_g for w, (_, cand_nut) in zip(weights, cands)),
-            sugar_g=sum(w * cand_nut.sugar_g for w, (_, cand_nut) in zip(weights, cands)),
-            sodium_mg=sum(w * cand_nut.sodium_mg for w, (_, cand_nut) in zip(weights, cands)),
+            final_nutrients = base_nutrients
+            scaling_factor = 1.0
+        
+        # Step 4: Confidence - Compute quality score
+        candidate_similarities = [cand.sim for cand, _ in candidates_with_nutrients]
+        candidate_calories = [nut.calories for _, nut in candidates_with_nutrients]
+        
+        confidence_result = compute_confidence(
+            top_similarity=candidate_similarities[0],
+            candidate_similarities=candidate_similarities,
+            candidate_calories=candidate_calories,
+            target_calories=req.target_calories or base_nutrients.calories,
+            scaling_factor=scaling_factor
         )
-
-        conf = confidence(best_cand.sim, weights, base_kcal, req.calories)
-
-        assumptions = "Rebalanced macros and weighted mixture applied."
+        
+        # Build mobile-friendly response
+        best_match = candidates_with_nutrients[0][0]
+        
         return LabelResponse(
-            nutrients=final_nutrients,
-            confidence=conf,
-            assumptions=assumptions,
-            candidates=[Candidate(dish_id=cand.dish_id, name=cand.name, sim=cand.sim, weight=w) for (cand, _), w in zip(cands, weights)]
+            matched_dish=best_match.name,
+            nutrition={
+                "calories": round(final_nutrients.calories, 1),
+                "protein_g": round(final_nutrients.protein_g, 1),
+                "carbs_g": round(final_nutrients.carbs_g, 1),
+                "fat_g": round(final_nutrients.fat_g, 1),
+                "sugar_g": round(final_nutrients.sugar_g, 1) if final_nutrients.sugar_g > 0 else None,
+                "fiber_g": round(final_nutrients.fiber_g, 1) if final_nutrients.fiber_g > 0 else None,
+                "sodium_mg": round(final_nutrients.sodium_mg, 0) if final_nutrients.sodium_mg > 0 else None,
+                "potassium_mg": None  # Not tracked in current schema, can add later
+            },
+            confidence=round(confidence_result.score, 2),
+            explanation=confidence_result.explanation
         )
+    
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid request: {str(e)}"
+        )
+    
     except Exception as e:
-        # Print full stack trace for debugging
-        import traceback
+        # Log error and return 500
         traceback.print_exc()
-
-        # Return fallback response during development
-        fallback_candidate = Candidate(dish_id="error", name=req.dish_name, sim=0.5, weight=1.0)
-        fallback_nutrients = Nutrients(
-            calories=req.calories,
-            protein_g=req.calories * 0.05,
-            carbs_g=req.calories * 0.10,
-            fat_g=req.calories * 0.03,
-            fiber_g=req.calories * 0.01,
-            sugar_g=req.calories * 0.02,
-            sodium_mg=req.calories * 1.6
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Internal server error: {str(e)}"
         )
 
-        return LabelResponse(
-            nutrients=fallback_nutrients,
-            confidence=0.5,
-            assumptions=f"Error processing request: {str(e)}",
-            candidates=[fallback_candidate]
-        )
+
+def _build_query_text(dish_name: str, style: str = None) -> str:
+    """Build query text with optional style hint."""
+    if style and style.strip():
+        return f"{style.strip().lower()} {dish_name.strip()}"
+    return dish_name.strip()

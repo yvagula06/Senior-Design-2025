@@ -64,6 +64,9 @@ node_modules/
 *.swo
 *.tmp
 *.orig
+*.old
+*.docx
+*.doc
 
 # Ignore secrets
 secrets.*

@@ -1,9 +1,22 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { FoodEntry, NutritionInfo } from '../types/nutrition';
+import { saveFoodEntries, loadFoodEntries, StoredFoodEntry } from '../services/storage';
 
 interface FoodContextType {
   foodEntries: FoodEntry[];
   addFoodEntry: (entry: NutritionInfo) => void;
+  addLabelEntry: (entry: {
+    dishName: string;
+    matchedDish: string;
+    calories: number;
+    protein: number;
+    carbs: number;
+    fats: number;
+    confidence: number;
+    fiber?: number | null;
+    sugar?: number | null;
+    sodium?: number | null;
+  }) => void;
   deleteFoodEntry: (id: string) => void;
   getTotals: () => {
     calories: number;
@@ -11,12 +24,64 @@ interface FoodContextType {
     carbs: number;
     fats: number;
   };
+  isLoading: boolean;
 }
 
 const FoodContext = createContext<FoodContextType | undefined>(undefined);
 
 export const FoodProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [foodEntries, setFoodEntries] = useState<FoodEntry[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Load entries from AsyncStorage on mount
+  useEffect(() => {
+    loadEntriesFromStorage();
+  }, []);
+
+  // Save entries to AsyncStorage whenever they change
+  useEffect(() => {
+    if (!isLoading) {
+      saveEntriesToStorage();
+    }
+  }, [foodEntries, isLoading]);
+
+  const loadEntriesFromStorage = async () => {
+    try {
+      const stored = await loadFoodEntries();
+      const entries: FoodEntry[] = stored.map((item: StoredFoodEntry) => ({
+        id: item.id,
+        foodName: item.foodName,
+        calories: item.calories,
+        protein: item.protein,
+        carbs: item.carbs,
+        fats: item.fats,
+      }));
+      setFoodEntries(entries);
+      console.log('✅ [FoodContext] Loaded', entries.length, 'entries from storage');
+    } catch (error) {
+      console.error('❌ [FoodContext] Failed to load entries:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const saveEntriesToStorage = async () => {
+    try {
+      const stored: StoredFoodEntry[] = foodEntries.map((entry) => ({
+        id: entry.id,
+        foodName: entry.foodName,
+        calories: entry.calories,
+        protein: entry.protein,
+        carbs: entry.carbs,
+        fats: entry.fats,
+        timestamp: new Date().toISOString(),
+      }));
+      await saveFoodEntries(stored);
+      console.log('✅ [FoodContext] Saved', stored.length, 'entries to storage');
+    } catch (error) {
+      console.error('❌ [FoodContext] Failed to save entries:', error);
+    }
+  };
 
   const addFoodEntry = (entry: NutritionInfo) => {
     const newEntry: FoodEntry = {
@@ -24,6 +89,30 @@ export const FoodProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       id: Date.now().toString(),
     };
     setFoodEntries((prev) => [...prev, newEntry]);
+  };
+
+  const addLabelEntry = (entry: {
+    dishName: string;
+    matchedDish: string;
+    calories: number;
+    protein: number;
+    carbs: number;
+    fats: number;
+    confidence: number;
+    fiber?: number | null;
+    sugar?: number | null;
+    sodium?: number | null;
+  }) => {
+    const newEntry: FoodEntry = {
+      id: Date.now().toString(),
+      foodName: entry.matchedDish || entry.dishName,
+      calories: entry.calories,
+      protein: entry.protein,
+      carbs: entry.carbs,
+      fats: entry.fats,
+    };
+    setFoodEntries((prev) => [...prev, newEntry]);
+    console.log('✅ [FoodContext] Added label entry:', newEntry.foodName);
   };
 
   const deleteFoodEntry = (id: string) => {
@@ -43,7 +132,7 @@ export const FoodProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   return (
-    <FoodContext.Provider value={{ foodEntries, addFoodEntry, deleteFoodEntry, getTotals }}>
+    <FoodContext.Provider value={{ foodEntries, addFoodEntry, addLabelEntry, deleteFoodEntry, getTotals, isLoading }}>
       {children}
     </FoodContext.Provider>
   );
