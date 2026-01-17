@@ -1,149 +1,390 @@
-# Quick Start Guide - Nutrition Estimator
+# NutriLabelAI - Complete Setup Walkthrough
 
-## 🚀 Get Started in 5 Minutes
+**Complete guide to get the entire app working from scratch**
 
-### Step 1: Start the Backend (Optional for now)
+---
 
-The mobile app can work independently, but for full image analysis features:
+## 📋 Prerequisites
+
+Before you begin, make sure you have:
+
+- ✅ **Docker Desktop** installed and running ([download](https://www.docker.com/products/docker-desktop))
+- ✅ **Node.js** (v18 or higher) ([download](https://nodejs.org/))
+- ✅ **Git** for cloning the repository
+- ✅ **Expo Go** app on your phone:
+  - [iOS App Store](https://apps.apple.com/app/expo-go/id982107779)
+  - [Google Play Store](https://play.google.com/store/apps/details?id=host.exp.exponent)
+
+---
+
+## 🚀 Complete Setup (First Time)
+
+### Step 1: Clone the Repository
 
 ```bash
-# In the project root
-docker-compose up -d --build
-docker-compose exec api alembic upgrade head
-docker-compose exec api python -m scripts.ingest_seed data/seed_dishes.csv
-docker-compose exec api python -m scripts.embed_dishes
+git clone https://github.com/yvagula06/Senior-Design-2025.git
+cd Senior-Design-2025
 ```
 
-### Step 2: Run the Mobile App
+### Step 2: Start the Backend
+
+```bash
+# Start Docker containers (PostgreSQL + FastAPI)
+docker-compose up -d --build
+```
+
+Wait for containers to be healthy (about 30 seconds). Check status:
+```bash
+docker ps
+```
+
+You should see both `nutrition_db` and `nutrition_api` running.
+
+### Step 3: Set Up the Database
+
+**Create the schema:**
+```bash
+docker-compose exec api alembic upgrade head
+```
+
+**Populate with 516 dishes (takes 2-3 minutes):**
+```bash
+docker exec -it nutrition_api python /app/scripts/ingest_comprehensive.py
+```
+
+You should see:
+```
+✅ INGESTION COMPLETE
+📊 Total dishes inserted: 516
+   • Dishes in database: 516
+   • Variants created: 778
+```
+
+### Step 4: Configure Mobile App API
+
+**Find your computer's IP address:**
+- **Windows:** Open PowerShell and run `ipconfig` (look for IPv4 Address like `192.168.1.x`)
+- **Mac/Linux:** Run `ifconfig` or `ip addr` (look for your local network IP)
+
+**Update the mobile app configuration:**
+
+Open `mobile/src/services/api.ts` and update line 11 with your IP:
+```typescript
+if (Platform.OS === 'ios' && isDevice) {
+  return 'http://YOUR_IP_ADDRESS:8000';  // ← Change this to your IP
+}
+```
+
+Example: `return 'http://192.168.1.191:8000';`
+
+**Important:** Your phone and computer must be on the same WiFi network!
+
+### Step 5: Install Mobile Dependencies
 
 ```bash
 cd mobile
 npm install
+```
+
+### Step 6: Start the Mobile App
+
+```bash
 npm start
 ```
 
-### Step 3: Open on Your Phone
+Wait for the QR code to appear in your terminal.
 
-1. **Install Expo Go** on your phone:
-   - [iOS App Store](https://apps.apple.com/app/expo-go/id982107779)
-   - [Google Play Store](https://play.google.com/store/apps/details?id=host.exp.exponent)
+### Step 7: Open on Your Phone
 
-2. **Scan the QR code** shown in your terminal
-   - iOS: Use Camera app
-   - Android: Use Expo Go app
+1. Open **Expo Go** app on your phone
+2. **iOS:** Use Camera app to scan the QR code
+3. **Android:** Use Expo Go's built-in scanner to scan the QR code
+4. Wait for the app to load (first time takes ~30 seconds)
 
-3. **Start tracking!**
+---
+
+## ✅ Verify Everything Works
+
+### Test Backend (from your computer)
+
+```bash
+# Health check
+curl http://localhost:8000/health
+
+# Test label generation
+curl -X POST http://localhost:8000/label ^
+  -H "Content-Type: application/json" ^
+  -d "{\"dish_name\": \"pizza\"}"
+```
+
+### Test Mobile App
+
+1. Open the app on your phone
+2. Go to the **Label** tab
+3. Type "pizza" in the search box
+4. Tap **Generate Label**
+5. You should see nutrition information appear within 2-3 seconds
+
+If it works, you're all set! 🎉
+
+---
+
+## 🔄 Daily Development Workflow
+
+Once everything is set up, you only need:
+
+### Start Backend
+```bash
+cd Senior-Design-2025
+docker-compose up -d
+```
+
+### Start Mobile App
+```bash
+cd mobile
+npm start
+```
+
+**Note:** Database persists between restarts, so you don't need to repopulate it!
+
+---
+
+## 🛑 Stopping the App
+
+### Stop Mobile App
+Press `Ctrl+C` in the terminal running `npm start`
+
+### Stop Backend
+```bash
+docker-compose down
+```
+
+To remove database data (start fresh):
+```bash
+docker-compose down -v
+```
 
 ## 📱 Using the App
 
-### Add Entry Tab
-- **Manual Entry**: Fill in food name and macros, tap "Save Food Entry"
-- **Camera Entry**: Tap the camera icon, take a photo, verify the analysis
+### Label Tab - Generate Nutrition Labels
+1. Tap the **Label** tab at the bottom
+2. Type a dish name (e.g., "chicken tikka masala", "Big Mac", "fettuccine alfredo")
+3. Optionally enter target calories
+4. Tap **Generate Label**
+5. View complete nutrition breakdown with confidence score
 
-### Daily Consumer Tab
-- View your daily nutrition totals in the green card
-- See all food entries below
-- Tap the delete icon to remove entries
+The app searches through 516 dishes to find the best match!
 
-### Drawer Menu
-- Swipe from the left edge or tap the menu icon
-- Access About and Help sections
+### History Tab - Track Your Meals
+- View previously generated labels
+- Access your meal history
+- Track nutrition over time
 
-## 🛠️ Development Tips
+### Explore Tab - Browse Dishes
+- Discover available dishes
+- Search the database
+- Find nutrition info quickly
+
+### Profile Tab - Your Settings
+- Manage your preferences
+- View app information
+- Customize your experience
+
+---
+
+## 🛠️ Development & Customization
 
 ### Running on Emulator/Simulator
 
 **Android Emulator:**
 ```bash
+cd mobile
 npm run android
 ```
 
 **iOS Simulator (macOS only):**
 ```bash
+cd mobile
 npm run ios
 ```
 
 **Web Browser:**
 ```bash
+cd mobile
 npm run web
 ```
 
-### Connecting to Local Backend
+### API Endpoint Configuration
 
-When testing with your local FastAPI backend on a physical device:
+The app automatically detects your device type and uses the correct API URL:
+- **iOS Physical Device:** Uses IP address in `api.ts`
+- **Android Emulator:** Uses `10.0.2.2:8000` (auto-mapped to localhost)
+- **iOS Simulator:** Uses `localhost:8000`
 
-1. Find your computer's IP address:
-   - Windows: `ipconfig` (look for IPv4 Address)
-   - Mac/Linux: `ifconfig` or `ip addr`
-
-2. Update `mobile/src/services/api.ts`:
-   ```typescript
-   const API_BASE_URL = 'http://YOUR_IP_ADDRESS:8000';
-   // Example: 'http://192.168.1.100:8000'
-   ```
-
-3. Make sure your phone and computer are on the same WiFi network
-
-### Hot Reload
-
-The app supports hot reload - just save your files and see changes instantly!
-
-## 🎨 Customization
-
-### Change Colors
-
-Edit `mobile/src/theme/colors.ts`:
-
+To change the IP for physical devices, edit `mobile/src/services/api.ts`:
 ```typescript
-export const AppColors = {
-  background: '#F9FBE7',  // Change these!
-  primary: '#81C784',
-  accent: '#4CAF50',
-  text: '#2E2E2E',
-};
+if (Platform.OS === 'ios' && isDevice) {
+  return 'http://YOUR_IP_ADDRESS:8000';
+}
 ```
 
-### Modify API Endpoint
+### Hot Reload & Developer Tools
 
-Edit `mobile/src/services/api.ts`:
+- **Hot Reload:** Save any file to see changes instantly
+- **Reload App:** Shake your phone or press `r` in terminal
+- **Developer Menu:** Shake your phone to open
+- **Chrome DevTools:** Press `j` in terminal
+- **Element Inspector:** Press `i` in terminal
 
-```typescript
-const API_BASE_URL = 'YOUR_API_URL_HERE';
-```
+---
 
 ## ❓ Troubleshooting
 
-**"Unable to connect to server"**
-- Make sure you ran `npm start` in the mobile directory
-- Check if Expo Go is up to date
+### Backend Issues
 
-**Camera not working**
-- Grant camera permissions when prompted
-- Make sure you're testing on a physical device (not web)
+**Containers won't start:**
+```bash
+# Check Docker is running
+docker ps
 
-**Backend connection issues**
-- Use your computer's IP address, not `localhost`
-- Ensure both devices are on the same network
-- Check if backend is running: `http://YOUR_IP:8000/health`
+# View logs
+docker-compose logs
 
-**Module not found errors**
+# Restart containers
+docker-compose down
+docker-compose up -d --build
+```
+
+**Database is empty:**
+```bash
+# Re-run the ingestion script
+docker exec -it nutrition_api python /app/scripts/ingest_comprehensive.py
+```
+
+**Backend not responding:**
+```bash
+# Check health endpoint
+curl http://localhost:8000/health
+
+# View API logs
+docker logs nutrition_api
+
+# Restart API container
+docker restart nutrition_api
+```
+
+### Mobile App Issues
+
+**"Network Error" or "Unable to connect":**
+- ✅ Check backend is running: `docker ps`
+- ✅ Verify your IP address is correct in `api.ts`
+- ✅ Ensure phone and computer are on same WiFi
+- ✅ Test backend manually: `curl http://YOUR_IP:8000/health`
+- ✅ Disable VPN or firewall temporarily
+
+**App won't load on phone:**
+- ✅ Make sure Expo Go is installed and up to date
+- ✅ Check that `npm start` is running
+- ✅ Try pressing `r` in terminal to reload
+- ✅ Close and reopen Expo Go app
+
+**Module not found errors:**
 ```bash
 cd mobile
-rm -rf node_modules
+rm -rf node_modules package-lock.json
 npm install
 ```
 
-## 📚 Next Steps
+**Metro bundler issues:**
+```bash
+cd mobile
+npx expo start --clear
+```
 
-- Read the full docs: `mobile/README.md`
-- Explore the backend API: `http://localhost:8000/docs`
-- Check out the codebase structure in the main `README.md`
+### Connection Testing
+
+**Test backend from your computer:**
+```bash
+# Windows PowerShell
+Invoke-WebRequest http://localhost:8000/health
+
+# Windows CMD or Mac/Linux
+curl http://localhost:8000/health
+```
+
+**Test backend from your phone's network:**
+```bash
+curl http://YOUR_IP_ADDRESS:8000/health
+```
+
+If this fails, check your firewall settings.
+
+---
+
+## 🗄️ Database Information
+
+**Database Details:**
+- **Location:** Docker container `nutrition_db`
+- **Type:** PostgreSQL 16 with pgvector extension
+- **Contents:** 516 dishes with 778 searchable variants
+- **Persistence:** Data persists between container restarts
+
+**View database contents:**
+```bash
+# Connect to database
+docker exec -it nutrition_db psql -U postgres -d nutrition
+
+# Query dishes
+SELECT COUNT(*) FROM dishes;
+SELECT name, calories FROM dishes LIMIT 10;
+
+# Exit
+\q
+```
+
+**Reset database (start fresh):**
+```bash
+docker-compose down -v
+docker-compose up -d
+docker-compose exec api alembic upgrade head
+docker exec -it nutrition_api python /app/scripts/ingest_comprehensive.py
+```
+
+---
+
+## 📚 Additional Resources
+
+- **Backend API Documentation:** Visit `http://localhost:8000/docs` while backend is running
+- **Mobile App Architecture:** See `mobile/README.md`
+- **Repository Overview:** See main `README.md`
+- **Data Sources:** See `DATASET_PLAN.md`
+- **API Integration:** See `MOBILE_INTEGRATION.md`
+
+---
 
 ## 💡 Pro Tips
 
-1. **Use Expo Go for quick testing** - no need to build native apps
-2. **Enable Shake Gesture** - shake your phone to open the developer menu
-3. **Use Chrome DevTools** - press `j` in the terminal to debug
-4. **Live Reload** - press `r` in the terminal to reload the app
+1. **Backend First:** Always start the backend before testing label generation
+2. **IP Address Changes:** If your IP changes (different WiFi), update `api.ts`
+3. **Database Persistence:** Database survives restarts, no need to repopulate
+4. **Fast Reload:** Use `r` in terminal instead of restarting app
+5. **Live Logs:** Watch backend logs: `docker logs -f nutrition_api`
+6. **API Testing:** Use FastAPI docs at `http://localhost:8000/docs` for testing
 
-Happy coding! 🎉
+---
+
+## 🎯 Next Steps
+
+After setup:
+- ✅ Try generating labels for different dishes
+- ✅ Explore the 516 dishes in the database
+- ✅ Test with various calorie targets
+- ✅ Check confidence scores for different queries
+- ✅ Browse the API documentation
+
+**Need help?** Check the troubleshooting section above or view backend logs:
+```bash
+docker logs nutrition_api
+```
+
+Happy tracking! 🎉
