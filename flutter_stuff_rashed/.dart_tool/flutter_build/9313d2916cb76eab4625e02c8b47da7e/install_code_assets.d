@@ -1,0 +1,1 @@
+ /Users/nhatle/NutritionFactApp/Senior-Design-2025/flutter_stuff_rashed/.dart_tool/flutter_build/9313d2916cb76eab4625e02c8b47da7e/native_assets.json: 

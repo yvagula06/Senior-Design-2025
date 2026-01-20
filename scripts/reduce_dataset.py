@@ -5,8 +5,8 @@ import pandas as pd
 from pathlib import Path
 
 # Paths
-input_file = Path(r"C:\Users\Yuvar\Desktop\VSProjects\Senior-Design-2025\data\usda_branded_foods.csv")
-output_file = Path(r"C:\Users\Yuvar\Desktop\VSProjects\Senior-Design-2025\data\usda_branded_foods_reduced.csv")
+input_file = Path("/Users/nhatle/NutritionFactApp/Senior-Design-2025/data/usda_branded_foods.csv")
+output_file = Path("/Users/nhatle/NutritionFactApp/Senior-Design-2025/data/usda_branded_foods.csv")
 
 print(f"Reading dataset from: {input_file}")
 df = pd.read_csv(input_file)
