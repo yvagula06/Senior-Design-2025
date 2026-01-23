@@ -77,7 +77,7 @@ export const ProfileScreen: React.FC = () => {
   const handleAboutPress = () => {
     Alert.alert(
       'About NutriLabelAI',
-      'NutriLabelAI is an intelligent nutrition analysis app that helps you understand the nutritional content of your meals.\n\nVersion 1.0.0\nDeveloped by Senior Design Team 2025',
+      'NutriLabelAI is an intelligent nutrition analysis app that helps you understand the nutritional content of your meals.\n\nVersion 1.0.0\n\nDeveloped by:\nRaj, Rached, Nhat, Matthew\n\nSenior Design Team 2025',
       [{ text: 'OK' }]
     );
   };
