@@ -148,43 +148,89 @@ export const LabelResultScreen: React.FC = () => {
     navigation.goBack();
   };
 
+  // Helper to get confidence color and label
+  const getConfidenceColor = () => {
+    if (confidence > 80) return AppColors.success;
+    if (confidence > 60) return AppColors.warning;
+    return AppColors.error;
+  };
+
+  const getConfidenceLabel = () => {
+    if (confidence > 80) return 'High Confidence';
+    if (confidence > 60) return 'Medium Confidence';
+    return 'Low Confidence';
+  };
+
   return (
     <ScrollView 
       style={styles.container}
       contentContainerStyle={styles.scrollContent}
       showsVerticalScrollIndicator={false}
     >
-      {/* Dish Name Header */}
+      {/* Dish Name Header with Confidence Badge */}
       <View style={styles.headerCard}>
         <Text style={styles.dishName}>{dishName}</Text>
+        <View style={[styles.confidenceBadge, { backgroundColor: getConfidenceColor() }]}>
+          <MaterialCommunityIcons name="shield-check" size={16} color={AppColors.white} />
+          <Text style={styles.confidenceBadgeText}>
+            {confidence}% · {getConfidenceLabel()}
+          </Text>
+        </View>
       </View>
 
-      {/* Confidence Bar */}
-      <ConfidenceBar confidence={confidence} showDetails={true} />
+      {/* HERO SECTION - Calories */}
+      <View style={styles.heroSection}>
+        <MaterialCommunityIcons name="fire" size={48} color={AppColors.primary} />
+        <Text style={styles.heroValue}>{nutritionData.calories}</Text>
+        <Text style={styles.heroLabel}>CALORIES</Text>
+      </View>
 
-      {/* Summary Panel */}
-      <View style={styles.summaryPanel}>
-        <Text style={styles.summaryTitle}>Quick Summary</Text>
-        <View style={styles.summaryGrid}>
-          <View style={styles.summaryItem}>
-            <MaterialCommunityIcons name="fire" size={24} color={AppColors.accent} />
-            <Text style={styles.summaryValue}>{nutritionData.calories}</Text>
-            <Text style={styles.summaryLabel}>Calories</Text>
+      {/* MACRO GROUPING - Protein, Carbs, Fat */}
+      <View style={styles.macroSection}>
+        <Text style={styles.sectionTitle}>Macronutrients</Text>
+        <View style={styles.macroGrid}>
+          <View style={styles.macroCard}>
+            <MaterialCommunityIcons name="food-steak" size={32} color={AppColors.accent} />
+            <Text style={styles.macroValue}>{nutritionData.protein}g</Text>
+            <Text style={styles.macroLabel}>Protein</Text>
           </View>
-          <View style={styles.summaryItem}>
-            <MaterialCommunityIcons name="food-steak" size={24} color={AppColors.accent} />
-            <Text style={styles.summaryValue}>{nutritionData.protein}g</Text>
-            <Text style={styles.summaryLabel}>Protein</Text>
+          <View style={styles.macroCard}>
+            <MaterialCommunityIcons name="barley" size={32} color={AppColors.warning} />
+            <Text style={styles.macroValue}>{nutritionData.totalCarbohydrate}g</Text>
+            <Text style={styles.macroLabel}>Carbs</Text>
           </View>
-          <View style={styles.summaryItem}>
-            <MaterialCommunityIcons name="bread-slice" size={24} color={AppColors.accent} />
-            <Text style={styles.summaryValue}>{nutritionData.totalCarbohydrate}g</Text>
-            <Text style={styles.summaryLabel}>Carbs</Text>
+          <View style={styles.macroCard}>
+            <MaterialCommunityIcons name="water" size={32} color={AppColors.info} />
+            <Text style={styles.macroValue}>{nutritionData.totalFat}g</Text>
+            <Text style={styles.macroLabel}>Fat</Text>
           </View>
-          <View style={styles.summaryItem}>
-            <MaterialCommunityIcons name="water" size={24} color={AppColors.accent} />
-            <Text style={styles.summaryValue}>{nutritionData.totalFat}g</Text>
-            <Text style={styles.summaryLabel}>Fat</Text>
+        </View>
+      </View>
+
+      {/* SECONDARY STATS - Micronutrients */}
+      <View style={styles.microSection}>
+        <Text style={styles.sectionTitle}>Micronutrients</Text>
+        <View style={styles.microList}>
+          <View style={styles.microRow}>
+            <View style={styles.microIcon}>
+              <MaterialCommunityIcons name="grain" size={20} color={AppColors.textSecondary} />
+            </View>
+            <Text style={styles.microName}>Dietary Fiber</Text>
+            <Text style={styles.microValue}>{nutritionData.dietaryFiber}g</Text>
+          </View>
+          <View style={styles.microRow}>
+            <View style={styles.microIcon}>
+              <MaterialCommunityIcons name="cube-outline" size={20} color={AppColors.textSecondary} />
+            </View>
+            <Text style={styles.microName}>Total Sugars</Text>
+            <Text style={styles.microValue}>{nutritionData.totalSugars}g</Text>
+          </View>
+          <View style={styles.microRow}>
+            <View style={styles.microIcon}>
+              <MaterialCommunityIcons name="shaker-outline" size={20} color={AppColors.textSecondary} />
+            </View>
+            <Text style={styles.microName}>Sodium</Text>
+            <Text style={styles.microValue}>{nutritionData.sodium}mg</Text>
           </View>
         </View>
       </View>
@@ -247,48 +293,134 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.xxl,
   },
   headerCard: {
-    backgroundColor: AppColors.white,
+    backgroundColor: AppColors.cardBackground,
     borderRadius: BorderRadius.lg,
     padding: Spacing.lg,
     marginBottom: Spacing.md,
     ...Shadows.md,
+    alignItems: 'center',
   },
   dishName: {
     fontSize: Typography.fontSize.xxl,
     fontWeight: Typography.fontWeight.bold,
-    color: AppColors.darkGray,
+    color: AppColors.text,
     textAlign: 'center',
+    marginBottom: Spacing.sm,
   },
-  summaryPanel: {
-    backgroundColor: AppColors.white,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.lg,
-    marginVertical: Spacing.md,
-    ...Shadows.md,
-  },
-  summaryTitle: {
-    fontSize: Typography.fontSize.lg,
-    fontWeight: Typography.fontWeight.bold,
-    color: AppColors.darkGray,
-    marginBottom: Spacing.md,
-  },
-  summaryGrid: {
+  confidenceBadge: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-  },
-  summaryItem: {
     alignItems: 'center',
     gap: Spacing.xs,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xs,
+    borderRadius: BorderRadius.full,
   },
-  summaryValue: {
+  confidenceBadgeText: {
+    fontSize: Typography.fontSize.sm,
+    fontWeight: Typography.fontWeight.semibold,
+    color: AppColors.white,
+  },
+  // HERO SECTION - Calories
+  heroSection: {
+    backgroundColor: AppColors.cardBackground,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.xl,
+    marginBottom: Spacing.md,
+    alignItems: 'center',
+    ...Shadows.md,
+  },
+  heroValue: {
+    fontSize: 72,
+    fontWeight: Typography.fontWeight.bold,
+    color: AppColors.primary,
+    marginTop: Spacing.sm,
+    lineHeight: 80,
+  },
+  heroLabel: {
+    fontSize: Typography.fontSize.md,
+    fontWeight: Typography.fontWeight.semibold,
+    color: AppColors.textSecondary,
+    letterSpacing: 2,
+    marginTop: Spacing.xs,
+  },
+  // MACRO SECTION
+  macroSection: {
+    backgroundColor: AppColors.cardBackground,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.lg,
+    marginBottom: Spacing.md,
+    ...Shadows.md,
+  },
+  sectionTitle: {
+    fontSize: Typography.fontSize.lg,
+    fontWeight: Typography.fontWeight.bold,
+    color: AppColors.text,
+    marginBottom: Spacing.md,
+  },
+  macroGrid: {
+    flexDirection: 'row',
+    gap: Spacing.md,
+  },
+  macroCard: {
+    flex: 1,
+    backgroundColor: AppColors.background,
+    borderRadius: BorderRadius.md,
+    padding: Spacing.md,
+    alignItems: 'center',
+    gap: Spacing.xs,
+    borderWidth: 1,
+    borderColor: AppColors.border,
+  },
+  macroValue: {
     fontSize: Typography.fontSize.xl,
     fontWeight: Typography.fontWeight.bold,
-    color: AppColors.darkGray,
+    color: AppColors.text,
   },
-  summaryLabel: {
+  macroLabel: {
     fontSize: Typography.fontSize.xs,
-    color: AppColors.mediumGray,
+    fontWeight: Typography.fontWeight.medium,
+    color: AppColors.textSecondary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
+  // MICRO SECTION
+  microSection: {
+    backgroundColor: AppColors.cardBackground,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.lg,
+    marginBottom: Spacing.md,
+    ...Shadows.md,
+  },
+  microList: {
+    gap: Spacing.sm,
+  },
+  microRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+    backgroundColor: AppColors.background,
+    borderRadius: BorderRadius.sm,
+    borderWidth: 1,
+    borderColor: AppColors.border,
+  },
+  microIcon: {
+    width: 32,
+    alignItems: 'center',
+    marginRight: Spacing.sm,
+  },
+  microName: {
+    flex: 1,
+    fontSize: Typography.fontSize.md,
+    fontWeight: Typography.fontWeight.medium,
+    color: AppColors.text,
+  },
+  microValue: {
+    fontSize: Typography.fontSize.md,
+    fontWeight: Typography.fontWeight.bold,
+    color: AppColors.textSecondary,
+  },
+  // ACTION BUTTONS
   actionButtons: {
     flexDirection: 'row',
     gap: Spacing.md,
@@ -316,7 +448,7 @@ const styles = StyleSheet.create({
     color: AppColors.white,
   },
   newSearchButton: {
-    backgroundColor: AppColors.white,
+    backgroundColor: AppColors.cardBackground,
     borderWidth: 2,
     borderColor: AppColors.accent,
   },

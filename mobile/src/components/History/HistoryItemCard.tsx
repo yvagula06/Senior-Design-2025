@@ -69,62 +69,66 @@ export const HistoryItemCard: React.FC<HistoryItemCardProps> = ({ item, onPress 
       activeOpacity={0.7}
     >
       <View style={styles.cardContent}>
-        {/* Left Section */}
-        <View style={styles.leftSection}>
-          {/* Favorite Star */}
-          {item.isFavorite && (
-            <MaterialCommunityIcons
-              name="star"
-              size={16}
-              color={AppColors.warning}
-              style={styles.favoriteIcon}
-            />
-          )}
-
-          {/* Dish Name */}
-          <Text style={styles.dishName} numberOfLines={1}>
-            {item.dishName}
-          </Text>
-
-          {/* Metadata Row */}
-          <View style={styles.metadataRow}>
-            <MaterialCommunityIcons
-              name="calendar"
-              size={14}
-              color={AppColors.mediumGray}
-            />
-            <Text style={styles.dateText}>{formatDate(item.date)}</Text>
-
-            <MaterialCommunityIcons
-              name={getPrepStyleIcon()}
-              size={14}
-              color={AppColors.mediumGray}
-              style={styles.prepIcon}
-            />
-            <Text style={styles.prepText}>
-              {item.prepStyle === 'home' ? 'Home' : item.prepStyle === 'restaurant' ? 'Restaurant' : 'Unknown'}
+        {/* Top Row - Dish Name and Confidence */}
+        <View style={styles.topRow}>
+          <View style={styles.dishNameContainer}>
+            {item.isFavorite && (
+              <MaterialCommunityIcons
+                name="star"
+                size={20}
+                color={AppColors.warning}
+                style={styles.favoriteIcon}
+              />
+            )}
+            <Text style={styles.dishName} numberOfLines={2}>
+              {item.dishName}
             </Text>
+          </View>
+          <View style={[styles.confidenceBadge, { backgroundColor: getConfidenceColor() }]}>
+            <MaterialCommunityIcons name="shield-check" size={14} color="#FFF" />
+            <Text style={styles.confidenceText}>{item.confidence}%</Text>
           </View>
         </View>
 
-        {/* Right Section */}
-        <View style={styles.rightSection}>
-          {/* Calories */}
-          <View style={styles.caloriesContainer}>
-            <Text style={styles.caloriesValue}>{item.calories}</Text>
-            <Text style={styles.caloriesLabel}>cal</Text>
+        {/* Bottom Row - Calories, Date, Prep Style */}
+        <View style={styles.bottomRow}>
+          {/* Calories - Most Prominent */}
+          <View style={styles.caloriesSection}>
+            <MaterialCommunityIcons name="fire" size={24} color={AppColors.accent} />
+            <View style={styles.caloriesTextContainer}>
+              <Text style={styles.caloriesValue}>{item.calories}</Text>
+              <Text style={styles.caloriesLabel}>calories</Text>
+            </View>
           </View>
 
-          {/* Confidence Badge */}
-          <View style={[styles.confidenceBadge, { backgroundColor: getConfidenceColor() }]}>
-            <Text style={styles.confidenceText}>{item.confidence}%</Text>
+          {/* Date and Prep Style */}
+          <View style={styles.metadataSection}>
+            <View style={styles.metadataRow}>
+              <MaterialCommunityIcons
+                name="calendar-outline"
+                size={16}
+                color={AppColors.textTertiary}
+              />
+              <Text style={styles.dateText}>{formatDate(item.date)}</Text>
+            </View>
+            <View style={styles.metadataRow}>
+              <MaterialCommunityIcons
+                name={getPrepStyleIcon()}
+                size={16}
+                color={AppColors.textTertiary}
+              />
+              <Text style={styles.prepText}>
+                {item.prepStyle === 'home' ? 'Home' : item.prepStyle === 'restaurant' ? 'Restaurant' : 'Unknown'}
+              </Text>
+            </View>
           </View>
 
           {/* Chevron */}
           <MaterialCommunityIcons
             name="chevron-right"
-            size={24}
-            color={AppColors.mediumGray}
+            size={28}
+            color={AppColors.textTertiary}
+            style={styles.chevron}
           />
         </View>
       </View>
@@ -135,32 +139,80 @@ export const HistoryItemCard: React.FC<HistoryItemCardProps> = ({ item, onPress 
 const styles = StyleSheet.create({
   card: {
     backgroundColor: AppColors.cardBackground,
-    borderRadius: BorderRadius.lg,
+    borderRadius: BorderRadius.xl,
     marginHorizontal: Spacing.lg,
     marginBottom: Spacing.md,
-    ...Shadows.md,
+    ...Shadows.lg,
     borderWidth: 1,
     borderColor: AppColors.border,
   },
   cardContent: {
-    flexDirection: 'row',
-    padding: Spacing.md,
-    alignItems: 'center',
+    padding: Spacing.lg,
   },
-  leftSection: {
+  topRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    marginBottom: Spacing.md,
+  },
+  dishNameContainer: {
     flex: 1,
-    marginRight: Spacing.md,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginRight: Spacing.sm,
   },
   favoriteIcon: {
-    position: 'absolute',
-    top: -2,
-    left: -2,
+    marginRight: Spacing.xs,
+    marginTop: 2,
   },
   dishName: {
-    fontSize: Typography.fontSize.lg,
-    fontWeight: Typography.fontWeight.semibold,
+    flex: 1,
+    fontSize: Typography.fontSize.xl,
+    fontWeight: Typography.fontWeight.bold,
     color: AppColors.text,
-    marginBottom: Spacing.xs,
+    lineHeight: Typography.lineHeight.tight * Typography.fontSize.xl,
+  },
+  confidenceBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs / 2,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xs,
+    borderRadius: BorderRadius.full,
+  },
+  confidenceText: {
+    fontSize: Typography.fontSize.xs,
+    fontWeight: Typography.fontWeight.bold,
+    color: '#FFF',
+  },
+  bottomRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  caloriesSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+  caloriesTextContainer: {
+    flexDirection: 'column',
+  },
+  caloriesValue: {
+    fontSize: Typography.fontSize.xxl,
+    fontWeight: Typography.fontWeight.extrabold,
+    color: AppColors.accent,
+    lineHeight: Typography.fontSize.xxl * 1.1,
+  },
+  caloriesLabel: {
+    fontSize: Typography.fontSize.xs,
+    color: AppColors.textSecondary,
+    fontWeight: Typography.fontWeight.medium,
+  },
+  metadataSection: {
+    flex: 1,
+    marginLeft: Spacing.md,
+    gap: Spacing.xs / 2,
   },
   metadataRow: {
     flexDirection: 'row',
@@ -170,39 +222,14 @@ const styles = StyleSheet.create({
   dateText: {
     fontSize: Typography.fontSize.sm,
     color: AppColors.textTertiary,
-  },
-  prepIcon: {
-    marginLeft: Spacing.sm,
+    fontWeight: Typography.fontWeight.medium,
   },
   prepText: {
     fontSize: Typography.fontSize.sm,
     color: AppColors.textTertiary,
+    fontWeight: Typography.fontWeight.medium,
   },
-  rightSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-  },
-  caloriesContainer: {
-    alignItems: 'center',
-  },
-  caloriesValue: {
-    fontSize: Typography.fontSize.lg,
-    fontWeight: Typography.fontWeight.bold,
-    color: AppColors.text,
-  },
-  caloriesLabel: {
-    fontSize: Typography.fontSize.xs,
-    color: AppColors.mediumGray,
-  },
-  confidenceBadge: {
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: Spacing.xs / 2,
-    borderRadius: BorderRadius.md,
-  },
-  confidenceText: {
-    fontSize: Typography.fontSize.xs,
-    fontWeight: Typography.fontWeight.bold,
-    color: AppColors.white,
+  chevron: {
+    marginLeft: Spacing.xs,
   },
 });

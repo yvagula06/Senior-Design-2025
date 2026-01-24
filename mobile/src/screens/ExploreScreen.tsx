@@ -25,6 +25,7 @@ export const ExploreScreen: React.FC = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearch, setShowSearch] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState('All');
   const [restaurantDishes, setRestaurantDishes] = useState<DishCardData[]>([]);
   const [homeCookedMeals, setHomeCookedMeals] = useState<DishCardData[]>([]);
   const [allDishes, setAllDishes] = useState<DishCardData[]>([]);
@@ -32,6 +33,9 @@ export const ExploreScreen: React.FC = () => {
   // Animation values
   const searchBarHeight = useRef(new Animated.Value(0)).current;
   const searchBarOpacity = useRef(new Animated.Value(0)).current;
+  
+  // Categories for filtering
+  const categories = ['All', 'High Protein', 'Vegetarian', 'Keto', 'Spicy', 'Low Carb'];
 
   /**
    * Load featured dishes from backend or cache
@@ -124,6 +128,46 @@ export const ExploreScreen: React.FC = () => {
         setSearchQuery('');
       });
     }
+  };
+
+  // Filter dishes based on search query and category
+  const filterDishesByCategory = (dishes: DishCardData[]) => {
+    let filtered = dishes;
+
+    // Filter by category
+    if (selectedCategory !== 'All') {
+      filtered = filtered.filter(dish => {
+        switch (selectedCategory) {
+          case 'High Protein':
+            return (dish.estimatedProtein || 0) >= 30;
+          case 'Vegetarian':
+            return !dish.name.toLowerCase().includes('chicken') && 
+                   !dish.name.toLowerCase().includes('beef') &&
+                   !dish.name.toLowerCase().includes('shrimp');
+          case 'Keto':
+            return (dish.estimatedCarbs || 0) < 20;
+          case 'Spicy':
+            return dish.name.toLowerCase().includes('spicy') || 
+                   dish.description?.toLowerCase().includes('spicy') ||
+                   dish.name.toLowerCase().includes('tikka');
+          case 'Low Carb':
+            return (dish.estimatedCarbs || 0) < 30;
+          default:
+            return true;
+        }
+      });
+    }
+
+    // Filter by search query
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(dish => 
+        dish.name.toLowerCase().includes(query) ||
+        dish.description.toLowerCase().includes(query)
+      );
+    }
+
+    return filtered;
   };
 
   /**
@@ -268,22 +312,12 @@ export const ExploreScreen: React.FC = () => {
     setAllDishes(allData);
   };
 
-  // Filter dishes based on search query
-  const filterDishes = (dishes: DishCardData[]) => {
-    if (!searchQuery.trim()) return dishes;
-    
-    const query = searchQuery.toLowerCase();
-    return dishes.filter(dish => 
-      dish.name.toLowerCase().includes(query) ||
-      dish.description.toLowerCase().includes(query)
-    );
-  };
-
   // Get filtered dishes
-  const filteredRestaurant = filterDishes(restaurantDishes);
-  const filteredHome = filterDishes(homeCookedMeals);
-  const hasSearchResults = searchQuery.trim() && (filteredRestaurant.length > 0 || filteredHome.length > 0);
-  const hasNoResults = searchQuery.trim() && filteredRestaurant.length === 0 && filteredHome.length === 0;
+  const filteredAllDishes = filterDishesByCategory(allDishes);
+  const filteredRestaurant = filteredAllDishes.filter(d => d.prepStyle === 'restaurant');
+  const filteredHome = filteredAllDishes.filter(d => d.prepStyle === 'home');
+  const hasSearchResults = (searchQuery.trim() || selectedCategory !== 'All') && filteredAllDishes.length > 0;
+  const hasNoResults = (searchQuery.trim() || selectedCategory !== 'All') && filteredAllDishes.length === 0;
 
   // Handle dish selection - Navigate to Label tab and prefill
   const handleDishPress = (dish: DishCardData) => {
@@ -348,7 +382,7 @@ export const ExploreScreen: React.FC = () => {
             <View style={styles.headerTextContainer}>
               <Text style={styles.headerTitle}>Explore</Text>
               <Text style={styles.headerSubtitle}>
-                Discover popular dishes and get instant nutrition insights
+                Discover healthy foods and nutrition insights
               </Text>
             </View>
             <TouchableOpacity 
@@ -382,7 +416,7 @@ export const ExploreScreen: React.FC = () => {
             />
             <TextInput
               style={styles.searchInput}
-              placeholder="Search dishes..."
+              placeholder="Search for healthy foods..."
               placeholderTextColor={AppColors.textTertiary}
               value={searchQuery}
               onChangeText={setSearchQuery}
@@ -400,13 +434,41 @@ export const ExploreScreen: React.FC = () => {
           </Animated.View>
         </View>
 
+        {/* Category Chips */}
+        <View style={styles.categorySection}>
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.categoryScrollContent}
+          >
+            {categories.map((category) => (
+              <TouchableOpacity
+                key={category}
+                style={[
+                  styles.categoryChip,
+                  selectedCategory === category && styles.categoryChipActive
+                ]}
+                onPress={() => setSelectedCategory(category)}
+                activeOpacity={0.7}
+              >
+                <Text style={[
+                  styles.categoryChipText,
+                  selectedCategory === category && styles.categoryChipTextActive
+                ]}>
+                  {category}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+
         {/* Search Results Info */}
-        {searchQuery.trim() && (
+        {(searchQuery.trim() || selectedCategory !== 'All') && (
           <View style={styles.searchResultsInfo}>
             <Text style={styles.searchResultsText}>
               {hasNoResults 
                 ? 'No dishes found' 
-                : `Found ${filteredRestaurant.length + filteredHome.length} dish${filteredRestaurant.length + filteredHome.length !== 1 ? 'es' : ''}`
+                : `Found ${filteredAllDishes.length} dish${filteredAllDishes.length !== 1 ? 'es' : ''}`
               }
             </Text>
           </View>
@@ -429,8 +491,8 @@ export const ExploreScreen: React.FC = () => {
           </View>
         )}
 
-        {/* Quick Stats Card - Only show when not searching */}
-        {!searchQuery.trim() && (
+        {/* Quick Stats Card - Only show when not filtering */}
+        {!searchQuery.trim() && selectedCategory === 'All' && (
           <View style={styles.statsCard}>
             <View style={styles.statItem}>
               <MaterialCommunityIcons
@@ -559,6 +621,18 @@ const styles = StyleSheet.create({
     flex: 1,
     marginRight: Spacing.md,
   },
+  headerTitle: {
+    fontFamily: 'CrimsonPro_700Bold',
+    fontSize: Typography.fontSize.xxxl,
+    fontWeight: Typography.fontWeight.bold,
+    color: AppColors.text,
+    marginBottom: Spacing.xs,
+  },
+  headerSubtitle: {
+    fontSize: Typography.fontSize.md,
+    color: AppColors.textSecondary,
+    lineHeight: Typography.lineHeight.normal * Typography.fontSize.md,
+  },
   searchButton: {
     width: 44,
     height: 44,
@@ -588,6 +662,35 @@ const styles = StyleSheet.create({
     fontSize: Typography.fontSize.base,
     color: AppColors.text,
     paddingVertical: Spacing.sm,
+  },
+  // Category Chips
+  categorySection: {
+    marginTop: Spacing.md,
+    marginBottom: Spacing.md,
+  },
+  categoryScrollContent: {
+    paddingHorizontal: Spacing.xl,
+    gap: Spacing.sm,
+  },
+  categoryChip: {
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.full,
+    backgroundColor: AppColors.surface,
+    borderWidth: 1,
+    borderColor: AppColors.border,
+  },
+  categoryChipActive: {
+    backgroundColor: AppColors.accent,
+    borderColor: AppColors.accent,
+  },
+  categoryChipText: {
+    fontSize: Typography.fontSize.sm,
+    fontWeight: Typography.fontWeight.semibold,
+    color: AppColors.textSecondary,
+  },
+  categoryChipTextActive: {
+    color: '#FFF',
   },
   searchResultsInfo: {
     paddingHorizontal: Spacing.lg,
@@ -627,18 +730,6 @@ const styles = StyleSheet.create({
     fontSize: Typography.fontSize.sm,
     fontWeight: Typography.fontWeight.semibold,
     color: '#FFF',
-  },
-  headerTitle: {
-    fontFamily: 'CrimsonPro_700Bold',
-    fontSize: Typography.fontSize.xxxl,
-    fontWeight: Typography.fontWeight.bold,
-    color: AppColors.text,
-    marginBottom: Spacing.xs,
-  },
-  headerSubtitle: {
-    fontSize: Typography.fontSize.md,
-    color: AppColors.textSecondary,
-    lineHeight: Typography.lineHeight.normal * Typography.fontSize.md,
   },
   statsCard: {
     flexDirection: 'row',

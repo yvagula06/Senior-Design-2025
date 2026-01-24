@@ -2,7 +2,7 @@ import { MD3LightTheme as DefaultTheme } from 'react-native-paper';
 
 export const AppColors = {
   // Primary Elite Colors
-  primary: '#DC2626',          // Rich red
+  primary: '#F59E0B',          // Rich red
   primaryDark: '#991B1B',      // Deep crimson
   primaryLight: '#EF4444',     // Bright red
   
@@ -25,6 +25,7 @@ export const AppColors = {
   success: '#10B981',          // Elite green
   warning: '#F59E0B',          // Gold warning
   error: '#DC2626',            // Red error
+  danger: '#DC2626',           // Red for delete actions
   info: '#3B82F6',             // Blue info
   
   // Elite Palette

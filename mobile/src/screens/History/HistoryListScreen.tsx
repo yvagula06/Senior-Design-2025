@@ -8,6 +8,7 @@ import {
   Alert,
   Animated,
   ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -132,7 +133,14 @@ export const HistoryListScreen: React.FC = () => {
       Alert.alert('Error', 'Failed to load history. Please try again.');
     } finally {
       setIsLoading(false);
+      setIsRefreshing(false);
     }
+  };
+
+  // Handle pull-to-refresh
+  const handleRefresh = () => {
+    setIsRefreshing(true);
+    loadHistory();
   };
 
   /**
@@ -383,6 +391,14 @@ export const HistoryListScreen: React.FC = () => {
         swipeToOpenPercent={20}
         swipeToClosePercent={20}
         contentContainerStyle={styles.listContent}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={handleRefresh}
+            tintColor={AppColors.accent}
+            colors={[AppColors.accent]}
+          />
+        }
         ListHeaderComponent={
           historyData.length > 0 ? (
             <View style={styles.chartCard}>
@@ -397,18 +413,40 @@ export const HistoryListScreen: React.FC = () => {
           ) : null
         }
         ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <MaterialCommunityIcons
-              name="history"
-              size={64}
-              color={AppColors.mediumGray}
-            />
-            <Text style={styles.emptyTitle}>No history found</Text>
-            <Text style={styles.emptySubtitle}>
+          <View style={styles.emptyStateCard}>
+            <View style={styles.emptyStateIconContainer}>
+              <MaterialCommunityIcons
+                name="history"
+                size={80}
+                color={AppColors.primary}
+              />
+            </View>
+            <Text style={styles.emptyStateTitle}>
               {searchQuery || filterType !== 'all'
-                ? 'Try adjusting your filters'
-                : 'Start analyzing dishes to build your history'}
+                ? 'No meals found'
+                : 'No History Yet'}
             </Text>
+            <Text style={styles.emptyStateText}>
+              {searchQuery || filterType !== 'all'
+                ? 'Try adjusting your search or filters'
+                : 'Start scanning and tracking meals to build your nutrition history!'}
+            </Text>
+            {!searchQuery && filterType === 'all' && (
+              <View style={styles.emptyStateFeatures}>
+                <View style={styles.emptyFeatureRow}>
+                  <MaterialCommunityIcons name="food-apple" size={20} color={AppColors.success} />
+                  <Text style={styles.emptyFeatureText}>Analyze dishes instantly</Text>
+                </View>
+                <View style={styles.emptyFeatureRow}>
+                  <MaterialCommunityIcons name="chart-line" size={20} color={AppColors.success} />
+                  <Text style={styles.emptyFeatureText}>Track your nutrition trends</Text>
+                </View>
+                <View style={styles.emptyFeatureRow}>
+                  <MaterialCommunityIcons name="star" size={20} color={AppColors.success} />
+                  <Text style={styles.emptyFeatureText}>Save favorite meals</Text>
+                </View>
+              </View>
+            )}
           </View>
         }
       />
@@ -527,7 +565,7 @@ const styles = StyleSheet.create({
     backgroundColor: AppColors.accent,
   },
   deleteButton: {
-    backgroundColor: AppColors.primary,
+    backgroundColor: AppColors.danger,
   },
   hiddenButtonText: {
     fontSize: Typography.fontSize.xs,
@@ -537,24 +575,57 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
-  emptyContainer: {
+  emptyStateCard: {
+    marginHorizontal: Spacing.xl,
+    marginTop: Spacing.xxl,
+    padding: Spacing.xxl,
+    backgroundColor: AppColors.cardBackground,
+    borderRadius: BorderRadius.xl,
     alignItems: 'center',
+    ...Shadows.md,
+    borderWidth: 1,
+    borderColor: AppColors.border,
+  },
+  emptyStateIconContainer: {
+    width: 120,
+    height: 120,
+    borderRadius: BorderRadius.full,
+    backgroundColor: AppColors.background,
     justifyContent: 'center',
-    paddingVertical: Spacing.xxl * 2,
-    paddingHorizontal: Spacing.xl,
+    alignItems: 'center',
+    marginBottom: Spacing.lg,
+    borderWidth: 2,
+    borderColor: AppColors.primary,
   },
-  emptyTitle: {
-    fontFamily: 'CrimsonPro_600SemiBold',
-    fontSize: Typography.fontSize.lg,
-    fontWeight: Typography.fontWeight.semibold,
+  emptyStateTitle: {
+    fontFamily: 'CrimsonPro_700Bold',
+    fontSize: Typography.fontSize.xxl,
+    fontWeight: Typography.fontWeight.bold,
     color: AppColors.text,
-    marginTop: Spacing.md,
-    marginBottom: Spacing.xs,
+    marginBottom: Spacing.sm,
+    textAlign: 'center',
   },
-  emptySubtitle: {
-    fontSize: Typography.fontSize.sm,
+  emptyStateText: {
+    fontSize: Typography.fontSize.base,
     color: AppColors.textSecondary,
     textAlign: 'center',
-    lineHeight: Typography.lineHeight.normal * Typography.fontSize.sm,
+    lineHeight: Typography.lineHeight.relaxed * Typography.fontSize.base,
+    marginBottom: Spacing.lg,
+  },
+  emptyStateFeatures: {
+    width: '100%',
+    gap: Spacing.md,
+    marginTop: Spacing.sm,
+  },
+  emptyFeatureRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    paddingVertical: Spacing.xs,
+  },
+  emptyFeatureText: {
+    fontSize: Typography.fontSize.sm,
+    color: AppColors.text,
+    fontWeight: Typography.fontWeight.medium,
   },
 });

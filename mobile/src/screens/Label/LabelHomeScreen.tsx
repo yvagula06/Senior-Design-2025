@@ -234,25 +234,58 @@ export const LabelHomeScreen: React.FC = () => {
         />
       </Animated.View>
 
-      {/* Loading Spinner */}
+      {/* LOADING STATE - Centered overlay with large spinner */}
       {isGenerating && (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={AppColors.accent} />
-          <Text style={styles.loadingText}>Analyzing nutrition...</Text>
+        <View style={styles.loadingOverlay}>
+          <View style={styles.loadingCard}>
+            <ActivityIndicator size="large" color={AppColors.accent} />
+            <Text style={styles.loadingTitle}>Analyzing your food...</Text>
+            <Text style={styles.loadingSubtext}>This may take a few seconds</Text>
+          </View>
         </View>
       )}
 
-      {/* Error Message */}
+      {/* ERROR STATE - User-friendly error card with retry */}
       {apiError && !isGenerating && (
-        <View style={styles.errorContainer}>
-          <MaterialCommunityIcons name="alert-circle" size={24} color={AppColors.error} />
-          <Text style={styles.errorText}>{apiError}</Text>
+        <View style={styles.errorCard}>
+          <MaterialCommunityIcons name="alert-circle-outline" size={64} color={AppColors.error} />
+          <Text style={styles.errorTitle}>Oops! Something went wrong</Text>
+          <Text style={styles.errorMessage}>{apiError}</Text>
           <TouchableOpacity 
             style={styles.retryButton}
             onPress={handleGenerate}
+            activeOpacity={0.8}
           >
-            <Text style={styles.retryButtonText}>Retry</Text>
+            <MaterialCommunityIcons name="refresh" size={20} color="#FFF" />
+            <Text style={styles.retryButtonText}>Try Again</Text>
           </TouchableOpacity>
+        </View>
+      )}
+
+      {/* EMPTY STATE - Welcoming initial view */}
+      {!isGenerating && !labelResult && !apiError && !dishName.trim() && (
+        <View style={styles.emptyStateCard}>
+          <View style={styles.emptyStateIcon}>
+            <MaterialCommunityIcons name="food-apple-outline" size={80} color={AppColors.primary} />
+          </View>
+          <Text style={styles.emptyStateTitle}>Ready to Analyze!</Text>
+          <Text style={styles.emptyStateText}>
+            Enter a dish name above to discover its complete nutritional breakdown powered by AI.
+          </Text>
+          <View style={styles.emptyStateFeatures}>
+            <View style={styles.featureRow}>
+              <MaterialCommunityIcons name="check-circle" size={20} color={AppColors.success} />
+              <Text style={styles.featureText}>10,000+ dishes in our database</Text>
+            </View>
+            <View style={styles.featureRow}>
+              <MaterialCommunityIcons name="check-circle" size={20} color={AppColors.success} />
+              <Text style={styles.featureText}>Accurate macro & micro nutrients</Text>
+            </View>
+            <View style={styles.featureRow}>
+              <MaterialCommunityIcons name="check-circle" size={20} color={AppColors.success} />
+              <Text style={styles.featureText}>Instant confidence scoring</Text>
+            </View>
+          </View>
         </View>
       )}
 
@@ -567,53 +600,129 @@ const styles = StyleSheet.create({
     lineHeight: Typography.lineHeight.relaxed * Typography.fontSize.sm,
     fontWeight: Typography.fontWeight.regular,
   },
-  // Loading styles
-  loadingContainer: {
+  // LOADING STATE - Centered overlay
+  loadingOverlay: {
+    marginHorizontal: Spacing.xl,
+    marginTop: Spacing.xl,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loadingCard: {
+    backgroundColor: AppColors.cardBackground,
+    borderRadius: BorderRadius.xl,
+    padding: Spacing.xxl,
+    alignItems: 'center',
+    width: '100%',
+    ...Shadows.lg,
+    borderWidth: 1,
+    borderColor: AppColors.border,
+  },
+  loadingTitle: {
+    marginTop: Spacing.lg,
+    fontSize: Typography.fontSize.xl,
+    fontWeight: Typography.fontWeight.bold,
+    color: AppColors.text,
+    textAlign: 'center',
+  },
+  loadingSubtext: {
+    marginTop: Spacing.xs,
+    fontSize: Typography.fontSize.sm,
+    color: AppColors.textSecondary,
+    textAlign: 'center',
+  },
+  // ERROR STATE - User-friendly card
+  errorCard: {
     marginHorizontal: Spacing.xl,
     marginTop: Spacing.xl,
     padding: Spacing.xxl,
     backgroundColor: AppColors.cardBackground,
     borderRadius: BorderRadius.xl,
     alignItems: 'center',
-    ...Shadows.sm,
-    borderWidth: 1,
-    borderColor: AppColors.border,
-  },
-  loadingText: {
-    marginTop: Spacing.md,
-    fontSize: Typography.fontSize.base,
-    color: AppColors.textSecondary,
-    fontWeight: Typography.fontWeight.medium,
-  },
-  // Error styles
-  errorContainer: {
-    marginHorizontal: Spacing.xl,
-    marginTop: Spacing.xl,
-    padding: Spacing.lg,
-    backgroundColor: '#FEE',
-    borderRadius: BorderRadius.xl,
-    alignItems: 'center',
-    borderWidth: 1,
+    ...Shadows.md,
+    borderWidth: 2,
     borderColor: AppColors.error,
   },
-  errorText: {
-    marginTop: Spacing.sm,
-    fontSize: Typography.fontSize.sm,
-    color: AppColors.error,
+  errorTitle: {
+    marginTop: Spacing.lg,
+    fontSize: Typography.fontSize.xl,
+    fontWeight: Typography.fontWeight.bold,
+    color: AppColors.text,
     textAlign: 'center',
-    fontWeight: Typography.fontWeight.medium,
+  },
+  errorMessage: {
+    marginTop: Spacing.sm,
+    fontSize: Typography.fontSize.base,
+    color: AppColors.textSecondary,
+    textAlign: 'center',
+    lineHeight: Typography.lineHeight.relaxed * Typography.fontSize.base,
   },
   retryButton: {
-    marginTop: Spacing.md,
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.sm,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    marginTop: Spacing.lg,
+    paddingHorizontal: Spacing.xl,
+    paddingVertical: Spacing.md,
     backgroundColor: AppColors.error,
     borderRadius: BorderRadius.md,
+    ...Shadows.sm,
   },
   retryButtonText: {
     color: '#FFF',
+    fontSize: Typography.fontSize.base,
+    fontWeight: Typography.fontWeight.bold,
+  },
+  // EMPTY STATE - Welcoming initial view
+  emptyStateCard: {
+    marginHorizontal: Spacing.xl,
+    marginTop: Spacing.xl,
+    padding: Spacing.xxl,
+    backgroundColor: AppColors.cardBackground,
+    borderRadius: BorderRadius.xl,
+    alignItems: 'center',
+    ...Shadows.md,
+    borderWidth: 1,
+    borderColor: AppColors.border,
+  },
+  emptyStateIcon: {
+    width: 120,
+    height: 120,
+    borderRadius: BorderRadius.full,
+    backgroundColor: AppColors.background,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: Spacing.lg,
+    borderWidth: 2,
+    borderColor: AppColors.primary,
+  },
+  emptyStateTitle: {
+    fontSize: Typography.fontSize.xxl,
+    fontWeight: Typography.fontWeight.bold,
+    color: AppColors.text,
+    marginBottom: Spacing.sm,
+    textAlign: 'center',
+  },
+  emptyStateText: {
+    fontSize: Typography.fontSize.base,
+    color: AppColors.textSecondary,
+    textAlign: 'center',
+    lineHeight: Typography.lineHeight.relaxed * Typography.fontSize.base,
+    marginBottom: Spacing.lg,
+  },
+  emptyStateFeatures: {
+    width: '100%',
+    gap: Spacing.md,
+  },
+  featureRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    paddingVertical: Spacing.xs,
+  },
+  featureText: {
     fontSize: Typography.fontSize.sm,
-    fontWeight: Typography.fontWeight.semibold,
+    color: AppColors.text,
+    fontWeight: Typography.fontWeight.medium,
   },
   // Result styles
   resultContainer: {
