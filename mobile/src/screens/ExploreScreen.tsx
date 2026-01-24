@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,9 @@ import {
   FlatList,
   TouchableOpacity,
   ActivityIndicator,
+  RefreshControl,
+  TextInput,
+  Animated,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -19,8 +22,16 @@ import { cacheFeaturedDishes, loadCachedDishes } from '../services/storage';
 export const ExploreScreen: React.FC = () => {
   const navigation = useNavigation<RootTabNavigationProp>();
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showSearch, setShowSearch] = useState(false);
   const [restaurantDishes, setRestaurantDishes] = useState<DishCardData[]>([]);
   const [homeCookedMeals, setHomeCookedMeals] = useState<DishCardData[]>([]);
+  const [allDishes, setAllDishes] = useState<DishCardData[]>([]);
+  
+  // Animation values
+  const searchBarHeight = useRef(new Animated.Value(0)).current;
+  const searchBarOpacity = useRef(new Animated.Value(0)).current;
 
   /**
    * Load featured dishes from backend or cache
@@ -37,16 +48,23 @@ export const ExploreScreen: React.FC = () => {
     loadFeaturedDishes();
   }, []);
 
-  const loadFeaturedDishes = async () => {
+  const loadFeaturedDishes = async (isRefresh: boolean = false) => {
     try {
-      setIsLoading(true);
+      if (isRefresh) {
+        setIsRefreshing(true);
+      } else {
+        setIsLoading(true);
+      }
 
       // Try loading from cache first
       const cached = await loadCachedDishes();
-      if (cached.length > 0) {
+      if (cached.length > 0 && !isRefresh) {
         const { restaurant, home } = categorizesDishes(cached);
-        setRestaurantDishes(mapDishData(restaurant));
-        setHomeCookedMeals(mapDishData(home));
+        const restaurantData = mapDishData(restaurant);
+        const homeData = mapDishData(home);
+        setRestaurantDishes(restaurantData);
+        setHomeCookedMeals(homeData);
+        setAllDishes([...restaurantData, ...homeData]);
       }
 
       // TODO: Fetch from API
@@ -65,6 +83,46 @@ export const ExploreScreen: React.FC = () => {
       loadMockData();
     } finally {
       setIsLoading(false);
+      setIsRefreshing(false);
+    }
+  };
+
+  const onRefresh = () => {
+    loadFeaturedDishes(true);
+  };
+
+  const toggleSearch = () => {
+    const newShowSearch = !showSearch;
+    setShowSearch(newShowSearch);
+    
+    if (newShowSearch) {
+      Animated.parallel([
+        Animated.timing(searchBarHeight, {
+          toValue: 60,
+          duration: 250,
+          useNativeDriver: false,
+        }),
+        Animated.timing(searchBarOpacity, {
+          toValue: 1,
+          duration: 250,
+          useNativeDriver: false,
+        }),
+      ]).start();
+    } else {
+      Animated.parallel([
+        Animated.timing(searchBarHeight, {
+          toValue: 0,
+          duration: 200,
+          useNativeDriver: false,
+        }),
+        Animated.timing(searchBarOpacity, {
+          toValue: 0,
+          duration: 200,
+          useNativeDriver: false,
+        }),
+      ]).start(() => {
+        setSearchQuery('');
+      });
     }
   };
 
@@ -204,9 +262,28 @@ export const ExploreScreen: React.FC = () => {
     },
   ];
 
+    const allData = [...restaurantData, ...homeData];
     setRestaurantDishes(restaurantData);
     setHomeCookedMeals(homeData);
+    setAllDishes(allData);
   };
+
+  // Filter dishes based on search query
+  const filterDishes = (dishes: DishCardData[]) => {
+    if (!searchQuery.trim()) return dishes;
+    
+    const query = searchQuery.toLowerCase();
+    return dishes.filter(dish => 
+      dish.name.toLowerCase().includes(query) ||
+      dish.description.toLowerCase().includes(query)
+    );
+  };
+
+  // Get filtered dishes
+  const filteredRestaurant = filterDishes(restaurantDishes);
+  const filteredHome = filterDishes(homeCookedMeals);
+  const hasSearchResults = searchQuery.trim() && (filteredRestaurant.length > 0 || filteredHome.length > 0);
+  const hasNoResults = searchQuery.trim() && filteredRestaurant.length === 0 && filteredHome.length === 0;
 
   // Handle dish selection - Navigate to Label tab and prefill
   const handleDishPress = (dish: DishCardData) => {
@@ -224,18 +301,31 @@ export const ExploreScreen: React.FC = () => {
   };
 
   // Render horizontal scrollable section
-  const renderHorizontalSection = (dishes: DishCardData[]) => (
-    <FlatList
-      data={dishes}
-      renderItem={({ item }) => (
-        <DishCard dish={item} onPress={() => handleDishPress(item)} />
-      )}
-      keyExtractor={(item) => item.id}
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      contentContainerStyle={styles.horizontalList}
-    />
-  );
+  const renderHorizontalSection = (dishes: DishCardData[]) => {
+    if (dishes.length === 0) return null;
+    
+    return (
+      <FlatList
+        data={dishes}
+        renderItem={({ item }) => (
+          <DishCard dish={item} onPress={() => handleDishPress(item)} />
+        )}
+        keyExtractor={(item) => item.id}
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.horizontalList}
+      />
+    );
+  };
+
+  if (isLoading) {
+    return (
+      <View style={[styles.container, styles.centerContent]}>
+        <ActivityIndicator size="large" color={AppColors.accent} />
+        <Text style={styles.loadingText}>Loading dishes...</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -243,84 +333,185 @@ export const ExploreScreen: React.FC = () => {
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={onRefresh}
+            tintColor={AppColors.accent}
+            colors={[AppColors.accent]}
+          />
+        }
       >
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Explore</Text>
-          <Text style={styles.headerSubtitle}>
-            Discover popular dishes and get instant nutrition insights
-          </Text>
+          <View style={styles.headerContent}>
+            <View style={styles.headerTextContainer}>
+              <Text style={styles.headerTitle}>Explore</Text>
+              <Text style={styles.headerSubtitle}>
+                Discover popular dishes and get instant nutrition insights
+              </Text>
+            </View>
+            <TouchableOpacity 
+              style={styles.searchButton}
+              onPress={toggleSearch}
+              activeOpacity={0.7}
+            >
+              <MaterialCommunityIcons 
+                name={showSearch ? "close" : "magnify"} 
+                size={24} 
+                color={AppColors.accent} 
+              />
+            </TouchableOpacity>
+          </View>
+          
+          {/* Animated Search Bar */}
+          <Animated.View 
+            style={[
+              styles.searchContainer,
+              { 
+                height: searchBarHeight,
+                opacity: searchBarOpacity,
+              }
+            ]}
+          >
+            <MaterialCommunityIcons 
+              name="magnify" 
+              size={20} 
+              color={AppColors.textSecondary} 
+              style={styles.searchIcon}
+            />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search dishes..."
+              placeholderTextColor={AppColors.textTertiary}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              autoFocus={showSearch}
+            />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity onPress={() => setSearchQuery('')}>
+                <MaterialCommunityIcons 
+                  name="close-circle" 
+                  size={20} 
+                  color={AppColors.textSecondary} 
+                />
+              </TouchableOpacity>
+            )}
+          </Animated.View>
         </View>
 
-        {/* Quick Stats Card */}
-        <View style={styles.statsCard}>
-          <View style={styles.statItem}>
-            <MaterialCommunityIcons
-              name="food-variant"
-              size={32}
-              color={AppColors.primary}
-            />
-            <Text style={styles.statValue}>100+</Text>
-            <Text style={styles.statLabel}>Dishes</Text>
-          </View>
-          <View style={styles.statDivider} />
-          <View style={styles.statItem}>
-            <MaterialCommunityIcons
-              name="silverware-fork-knife"
-              size={32}
-              color={AppColors.accent}
-            />
-            <Text style={styles.statValue}>50+</Text>
-            <Text style={styles.statLabel}>Restaurants</Text>
-          </View>
-          <View style={styles.statDivider} />
-          <View style={styles.statItem}>
-            <MaterialCommunityIcons
-              name="home-heart"
-              size={32}
-              color={AppColors.error}
-            />
-            <Text style={styles.statValue}>50+</Text>
-            <Text style={styles.statLabel}>Home Cooked</Text>
-          </View>
-        </View>
-
-        {/* Popular Restaurant Dishes Section */}
-        <CategoryHeader
-          title="Popular Restaurant Dishes"
-          subtitle="Most analyzed dishes from restaurants"
-          icon="silverware-fork-knife"
-        />
-        {renderHorizontalSection(restaurantDishes)}
-
-        {/* Spacer */}
-        <View style={styles.sectionSpacer} />
-
-        {/* Common Home Cooked Meals Section */}
-        <CategoryHeader
-          title="Common Home Cooked Meals"
-          subtitle="Simple, healthy meals made at home"
-          icon="home-heart"
-        />
-        {renderHorizontalSection(homeCookedMeals)}
-
-        {/* Info Card */}
-        <View style={styles.infoCard}>
-          <View style={styles.infoIconContainer}>
-            <MaterialCommunityIcons
-              name="information-outline"
-              size={24}
-              color={AppColors.accent}
-            />
-          </View>
-          <View style={styles.infoContent}>
-            <Text style={styles.infoTitle}>How it works</Text>
-            <Text style={styles.infoText}>
-              Tap any dish to instantly prefill the Label screen with its data.
-              You can then adjust ingredients or portions to match your exact meal.
+        {/* Search Results Info */}
+        {searchQuery.trim() && (
+          <View style={styles.searchResultsInfo}>
+            <Text style={styles.searchResultsText}>
+              {hasNoResults 
+                ? 'No dishes found' 
+                : `Found ${filteredRestaurant.length + filteredHome.length} dish${filteredRestaurant.length + filteredHome.length !== 1 ? 'es' : ''}`
+              }
             </Text>
           </View>
-        </View>
+        )}
+
+        {/* No Results Message */}
+        {hasNoResults && (
+          <View style={styles.noResultsContainer}>
+            <MaterialCommunityIcons name="food-off" size={64} color={AppColors.textTertiary} />
+            <Text style={styles.noResultsTitle}>No dishes found</Text>
+            <Text style={styles.noResultsText}>
+              Try adjusting your search or browse our popular dishes
+            </Text>
+            <TouchableOpacity 
+              style={styles.clearSearchButton}
+              onPress={() => setSearchQuery('')}
+            >
+              <Text style={styles.clearSearchButtonText}>Clear Search</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {/* Quick Stats Card - Only show when not searching */}
+        {!searchQuery.trim() && (
+          <View style={styles.statsCard}>
+            <View style={styles.statItem}>
+              <MaterialCommunityIcons
+                name="food-variant"
+                size={32}
+                color={AppColors.primary}
+              />
+              <Text style={styles.statValue}>{allDishes.length}</Text>
+              <Text style={styles.statLabel}>Dishes</Text>
+            </View>
+            <View style={styles.statDivider} />
+            <View style={styles.statItem}>
+              <MaterialCommunityIcons
+                name="silverware-fork-knife"
+                size={32}
+                color={AppColors.accent}
+              />
+              <Text style={styles.statValue}>{restaurantDishes.length}</Text>
+              <Text style={styles.statLabel}>Restaurants</Text>
+            </View>
+            <View style={styles.statDivider} />
+            <View style={styles.statItem}>
+              <MaterialCommunityIcons
+                name="home-heart"
+                size={32}
+                color={AppColors.error}
+              />
+              <Text style={styles.statValue}>{homeCookedMeals.length}</Text>
+              <Text style={styles.statLabel}>Home Cooked</Text>
+            </View>
+          </View>
+        )}
+
+        {/* Popular Restaurant Dishes Section */}
+        {filteredRestaurant.length > 0 && (
+          <>
+            <CategoryHeader
+              title="Popular Restaurant Dishes"
+              subtitle="Most analyzed dishes from restaurants"
+              icon="silverware-fork-knife"
+            />
+            {renderHorizontalSection(filteredRestaurant)}
+          </>
+        )}
+
+        {/* Spacer */}
+        {filteredRestaurant.length > 0 && filteredHome.length > 0 && (
+          <View style={styles.sectionSpacer} />
+        )}
+
+        {/* Common Home Cooked Meals Section */}
+        {filteredHome.length > 0 && (
+          <>
+            <CategoryHeader
+              title="Common Home Cooked Meals"
+              subtitle="Simple, healthy meals made at home"
+              icon="home-heart"
+            />
+            {renderHorizontalSection(filteredHome)}
+          </>
+        )}
+
+        {/* Info Card - Only show when not searching */}
+        {!searchQuery.trim() && (
+          <View style={styles.infoCard}>
+            <View style={styles.infoIconContainer}>
+              <MaterialCommunityIcons
+                name="information-outline"
+                size={24}
+                color={AppColors.accent}
+              />
+            </View>
+            <View style={styles.infoContent}>
+              <Text style={styles.infoTitle}>How it works</Text>
+              <Text style={styles.infoText}>
+                Tap any dish to instantly prefill the Label screen with its data.
+                You can then adjust ingredients or portions to match your exact meal.
+              </Text>
+            </View>
+          </View>
+        )}
 
         {/* Bottom Padding */}
         <View style={styles.bottomPadding} />
@@ -340,6 +531,16 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingBottom: Spacing.xxl,
   },
+  centerContent: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: Spacing.md,
+    fontSize: Typography.fontSize.base,
+    color: AppColors.textSecondary,
+    fontWeight: Typography.fontWeight.medium,
+  },
   header: {
     paddingHorizontal: Spacing.lg,
     paddingTop: Spacing.xxxl,
@@ -347,6 +548,85 @@ const styles = StyleSheet.create({
     backgroundColor: AppColors.cardBackground,
     borderBottomWidth: 1,
     borderBottomColor: AppColors.border,
+  },
+  headerContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: Spacing.xs,
+  },
+  headerTextContainer: {
+    flex: 1,
+    marginRight: Spacing.md,
+  },
+  searchButton: {
+    width: 44,
+    height: 44,
+    borderRadius: BorderRadius.full,
+    backgroundColor: AppColors.background,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: AppColors.accent,
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: AppColors.background,
+    borderRadius: BorderRadius.md,
+    paddingHorizontal: Spacing.md,
+    marginTop: Spacing.md,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: AppColors.border,
+  },
+  searchIcon: {
+    marginRight: Spacing.sm,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: Typography.fontSize.base,
+    color: AppColors.text,
+    paddingVertical: Spacing.sm,
+  },
+  searchResultsInfo: {
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm,
+  },
+  searchResultsText: {
+    fontSize: Typography.fontSize.sm,
+    color: AppColors.textSecondary,
+    fontWeight: Typography.fontWeight.semibold,
+  },
+  noResultsContainer: {
+    alignItems: 'center',
+    paddingVertical: Spacing.xxxl,
+    paddingHorizontal: Spacing.xl,
+  },
+  noResultsTitle: {
+    fontSize: Typography.fontSize.lg,
+    fontWeight: Typography.fontWeight.bold,
+    color: AppColors.text,
+    marginTop: Spacing.md,
+    marginBottom: Spacing.xs,
+  },
+  noResultsText: {
+    fontSize: Typography.fontSize.sm,
+    color: AppColors.textSecondary,
+    textAlign: 'center',
+    lineHeight: Typography.lineHeight.relaxed * Typography.fontSize.sm,
+    marginBottom: Spacing.lg,
+  },
+  clearSearchButton: {
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm,
+    backgroundColor: AppColors.accent,
+    borderRadius: BorderRadius.md,
+  },
+  clearSearchButtonText: {
+    fontSize: Typography.fontSize.sm,
+    fontWeight: Typography.fontWeight.semibold,
+    color: '#FFF',
   },
   headerTitle: {
     fontFamily: 'CrimsonPro_700Bold',
