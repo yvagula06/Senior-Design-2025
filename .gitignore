@@ -48,6 +48,14 @@ alembic/versions/*.pyd
 *.log
 logs/
 
+# Flutter Generated Files (entire flutter_stuff_rashed directory)
+flutter_stuff_rashed/
+flutter_stuff_rashed/**/*
+
+# Documentation files (implementation details)
+*_IMPLEMENTATION.md
+*_SUMMARY.md
+
 # OS
 .DS_Store
 Thumbs.db
@@ -98,3 +106,7 @@ env/
 /macos/Flutter/ephemeral/
 /linux/flutter/ephemeral/
 /windows/flutter/ephemeral/
+MIGRATION.md
+NOTEBOOK_README.md
+NutriLabelAI_ML_Draft.ipynb
+PRESENTATION_SLIDES.md

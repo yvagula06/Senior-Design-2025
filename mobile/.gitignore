@@ -39,3 +39,7 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+# Ignore generated native folders
+android/
+ios/
+.expo/
