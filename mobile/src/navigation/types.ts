@@ -1,10 +1,11 @@
 import { NavigatorScreenParams } from '@react-navigation/native';
+import type { VisionResponse } from '../types/vision';
 
 // Root Bottom Tab Navigator
 export type RootTabParamList = {
   LabelStack: NavigatorScreenParams<LabelStackParamList>;
   HistoryStack: NavigatorScreenParams<HistoryStackParamList>;
-  Explore: undefined;
+  ExploreStack: NavigatorScreenParams<ExploreStackParamList>;
   Profile: undefined;
 };
 
@@ -33,7 +34,17 @@ export type HistoryStackParamList = {
   };
 };
 
+// Explore Stack Navigator
+export type ExploreStackParamList = {
+  ExploreHome: undefined;
+  CameraCapture: undefined;
+  EstimationResult: {
+    response: VisionResponse;
+  };
+};
+
 // Navigation prop types
 export type LabelStackNavigationProp = import('@react-navigation/native-stack').NativeStackNavigationProp<LabelStackParamList>;
 export type HistoryStackNavigationProp = import('@react-navigation/native-stack').NativeStackNavigationProp<HistoryStackParamList>;
+export type ExploreStackNavigationProp = import('@react-navigation/native-stack').NativeStackNavigationProp<ExploreStackParamList>;
 export type RootTabNavigationProp = import('@react-navigation/bottom-tabs').BottomTabNavigationProp<RootTabParamList>;

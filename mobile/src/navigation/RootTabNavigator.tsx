@@ -5,7 +5,8 @@ import { Platform, Easing } from 'react-native';
 import { RootTabParamList } from './types';
 import { LabelStackNavigator } from './LabelStackNavigator';
 import { HistoryStackNavigator } from './HistoryStackNavigator';
-import { ExploreScreen, ProfileScreen } from '../screens';
+import { ExploreStackNavigator } from './ExploreStackNavigator';
+import { ProfileScreen } from '../screens';
 import { AppColors, Spacing } from '../theme';
 
 const Tab = createBottomTabNavigator<RootTabParamList>();
@@ -62,14 +63,13 @@ export const RootTabNavigator: React.FC = () => {
         }}
       />
       <Tab.Screen
-        name="Explore"
-        component={ExploreScreen}
+        name="ExploreStack"
+        component={ExploreStackNavigator}
         options={{
           tabBarLabel: 'Explore',
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="compass" size={size} color={color} />
           ),
-          headerShown: false,
         }}
       />
       <Tab.Screen

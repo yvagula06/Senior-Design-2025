@@ -10,14 +10,14 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import type { RootTabNavigationProp } from '../navigation/types';
+import type { ExploreStackNavigationProp } from '../navigation/types';
 import { DishCard, CategoryHeader, type DishCardData } from '../components/Explore';
 import { AppColors, Spacing, Typography, BorderRadius, Shadows } from '../theme';
 import { fetchFeaturedDishes } from '../services/api';
 import { cacheFeaturedDishes, loadCachedDishes } from '../services/storage';
 
 export const ExploreScreen: React.FC = () => {
-  const navigation = useNavigation<RootTabNavigationProp>();
+  const navigation = useNavigation<ExploreStackNavigationProp>();
   const [isLoading, setIsLoading] = useState(true);
   const [restaurantDishes, setRestaurantDishes] = useState<DishCardData[]>([]);
   const [homeCookedMeals, setHomeCookedMeals] = useState<DishCardData[]>([]);
@@ -211,7 +211,7 @@ export const ExploreScreen: React.FC = () => {
   // Handle dish selection - Navigate to Label tab and prefill
   const handleDishPress = (dish: DishCardData) => {
     // Navigate to Label tab
-    navigation.navigate('LabelStack', {
+    navigation.navigate('LabelStack' as any, {
       screen: 'LabelHome',
       params: {
         prefillDish: {
@@ -221,6 +221,11 @@ export const ExploreScreen: React.FC = () => {
         },
       },
     });
+  };
+
+  // Navigate to camera capture
+  const handleOpenCamera = () => {
+    navigation.navigate('CameraCapture');
   };
 
   // Render horizontal scrollable section
@@ -252,7 +257,13 @@ export const ExploreScreen: React.FC = () => {
           </Text>
         </View>
 
-        {/* Quick Stats Card */}
+        {/* Qui
+
+        {/* Camera Estimate Button (Temporary) */}
+        <TouchableOpacity style={styles.cameraButton} onPress={handleOpenCamera}>
+          <MaterialCommunityIcons name="camera" size={24} color={AppColors.textInverse} />
+          <Text style={styles.cameraButtonText}>Camera Estimate (New!)</Text>
+        </TouchableOpacity>ck Stats Card */}
         <View style={styles.statsCard}>
           <View style={styles.statItem}>
             <MaterialCommunityIcons
@@ -433,6 +444,24 @@ const styles = StyleSheet.create({
     fontSize: Typography.fontSize.sm,
     color: AppColors.textSecondary,
     lineHeight: Typography.lineHeight.relaxed * Typography.fontSize.sm,
+  },
+  cameraButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: AppColors.primary,
+    marginHorizontal: Spacing.lg,
+    marginVertical: Spacing.md,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.lg,
+    borderRadius: BorderRadius.lg,
+    gap: Spacing.sm,
+    ...Shadows.md,
+  },
+  cameraButtonText: {
+    ...Typography.button,
+    color: AppColors.textInverse,
+    fontWeight: '600',
   },
   bottomPadding: {
     height: Spacing.xl,
