@@ -33,8 +33,8 @@ def retrieve_candidates(
     
     This function:
     1. Generates a 384-dim embedding for the input dish_name
-    2. Performs pgvector cosine similarity search on dish_variants table
-    3. Joins to dishes table to retrieve full nutrition facts
+    2. Performs pgvector cosine similarity search on embeddings table
+    3. Joins to dishes and nutrients tables to retrieve full nutrition facts
     4. Returns top-k matches with similarity scores
     
     Args:
@@ -80,11 +80,10 @@ def _search_similar_dishes(
     Internal function to execute pgvector similarity query.
     
     Query Strategy:
-    1. Search dish_variants table using pgvector's <=> operator (cosine distance)
-    2. Join to dishes table to get canonical dish + nutrition facts
-    3. Filter by is_active = TRUE to exclude deprecated dishes
-    4. Order by similarity (descending)
-    5. Limit to top-k results
+    1. Search embeddings table using pgvector's <=> operator (cosine distance)
+    2. Join to dishes and nutrients tables to get dish info + nutrition facts
+    3. Order by similarity (descending)
+    4. Limit to top-k results
     
     pgvector Similarity Formula:
         cosine_distance = embedding <=> query_vector
@@ -106,26 +105,26 @@ def _search_similar_dishes(
     # similarity = 1 - distance
     query = text("""
         SELECT 
-            d.id,
+            d.dish_id as id,
             d.name,
-            d.calories,
-            d.protein_g,
-            d.carbs_g,
-            d.fat_g,
-            d.fiber_g,
-            d.sugar_g,
-            d.sodium_mg,
-            d.saturated_fat_g,
-            d.cholesterol_mg,
-            d.data_source,
-            d.confidence_score,
-            dv.variant_text,
-            1 - (dv.embedding <=> CAST(:query_vector AS vector)) AS similarity
-        FROM dish_variants dv
-        JOIN dishes d ON dv.dish_id = d.id
-        WHERE d.is_active = TRUE
-          AND (1 - (dv.embedding <=> CAST(:query_vector AS vector))) >= :threshold
-        ORDER BY dv.embedding <=> CAST(:query_vector AS vector)
+            n.kcal as calories,
+            COALESCE(n.protein_g, 0.0) as protein_g,
+            COALESCE(n.carbs_g, 0.0) as carbs_g,
+            COALESCE(n.fat_g, 0.0) as fat_g,
+            COALESCE(n.fiber_g, 0.0) as fiber_g,
+            COALESCE(n.sugar_g, 0.0) as sugar_g,
+            COALESCE(n.sodium_mg, 0.0) as sodium_mg,
+            0.0 as saturated_fat_g,
+            0.0 as cholesterol_mg,
+            n.source as data_source,
+            1.0 as confidence_score,
+            e.text as variant_text,
+            1 - (e.vector <=> CAST(:query_vector AS vector)) AS similarity
+        FROM embeddings e
+        JOIN dishes d ON e.dish_id = d.dish_id
+        JOIN nutrients n ON d.dish_id = n.dish_id
+        WHERE (1 - (e.vector <=> CAST(:query_vector AS vector))) >= :threshold
+        ORDER BY e.vector <=> CAST(:query_vector AS vector)
         LIMIT :k
     """)
     

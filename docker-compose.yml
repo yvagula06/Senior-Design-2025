@@ -7,6 +7,8 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: nutrition
     ports: ["5432:5432"]
+    volumes:
+      - nutrition_db_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d nutrition"]
       interval: 5s
@@ -24,6 +26,13 @@ services:
       EMBEDDING_MODEL: sentence-transformers/all-MiniLM-L6-v2
       TOP_K: 5
       SIM_THRESHOLD: 0.45
+      CLARIFAI_API_KEY: ${CLARIFAI_API_KEY}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      OPENAI_MODEL: ${OPENAI_MODEL}
     ports: ["0.0.0.0:8000:8000"]
     volumes:
       - .:/app:cached
+
+volumes:
+  nutrition_db_data:
+    name: nutrition_db_data

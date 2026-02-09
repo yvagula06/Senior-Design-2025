@@ -42,23 +42,14 @@ You should see both `nutrition_db` and `nutrition_api` running.
 
 ### Step 3: Set Up the Database
 
-**Create the schema:**
+The database is already populated with **50,000+ dishes** and persists across restarts via Docker volume.
+
+**Check database status:**
 ```bash
-docker-compose exec api alembic upgrade head
+docker exec nutrition_db psql -U postgres -d nutrition -c "SELECT COUNT(*) FROM dishes;"
 ```
 
-**Populate with 516 dishes (takes 2-3 minutes):**
-```bash
-docker exec -it nutrition_api python /app/scripts/ingest_comprehensive.py
-```
-
-You should see:
-```
-✅ INGESTION COMPLETE
-📊 Total dishes inserted: 516
-   • Dishes in database: 516
-   • Variants created: 778
-```
+**Note:** Database automatically persists - you only need to populate once during initial setup!
 
 ### Step 4: Configure Mobile App API
 
@@ -173,7 +164,7 @@ docker-compose down -v
 4. Tap **Generate Label**
 5. View complete nutrition breakdown with confidence score
 
-The app searches through 516 dishes to find the best match!
+The app searches through 50,000+ dishes to find the best match!
 
 ### History Tab - Track Your Meals
 - View previously generated labels
@@ -257,8 +248,10 @@ docker-compose up -d --build
 
 **Database is empty:**
 ```bash
-# Re-run the ingestion script
-docker exec -it nutrition_api python /app/scripts/ingest_comprehensive.py
+# Check database status first
+docker exec nutrition_db psql -U postgres -d nutrition -c "SELECT COUNT(*) FROM dishes;"
+
+# Database persists automatically - no need to repopulate unless volume was deleted
 ```
 
 **Backend not responding:**
@@ -319,6 +312,8 @@ curl http://YOUR_IP_ADDRESS:8000/health
 
 If this fails, check your firewall settings.
 
+**For more detailed troubleshooting, see [TROUBLESHOOTING.md](TROUBLESHOOTING.md)**
+
 ---
 
 ## 🗄️ Database Information
@@ -326,7 +321,7 @@ If this fails, check your firewall settings.
 **Database Details:**
 - **Location:** Docker container `nutrition_db`
 - **Type:** PostgreSQL 16 with pgvector extension
-- **Contents:** 516 dishes with 778 searchable variants
+- **Contents:** 50,000+ dishes from USDA database with embeddings
 - **Persistence:** Data persists between container restarts
 
 **View database contents:**
@@ -344,17 +339,78 @@ SELECT name, calories FROM dishes LIMIT 10;
 
 **Reset database (start fresh):**
 ```bash
+# Warning: This deletes all data!
 docker-compose down -v
 docker-compose up -d
-docker-compose exec api alembic upgrade head
-docker exec -it nutrition_api python /app/scripts/ingest_comprehensive.py
+
+# Database schema is auto-created on startup
+# To repopulate with USDA data, see scripts/import_usda_fixed.py
 ```
 
 ---
 
-## 📚 Additional Resources
+## � Advanced Features
+
+### Database Management
+
+**Current Database:**
+- **50,973 dishes** from USDA branded foods dataset
+- **Semantic search** powered by pgvector and sentence-transformers
+- **Automatic persistence** via Docker named volumes
+
+**Monitoring Database:**
+```bash
+# Check current dish count
+docker exec nutrition_db psql -U postgres -d nutrition -c "SELECT COUNT(*) FROM dishes;"
+
+# View recent dishes
+docker exec nutrition_db psql -U postgres -d nutrition -c "SELECT name FROM dishes LIMIT 10;"
+
+# Check database size
+docker exec nutrition_db psql -U postgres -d nutrition -c "
+  SELECT pg_size_pretty(pg_database_size('nutrition')) as db_size;
+"
+```
+
+**Adding More Dishes:**
+The import script can be run anytime to add more dishes:
+```bash
+# Import from CSV file
+docker exec nutrition_api python scripts/import_usda_fixed.py data/usda_branded_foods_reduced.csv
+
+# The script automatically:
+# - Skips existing dishes
+# - Generates embeddings for new dishes
+# - Handles missing nutrition data
+```
+
+### Vision API Configuration
+
+The vision API timeout has been increased to 60 seconds to handle model loading:
+- **Location:** `mobile/src/services/visionApi.ts`
+- **Default timeout:** 60000ms (60 seconds)
+- **Why:** Model initialization takes 30-40 seconds on first load
+
+### Database Persistence
+
+Data persists across restarts thanks to Docker volumes:
+- **Volume name:** `nutrition_db_data`
+- **Location:** Defined in `docker-compose.yml`
+- **Size:** Scales with number of dishes (~2-3 GB for 50K dishes)
+
+**To completely reset:**
+```bash
+docker-compose down -v  # Warning: Deletes all data!
+docker-compose up -d
+# Database will be empty, run import script to repopulate
+```
+
+---
+
+## �📚 Additional Resources
 
 - **Backend API Documentation:** Visit `http://localhost:8000/docs` while backend is running
+- **Troubleshooting Guide:** See `TROUBLESHOOTING.md` for common issues and solutions
 - **Mobile App Architecture:** See `mobile/README.md`
 - **Repository Overview:** See main `README.md`
 - **Data Sources:** See `DATASET_PLAN.md`
@@ -377,7 +433,7 @@ docker exec -it nutrition_api python /app/scripts/ingest_comprehensive.py
 
 After setup:
 - ✅ Try generating labels for different dishes
-- ✅ Explore the 516 dishes in the database
+- ✅ Explore the 50,000+ dishes in the database
 - ✅ Test with various calorie targets
 - ✅ Check confidence scores for different queries
 - ✅ Browse the API documentation
