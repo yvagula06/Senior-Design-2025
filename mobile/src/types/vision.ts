@@ -87,6 +87,12 @@ export interface CalorieEstimate {
   unit: string;              // "kcal"
 }
 
+export interface VolumeEstimate {
+  value: number;
+  unit: string;              // "ml" or "cm3"
+  confidence: number;        // 0.0 to 1.0
+}
+
 export interface AccuracyScore {
   overall: number;           // 0.0 to 1.0
   factors: {
@@ -104,7 +110,6 @@ export interface ModelVersions {
 }
 
 export interface ResponseMetadata {
-  estimation_mode: EstimationMode;
   processing_time_ms: number;
   model_versions: ModelVersions;
   warnings?: string[];
@@ -114,8 +119,11 @@ export interface VisionResponse {
   dish_predictions: DishPrediction[];
   selected_dish: SelectedDish;
   calorie_estimate: CalorieEstimate;
-  accuracy_score: AccuracyScore;
+  accuracy_score: AccuracyScore | number;  // Can be simple number or full object
+  estimation_mode: EstimationMode;  // At root level per API spec
   metadata: ResponseMetadata;
+  volume_estimate?: VolumeEstimate;  // Optional field from API
+  suggested_meal_log?: any;  // Optional field from API
 }
 
 /**

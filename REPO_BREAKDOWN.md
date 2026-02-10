@@ -2,7 +2,7 @@
 
 **Project Name:** NutriLabelAI  
 **Repository:** [github.com/yvagula06/Senior-Design-2025](https://github.com/yvagula06/Senior-Design-2025)  
-**Description:** AI-powered nutrition label generator with semantic search, mobile app, and comprehensive food database
+**Description:** AI-powered nutrition estimation system with semantic search, camera-based meal detection, mobile app, and comprehensive food database
 
 ---
 
@@ -11,64 +11,81 @@
 **NutriLabelAI** is a production-ready nutrition estimation system that helps users get accurate nutrition information for any dish by combining semantic search with a comprehensive food database.
 
 ### What It Does
-Enter a dish name like "chicken tikka masala" or "Big Mac" and get:
+**Text-Based Label Generation:** Enter a dish name like "chicken tikka masala" or "Big Mac" and get:
 - ✅ Complete nutrition breakdown (calories, protein, carbs, fat, fiber, sugar, sodium)
 - ✅ Confidence score indicating reliability
-- ✅ Best match from 516 dishes in database
+- ✅ Best match from 516+ dishes in database
 - ✅ Instant results via mobile app or API
+
+**Camera-Based Meal Estimation:** Take a photo of your meal and get:
+- ✅ Automatic dish identification from image
+- ✅ Volume/portion size estimation
+- ✅ Calorie estimates with accuracy ranges
+- ✅ Multiple estimation modes (depth, multi-angle, reference-based)
 
 ### System Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                     Mobile App (React Native)                │
-│  ┌──────────┬──────────┬──────────┬──────────┐              │
-│  │  Label   │ History  │ Explore  │ Profile  │  (Bottom Tabs)│
-│  └────┬─────┴─────┬────┴────┬─────┴────┬─────┘              │
-└───────┼───────────┼─────────┼──────────┼────────────────────┘
-        │           │         │          │
-        │ HTTP/REST │         │          │
-        ▼           ▼         ▼          ▼
-┌─────────────────────────────────────────────────────────────┐
-│              FastAPI Backend (Python)                        │
-│  ┌──────────────────────────────────────────────────┐       │
-│  │  POST /label - Generate nutrition label           │       │
-│  │  GET /dishes - Browse database                    │       │
-│  │  GET /health - Health check                       │       │
-│  └──────────────────────────────────────────────────┘       │
-│                           │                                  │
-│  ┌────────────────────────▼──────────────────────────┐      │
-│  │      Retrieval Pipeline                            │      │
-│  │  1. Generate embedding (384-dim vector)           │      │
-│  │  2. pgvector similarity search (cosine distance)  │      │
-│  │  3. Mixture aggregation (weighted average)        │      │
-│  │  4. Calorie scaling (portion adjustment)          │      │
-│  │  5. Confidence scoring                             │      │
-│  └────────────────────────┬──────────────────────────┘      │
-└───────────────────────────┼─────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│                     Mobile App (React Native)                    │
+│  ┌──────────┬──────────┬──────────┬──────────┬──────────┐       │
+│  │  Label   │ Camera   │ History  │ Explore  │ Profile  │ (Tabs)│
+│  └────┬─────┴────┬─────┴─────┬────┴────┬─────┴────┬─────┘       │
+└───────┼──────────┼───────────┼─────────┼──────────┼─────────────┘
+        │          │           │         │          │
+        │ HTTP/REST│           │         │          │
+        ▼          ▼           ▼         ▼          ▼
+┌─────────────────────────────────────────────────────────────────┐
+│              FastAPI Backend (Python)                            │
+│  ┌──────────────────────────────────────────────────────┐       │
+│  │  POST /label - Generate nutrition label              │       │
+│  │  POST /vision/estimate - Camera-based estimation     │       │
+│  │  GET /dishes - Browse database                       │       │
+│  │  GET /health - Health check                          │       │
+│  └──────────────────────────────────────────────────────┘       │
+│                           │                                      │
+│  ┌────────────────────────▼──────────────────────────┐          │
+│  │      Text-Based Retrieval Pipeline                 │          │
+│  │  1. Generate embedding (384-dim vector)            │          │
+│  │  2. pgvector similarity search (cosine distance)   │          │
+│  │  3. Mixture aggregation (weighted average)         │          │
+│  │  4. Calorie scaling (portion adjustment)           │          │
+│  │  5. Confidence scoring                              │          │
+│  └─────────────────────────────────────────────────────┘         │
+│                                                                   │
+│  ┌──────────────────────────────────────────────────────┐        │
+│  │      Vision-Based Estimation Pipeline                │        │
+│  │  1. Segmentation (dish detection & boundary)         │        │
+│  │  2. Volume estimation (depth/multi-angle/reference)  │        │
+│  │  3. Dish classification (predict dish type)          │        │
+│  │  4. Nutrition mapping (volume → calories)            │        │
+│  │  5. Vision confidence scoring                        │        │
+│  └────────────────────────┬─────────────────────────────┘        │
+└───────────────────────────┼──────────────────────────────────────┘
                             │
                             ▼
-┌─────────────────────────────────────────────────────────────┐
-│          PostgreSQL + pgvector Database                      │
-│  ┌──────────────┐         ┌─────────────────┐              │
-│  │   dishes     │◄───────┤  dish_variants  │              │
-│  │  (516 rows)  │         │   (778 rows)    │              │
-│  │              │         │                 │              │
-│  │ • name       │         │ • variant_text  │              │
-│  │ • calories   │         │ • embedding     │ ◄── HNSW Index│
-│  │ • protein_g  │         │   (VECTOR(384)) │              │
-│  │ • carbs_g    │         │ • language_code │              │
-│  │ • fat_g      │         └─────────────────┘              │
-│  │ • fiber_g    │                                           │
-│  │ • sugar_g    │                                           │
-│  │ • sodium_mg  │                                           │
-│  └──────────────┘                                           │
-└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│          PostgreSQL + pgvector Database                          │
+│  ┌──────────────┐         ┌─────────────────┐                  │
+│  │   dishes     │◄───────┤  dish_variants  │                  │
+│  │  (516+ rows) │         │   (778+ rows)   │                  │
+│  │              │         │                 │                  │
+│  │ • name       │         │ • variant_text  │                  │
+│  │ • calories   │         │ • embedding     │ ◄── HNSW Index   │
+│  │ • protein_g  │         │   (VECTOR(384)) │                  │
+│  │ • carbs_g    │         │ • language_code │                  │
+│  │ • fat_g      │         └─────────────────┘                  │
+│  │ • fiber_g    │                                               │
+│  │ • sugar_g    │                                               │
+│  │ • sodium_mg  │                                               │
+│  └──────────────┘                                               │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
 ### Core Features
-- 🍽️ **516 dishes** covering fast food, restaurants, home cooking, and international cuisines
+- 🍽️ **516+ dishes** covering fast food, restaurants, home cooking, and international cuisines
 - 🔍 **Semantic search** - finds dishes even with typos, synonyms, or different phrasings
+- 📸 **Camera-based estimation** - take a photo to get nutrition estimates with volume detection
 - 📊 **Complete nutrition** - 9 nutrients per dish (calories, macros, fiber, sugar, sodium)
 - 🎯 **Confidence scoring** - tells you how reliable the match is (0.0-1.0)
 - 📱 **Native mobile app** - iOS & Android via React Native + Expo
@@ -213,9 +230,14 @@ Senior-Design-2025/
 │   │   │   ├── Label/                # Label generation screens
 │   │   │   │   ├── LabelHomeScreen.tsx    # Input form
 │   │   │   │   └── LabelResultScreen.tsx  # Results display
+│   │   │   ├── Vision/               # Camera-based screens
+│   │   │   │   ├── CameraCaptureScreen.tsx  # Camera interface
+│   │   │   │   └── EstimationResultScreen.tsx # Vision results
 │   │   │   ├── History/              # History screens
 │   │   │   │   ├── HistoryListScreen.tsx  # List view
 │   │   │   │   └── HistoryDetailScreen.tsx # Detail view
+│   │   │   ├── AddEntryScreen.tsx    # Manual food entry
+│   │   │   ├── DailyConsumerScreen.tsx # Daily tracking/history
 │   │   │   ├── ExploreScreen.tsx     # Browse dishes
 │   │   │   └── ProfileScreen.tsx     # User profile
 │   │   │
@@ -223,6 +245,7 @@ Senior-Design-2025/
 │   │   │   ├── api.ts                # Axios client config
 │   │   │   ├── label.ts              # Label API calls
 │   │   │   ├── labelApi.ts           # Label service
+│   │   │   ├── visionApi.ts          # Vision API calls
 │   │   │   └── storage.ts            # AsyncStorage wrapper
 │   │   │
 │   │   ├── theme/                     # Design system
@@ -249,6 +272,7 @@ Senior-Design-2025/
 │   │   ├── __init__.py
 │   │   ├── dishes_router.py          # GET /dishes - Browse database
 │   │   ├── label_router.py           # POST /label - Generate labels ⭐
+│   │   ├── vision_router.py          # POST /vision/estimate - Camera estimation
 │   │   └── feedback_router.py        # POST /feedback - User feedback
 │   │
 │   ├── core/                          # Configuration
@@ -264,9 +288,12 @@ Senior-Design-2025/
 │   │
 │   ├── schemas/                       # Pydantic schemas
 │   │   ├── __init__.py
-│   │   └── label.py                  # Request/response models ⭐
-│   │                                 # - LabelRequest
-│   │                                 # - LabelResponse
+│   │   ├── label.py                  # Request/response models ⭐
+│   │   │                             # - LabelRequest
+│   │   │                             # - LabelResponse
+│   │   └── vision.py                 # Vision request/response models
+│   │                                 # - VisionRequest
+│   │                                 # - VisionResponse
 │   │
 │   ├── services/                      # Business logic ⭐
 │   │   ├── __init__.py
@@ -274,7 +301,13 @@ Senior-Design-2025/
 │   │   ├── mixture_service.py        # Weighted aggregation
 │   │   ├── scaling_service.py        # Calorie-based scaling
 │   │   ├── rebalance_service.py      # Nutrient rebalancing
-│   │   └── confidence_service.py     # Confidence scoring
+│   │   ├── confidence_service.py     # Confidence scoring
+│   │   ├── vision_orchestrator.py    # Vision pipeline orchestration
+│   │   ├── segmentation_service.py   # Dish segmentation from images
+│   │   ├── volume_estimator.py       # Volume/portion size estimation
+│   │   ├── dish_classifier.py        # Dish type classification
+│   │   ├── nutrition_mapper.py       # Volume to nutrition mapping
+│   │   └── vision_confidence_adapter.py # Vision confidence scoring
 │   │
 │   ├── utils/                         # Utilities
 │   │   ├── __init__.py
@@ -313,7 +346,7 @@ Senior-Design-2025/
 ├── 📝 scripts/                         # Data & Admin Scripts ⭐
 │   ├── ingest_seed.py                # Load seed dishes
 │   ├── embed_dishes.py               # Generate embeddings
-│   ├── ingest_comprehensive.py       # Populate 516 dishes ⭐⭐
+│   ├── import_usda_dishes.py         # Populate dishes from USDA data ⭐⭐
 │   ├── reduce_dataset.py             # Preprocess CSVs
 │   ├── inspect_db.py                 # Database inspector
 │   ├── query_db.py                   # Test queries
@@ -400,6 +433,57 @@ consistency_bonus = 0.02       # Bonus for consistent top results
 final_confidence = 0.92 - 0.05 + 0.02 = 0.89
 ```
 
+### Vision Services (app/services/)
+
+**1. Vision Orchestrator** ([vision_orchestrator.py](app/services/vision_orchestrator.py))
+```python
+# Coordinates the entire vision pipeline
+# Takes image(s) + metadata → Returns nutrition estimate
+def estimate_from_images(images, depth_data=None, mode='reference_based'):
+    segments = segmentation_service.detect_dishes(images)
+    volume = volume_estimator.estimate_volume(segments, depth_data, mode)
+    dish_type = dish_classifier.classify(segments)
+    nutrition = nutrition_mapper.map_to_nutrition(dish_type, volume)
+    confidence = vision_confidence_adapter.score(segments, volume, dish_type)
+    return NutritionEstimate(nutrition, confidence)
+```
+
+**2. Segmentation Service** ([segmentation_service.py](app/services/segmentation_service.py))
+```python
+# Detects and isolates dishes from images
+# Uses image processing to identify dish boundaries
+# Returns segmented regions for volume estimation
+```
+
+**3. Volume Estimator** ([volume_estimator.py](app/services/volume_estimator.py))
+```python
+# Estimates portion size using three modes:
+# - depth: Uses depth map + camera intrinsics (most accurate)
+# - multi_angle: Triangulates from multiple photos
+# - reference_based: Compares to standard portions in database
+```
+
+**4. Dish Classifier** ([dish_classifier.py](app/services/dish_classifier.py))
+```python
+# Identifies dish type from image features
+# Returns dish predictions with confidence scores
+# Integrated with semantic search for improved matching
+```
+
+**5. Nutrition Mapper** ([nutrition_mapper.py](app/services/nutrition_mapper.py))
+```python
+# Maps estimated volume to nutrition values
+# Uses portion size + dish type → calorie/macro predictions
+# Queries database for similar dishes and scales appropriately
+```
+
+**6. Vision Confidence Adapter** ([vision_confidence_adapter.py](app/services/vision_confidence_adapter.py))
+```python
+# Calculates reliability of vision-based estimates
+# Factors: segmentation quality, dish recognition confidence, volume accuracy
+# Returns accuracy score and uncertainty range
+```
+
 ### Database Schema
 
 **dishes table** - Canonical nutrition data (516 rows)
@@ -452,10 +536,15 @@ CREATE INDEX ON dish_variants USING hnsw (embedding vector_cosine_ops);
 App.tsx
   └── BottomTabNavigator
         ├── Label Tab
-        │     ├── LabelHomeScreen (input form)
+        │     ├── LabelHomeScreen (text input form)
         │     └── LabelResultScreen (nutrition card)
+        ├── Camera Tab
+        │     ├── CameraCaptureScreen (camera interface)
+        │     └── EstimationResultScreen (vision results)
         ├── History Tab
-        │     ├── HistoryListScreen (meal history)
+        │     ├── DailyConsumerScreen (daily food tracking)
+        │     ├── AddEntryScreen (manual food entry)
+        │     ├── HistoryListScreen (meal history list)
         │     └── HistoryDetailScreen (detailed view)
         ├── Explore Tab (browse database)
         └── Profile Tab (settings)
@@ -519,7 +608,7 @@ docker-compose exec api alembic upgrade head  # Create schema
 
 **3. Populate database with 516 dishes**
 ```bash
-docker exec -it nutrition_api python /app/scripts/ingest_comprehensive.py
+docker exec -it nutrition_api python /app/scripts/import_usda_dishes.py
 ```
 This takes 2-3 minutes and loads:
 - 1 seed dish (Chicken Tikka Masala)
@@ -544,7 +633,8 @@ npm start
 
 **6. Open on phone**
 - Scan QR code with Expo Go
-- Test by searching for "pizza" or "Big Mac"
+- Test text search: "pizza" or "Big Mac"
+- Test camera: take a photo of a meal
 
 See [QUICKSTART.md](QUICKSTART.md) for detailed instructions.
 
@@ -994,17 +1084,21 @@ const BASE_URL = 'http://YOUR_IP:8000';  // Update with your IP
 
 **Backend:**
 - [x] PostgreSQL schema with pgvector support
-- [x] FastAPI with 3 routers (label, dishes, feedback)
+- [x] FastAPI with 4 routers (label, dishes, feedback, vision)
 - [x] 4-stage retrieval pipeline (retrieval → mixture → scaling → confidence)
+- [x] Vision pipeline (segmentation → volume → classification → mapping)
 - [x] Database migrations with Alembic
-- [x] Comprehensive data ingestion (516 dishes)
+- [x] Comprehensive data ingestion (516+ dishes)
 - [x] Unit & integration tests
 - [x] Docker containerization
 
 **Mobile:**
 - [x] React Native app with Expo
-- [x] 4-tab navigation (Label, History, Explore, Profile)
+- [x] 5-tab navigation (Label, Camera, History, Explore, Profile)
 - [x] Label generation UI with confidence display
+- [x] Camera capture interface for meal photos
+- [x] Daily food tracking (DailyConsumerScreen)
+- [x] Manual entry screen (AddEntryScreen)
 - [x] Platform-aware API configuration
 - [x] TypeScript type safety
 - [x] Material Design UI (React Native Paper)
@@ -1025,11 +1119,12 @@ const BASE_URL = 'http://YOUR_IP:8000';  // Update with your IP
 
 ### 🚧 In Progress
 
-- [ ] History tab functionality (save/view past labels)
-- [ ] Explore tab (browse database by category)
-- [ ] Profile tab (user settings)
+- [ ] Enhanced history functionality (advanced filtering, date ranges)
+- [ ] Explore tab improvements (browse by category, filters)
+- [ ] Profile tab enhancements (preferences, goals tracking)
+- [ ] Vision model optimization (faster inference, better accuracy)
 - [ ] Expanded database (target: 800+ dishes)
-- [ ] Additional test coverage
+- [ ] Additional test coverage for vision pipeline
 
 ### 📋 Future Enhancements
 
@@ -1041,11 +1136,12 @@ const BASE_URL = 'http://YOUR_IP:8000';  // Update with your IP
 - [ ] Export nutrition data (CSV/PDF)
 
 **Medium-term:**
-- [ ] Image-based nutrition estimation (OCR/Computer Vision)
-- [ ] Barcode scanning
+- [ ] OCR for nutrition labels (extract from product packaging)
+- [ ] Barcode scanning integration
 - [ ] Meal planning features
 - [ ] Recipe suggestions based on nutrition goals
-- [ ] Social sharing
+- [ ] Social sharing and meal comparisons
+- [ ] Improved depth sensing accuracy
 
 **Long-term:**
 - [ ] AI-powered meal recommendations
@@ -1129,10 +1225,11 @@ chore: maintenance tasks
 - Sub-100ms query latency for 516+ dishes
 - Handles natural language variations, typos, and synonyms
 
-**2. Multi-Stage Pipeline**
-- Retrieval → Mixture → Scaling → Confidence
+**2. Dual-Mode Estimation**
+- Text-based: Retrieval → Mixture → Scaling → Confidence
+- Vision-based: Segmentation → Volume → Classification → Mapping
 - Each stage adds intelligence and reliability
-- Transparent confidence scoring
+- Transparent confidence scoring for both modes
 
 **3. Production-Ready Architecture**
 - Docker containerization for consistent environments
@@ -1153,12 +1250,14 @@ chore: maintenance tasks
 - Architecture diagrams and workflows
 
 ### Technical Achievements
-- ✅ 516 dishes with 778 searchable variants
+- ✅ 516+ dishes with 778+ searchable variants
 - ✅ pgvector HNSW indexes for fast similarity search
 - ✅ 95%+ confidence on exact matches
+- ✅ Camera-based meal estimation with multiple modes
+- ✅ Vision pipeline with segmentation and volume estimation
 - ✅ Type-safe end-to-end (TypeScript + Pydantic)
 - ✅ Fully containerized deployment
-- ✅ Cross-platform mobile app
+- ✅ Cross-platform mobile app with camera integration
 - ✅ RESTful API with OpenAPI documentation
 - ✅ Production-grade error handling and validation
 
@@ -1170,13 +1269,15 @@ chore: maintenance tasks
 1. Read [QUICKSTART.md](QUICKSTART.md) for environment setup
 2. Start backend and populate database
 3. Test API: `curl http://localhost:8000/docs`
-4. Run mobile app and test label generation
+4. Run mobile app and test both label generation and camera capture
 5. Explore codebase starting with [app/main.py](app/main.py) and [mobile/App.tsx](mobile/App.tsx)
 
 ### Understanding the Codebase
-- **Start with:** [app/api/label_router.py](app/api/label_router.py) (main endpoint)
-- **Then explore:** [app/services/](app/services/) (business logic)
+- **Start with:** [app/api/label_router.py](app/api/label_router.py) (text-based endpoint)
+- **Vision pipeline:** [app/api/vision_router.py](app/api/vision_router.py) (camera-based endpoint)
+- **Then explore:** [app/services/](app/services/) (business logic for both pipelines)
 - **Mobile entry:** [mobile/src/screens/Label/LabelHomeScreen.tsx](mobile/src/screens/Label/LabelHomeScreen.tsx)
+- **Camera interface:** [mobile/src/screens/Vision/CameraCaptureScreen.tsx](mobile/src/screens/Vision/CameraCaptureScreen.tsx)
 - **Database:** [app/db/models.py](app/db/models.py) and [schema.sql](schema.sql)
 
 ### Common Tasks
@@ -1194,5 +1295,5 @@ chore: maintenance tasks
 
 ---
 
-*Last Updated: January 17, 2026*  
-*Version: 1.0 - Production Ready*
+*Last Updated: February 8, 2026*  
+*Version: 1.1 - Vision Pipeline Integration*

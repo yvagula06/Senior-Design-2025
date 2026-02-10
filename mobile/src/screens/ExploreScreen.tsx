@@ -467,6 +467,36 @@ export const ExploreScreen: React.FC = () => {
           </ScrollView>
         </View>
 
+        {/* Camera Estimation Card - Only show when not filtering */}
+        {!searchQuery.trim() && selectedCategory === 'All' && (
+          <TouchableOpacity 
+            style={styles.cameraCard}
+            onPress={handleOpenCamera}
+            activeOpacity={0.8}
+          >
+            <View style={styles.cameraCardContent}>
+              <View style={styles.cameraIconContainer}>
+                <MaterialCommunityIcons 
+                  name="camera" 
+                  size={32} 
+                  color={AppColors.accent} 
+                />
+              </View>
+              <View style={styles.cameraTextContainer}>
+                <Text style={styles.cameraCardTitle}>Estimate Nutrition from Photos</Text>
+                <Text style={styles.cameraCardSubtitle}>
+                  Take photos of your meal for instant calorie & nutrition analysis
+                </Text>
+              </View>
+              <MaterialCommunityIcons 
+                name="chevron-right" 
+                size={24} 
+                color={AppColors.textSecondary} 
+              />
+            </View>
+          </TouchableOpacity>
+        )}
+
         {/* Search Results Info */}
         {(searchQuery.trim() || selectedCategory !== 'All') && (
           <View style={styles.searchResultsInfo}>
@@ -696,6 +726,45 @@ const styles = StyleSheet.create({
   },
   categoryChipTextActive: {
     color: '#FFF',
+  },
+  // Camera Card
+  cameraCard: {
+    backgroundColor: AppColors.cardBackground,
+    borderRadius: BorderRadius.lg,
+    marginHorizontal: Spacing.lg,
+    marginTop: Spacing.md,
+    marginBottom: Spacing.lg,
+    padding: Spacing.lg,
+    borderWidth: 2,
+    borderColor: AppColors.accent,
+    ...Shadows.md,
+  },
+  cameraCardContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.md,
+  },
+  cameraIconContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: BorderRadius.lg,
+    backgroundColor: `${AppColors.accent}15`,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  cameraTextContainer: {
+    flex: 1,
+    gap: Spacing.xs,
+  },
+  cameraCardTitle: {
+    fontSize: Typography.fontSize.md,
+    fontWeight: Typography.fontWeight.bold,
+    color: AppColors.text,
+  },
+  cameraCardSubtitle: {
+    fontSize: Typography.fontSize.sm,
+    color: AppColors.textSecondary,
+    lineHeight: Typography.lineHeight.relaxed * Typography.fontSize.sm,
   },
   searchResultsInfo: {
     paddingHorizontal: Spacing.lg,

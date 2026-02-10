@@ -298,3 +298,184 @@ class VisionResponse(BaseModel):
         None,
         description="Additional metadata about the estimation process"
     )
+
+
+# ============================================================================
+# Phase 3: Feedback Collection & Personalization Schemas
+# ============================================================================
+
+
+class FeedbackType(str, Enum):
+    """Type of user feedback."""
+    CONFIRMED = "confirmed"                    # User confirmed prediction was correct
+    CORRECTED_DISH = "corrected_dish"         # User changed the dish
+    CORRECTED_PORTION = "corrected_portion"   # User adjusted portion size
+    QUICK_CORRECTION = "quick_correction"     # Quick thumbs up/down or too high/low
+
+
+class QuickFeedback(str, Enum):
+    """Quick feedback options."""
+    ACCURATE = "accurate"           # Thumbs up - estimate was accurate
+    TOO_HIGH = "too_high"          # Estimate was too high
+    TOO_LOW = "too_low"            # Estimate was too low
+    WRONG_DISH = "wrong_dish"      # Dish was misidentified
+
+
+class PlateSize(str, Enum):
+    """Plate/bowl size options."""
+    SMALL_PLATE = "small_plate"         # ~8 inch diameter
+    STANDARD_PLATE = "standard_plate"   # ~10 inch diameter
+    LARGE_PLATE = "large_plate"         # ~12 inch diameter
+    BOWL = "bowl"                        # Standard bowl
+    HAND = "hand"                        # Hand reference (for scale)
+
+
+class VisionFeedbackRequest(BaseModel):
+    """Request schema for POST /vision/feedback - Phase 3."""
+    
+    # Link to original estimate (if available from backend)
+    estimate_id: Optional[str] = Field(
+        None,
+        description="UUID of the original vision estimate (if stored)"
+    )
+    
+    # User identification
+    user_id: Optional[str] = Field(
+        None,
+        description="Optional user ID for personalization"
+    )
+    
+    # Feedback type
+    feedback_type: FeedbackType = Field(
+        ...,
+        description="Type of feedback being provided"
+    )
+    
+    # Original prediction context (for logging)
+    original_dish_name: str = Field(
+        ...,
+        description="The dish name that was originally predicted"
+    )
+    original_calories: float = Field(
+        ...,
+        ge=0,
+        description="The calorie value that was originally estimated"
+    )
+    original_mode: EstimationMode = Field(
+        ...,
+        description="The estimation mode used"
+    )
+    
+    # User corrections
+    confirmed_dish: Optional[str] = Field(
+        None,
+        description="The dish name the user confirmed or selected"
+    )
+    portion_adjustment: Optional[float] = Field(
+        None,
+        ge=0.25,
+        le=2.0,
+        description="Portion size multiplier (e.g., 0.5, 0.75, 1.0, 1.25, 1.5)"
+    )
+    plate_size: Optional[PlateSize] = Field(
+        None,
+        description="What plate/bowl size was used"
+    )
+    
+    # Quick feedback
+    quick_feedback: Optional[QuickFeedback] = Field(
+        None,
+        description="Quick thumbs up/down or correction indicator"
+    )
+    corrected_calories: Optional[float] = Field(
+        None,
+        ge=0,
+        description="If user manually provides a calorie correction"
+    )
+    
+    # Additional context
+    notes: Optional[str] = Field(
+        None,
+        max_length=500,
+        description="Optional user notes or comments"
+    )
+    
+    # Metadata
+    timestamp: Optional[datetime] = Field(
+        None,
+        description="When feedback was provided"
+    )
+
+
+class VisionFeedbackResponse(BaseModel):
+    """Response schema for POST /vision/feedback - Phase 3."""
+    
+    success: bool = Field(
+        ...,
+        description="Whether feedback was successfully recorded"
+    )
+    feedback_id: str = Field(
+        ...,
+        description="UUID of the stored feedback record"
+    )
+    message: str = Field(
+        ...,
+        description="Confirmation message"
+    )
+    
+    # Optional personalization info
+    personalization_updated: Optional[bool] = Field(
+        None,
+        description="Whether user's personalization profile was updated"
+    )
+    new_portion_factor: Optional[float] = Field(
+        None,
+        description="Updated average portion factor for this user"
+    )
+
+
+class PersonalizationProfile(BaseModel):
+    """User's personalization profile - Phase 3."""
+    
+    user_id: str = Field(..., description="User identifier")
+    
+    # Global preferences
+    avg_portion_factor: float = Field(
+        default=1.0,
+        ge=0.5,
+        le=2.0,
+        description="Average portion size factor for this user"
+    )
+    feedback_count: int = Field(
+        default=0,
+        ge=0,
+        description="Number of feedback entries collected"
+    )
+    confidence_score: float = Field(
+        default=0.0,
+        ge=0.0,
+        le=1.0,
+        description="Confidence in personalization (higher = more data)"
+    )
+    
+    # Per-dish preferences (optional)
+    dish_preferences: Optional[Dict[str, Dict[str, float]]] = Field(
+        None,
+        description="Per-dish portion preferences: {dish_name: {avg_factor, count}}"
+    )
+    
+    # Per-category preferences (optional)
+    category_preferences: Optional[Dict[str, Dict[str, float]]] = Field(
+        None,
+        description="Per-category portion preferences: {category: {avg_factor, count}}"
+    )
+    
+    # Metadata
+    last_updated: datetime = Field(
+        ...,
+        description="When profile was last updated"
+    )
+    created_at: datetime = Field(
+        ...,
+        description="When profile was created"
+    )

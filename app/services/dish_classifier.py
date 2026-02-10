@@ -1,8 +1,8 @@
 """
 Dish Classification Service
 
-Uses OpenAI Vision API (GPT-4o-mini) for real-time dish classification.
-Falls back to mocked predictions if API fails or is unavailable.
+Uses Clarifai API for dish classification as per Camera_Functionality_Plan.md.
+Falls back to OpenAI Vision API, then to mocked predictions if both fail.
 """
 
 from typing import List, Dict
@@ -12,6 +12,15 @@ import logging
 from openai import OpenAI
 from dotenv import load_dotenv
 
+# Import Clarifai client
+try:
+    from app.services.vision_api_client import get_clarifai_client
+    CLARIFAI_AVAILABLE = True
+except ImportError as e:
+    logger = logging.getLogger(__name__)
+    logger.warning(f"⚠️ Clarifai client not available: {e}")
+    CLARIFAI_AVAILABLE = False
+
 # Load environment variables
 load_dotenv()
 
@@ -19,25 +28,43 @@ logger = logging.getLogger(__name__)
 
 
 class DishClassifier:
-    """OpenAI Vision-powered dish classifier with fallback."""
+    """
+    Dish classifier using Clarifai (primary) with OpenAI (fallback).
+    
+    Hierarchy:
+    1. Clarifai API (preferred as per plan)
+    2. OpenAI Vision API (fallback)
+    3. Mocked predictions (last resort)
+    """
     
     def __init__(self):
-        """Initialize OpenAI client and fallback predictions."""
-        self.api_key = os.getenv("OPENAI_API_KEY")
-        self.model = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
-        self.client = None
-        
-        if self.api_key:
+        """Initialize Clarifai and OpenAI clients with fallback predictions."""
+        # Initialize Clarifai client
+        self.clarifai_client = None
+        if CLARIFAI_AVAILABLE:
             try:
-                self.client = OpenAI(api_key=self.api_key)
-                logger.info(f"✅ OpenAI Vision API initialized with model: {self.model}")
+                self.clarifai_client = get_clarifai_client()
+                if self.clarifai_client.stub:
+                    logger.info("✅ Clarifai client initialized (primary)")
+            except Exception as e:
+                logger.warning(f"⚠️ Failed to initialize Clarifai: {e}")
+        
+        # Initialize OpenAI client (fallback)
+        self.openai_api_key = os.getenv("OPENAI_API_KEY")
+        self.openai_model = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+        self.openai_client = None
+        
+        if self.openai_api_key:
+            try:
+                self.openai_client = OpenAI(api_key=self.openai_api_key)
+                logger.info(f"✅ OpenAI Vision API initialized (fallback) with model: {self.openai_model}")
             except Exception as e:
                 logger.warning(f"⚠️ Failed to initialize OpenAI client: {e}")
-                self.client = None
+                self.openai_client = None
         else:
-            logger.warning("⚠️ OPENAI_API_KEY not found, using fallback predictions")
+            logger.warning("⚠️ OPENAI_API_KEY not found")
         
-        # Fallback predictions if API fails
+        # Fallback predictions if all APIs fail
         self.fallback_predictions = [
             {
                 "dish_id": "1",
@@ -65,7 +92,12 @@ class DishClassifier:
         top_k: int = 3
     ) -> List[Dict[str, any]]:
         """
-        Classify dish from base64-encoded image using OpenAI Vision API.
+        Classify dish from base64-encoded image.
+        
+        Tries in order:
+        1. Clarifai API (primary)
+        2. OpenAI Vision API (fallback)
+        3. Mocked predictions (last resort)
         
         Args:
             image_base64: Base64-encoded image data
@@ -74,15 +106,27 @@ class DishClassifier:
         Returns:
             List of predictions with dish_id, dish_name, confidence, category
         """
-        # Try OpenAI Vision API first
-        if self.client:
+        # Try Clarifai first (per Camera_Functionality_Plan.md)
+        if self.clarifai_client and self.clarifai_client.stub:
             try:
+                logger.info("🔍 Trying Clarifai API for dish classification...")
+                predictions = self.clarifai_client.predict_dish(image_base64, top_k)
+                if predictions:
+                    logger.info(f"✅ Clarifai classified: {[p['dish_name'] for p in predictions]}")
+                    return predictions
+            except Exception as e:
+                logger.warning(f"⚠️ Clarifai API failed: {e}, trying OpenAI fallback")
+        
+        # Try OpenAI Vision API as fallback
+        if self.openai_client:
+            try:
+                logger.info("🔍 Trying OpenAI Vision API (fallback)...")
                 return self._classify_with_openai(image_base64, top_k)
             except Exception as e:
-                logger.error(f"❌ OpenAI API failed: {e}, using fallback")
+                logger.error(f"❌ OpenAI API also failed: {e}, using mocked fallback")
         
-        # Fallback to mocked predictions
-        logger.warning(f"Using fallback predictions for dish classification")
+        # Last resort: return mocked predictions
+        logger.warning(f"Using mocked fallback predictions for dish classification")
         return self.fallback_predictions[:top_k]
     
     def _classify_with_openai(self, image_base64: str, top_k: int) -> List[Dict[str, any]]:
@@ -116,8 +160,8 @@ Return ONLY valid JSON in this exact format:
 Be specific with dish names. If you see multiple components, name the main dish."""
 
         # Call OpenAI Vision API
-        response = self.client.chat.completions.create(
-            model=self.model,
+        response = self.openai_client.chat.completions.create(
+            model=self.openai_model,
             messages=[
                 {
                     "role": "user",

@@ -19,7 +19,8 @@
   },
   "homepage": "https://github.com/yvagula06/Senior-Design-2025#readme",
   "dependencies": {
-    "expo": "^54.0.25"
+    "@react-native-picker/picker": "2.11.1",
+    "expo": "~54.0.33"
   },
   "devDependencies": {
     "@types/react": "~19.1.10",
