@@ -4,7 +4,9 @@
   "description": "A comprehensive nutrition tracking system with AI-powered image analysis, consisting of a **React Native mobile app** and a **FastAPI backend** with PostgreSQL + pgvector.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "android": "expo run:android",
+    "ios": "expo run:ios"
   },
   "repository": {
     "type": "git",
@@ -20,7 +22,9 @@
   "homepage": "https://github.com/yvagula06/Senior-Design-2025#readme",
   "dependencies": {
     "@react-native-picker/picker": "2.11.1",
-    "expo": "~54.0.33"
+    "expo": "~54.0.33",
+    "react": "19.1.0",
+    "react-native": "0.81.5"
   },
   "devDependencies": {
     "@types/react": "~19.1.10",
