@@ -8,13 +8,17 @@ Mobile app endpoint for nutrition label generation:
 """
 
 from fastapi import APIRouter, HTTPException, status
+import json
 import traceback
+from typing import Optional
+from sqlalchemy import text
 
 from app.schemas.label import LabelRequest, LabelResponse, Nutrients, Candidate
 from app.services.retrieval_service import retrieve_candidates
 from app.services.mixture_service import compute_mixture
 from app.services.scaling_service import scale_nutrients
 from app.services.confidence_service import compute_confidence
+from app.db.session import engine, get_or_create_user_id
 
 
 router = APIRouter(
@@ -97,21 +101,78 @@ def create_label(req: LabelRequest) -> LabelResponse:
         
         # Build mobile-friendly response
         best_match = candidates_with_nutrients[0][0]
-        
+
+        nutrition_dict = {
+            "calories":         round(final_nutrients.calories, 1),
+            "protein_g":        round(final_nutrients.protein_g, 1),
+            "carbs_g":          round(final_nutrients.carbs_g, 1),
+            "fat_g":            round(final_nutrients.fat_g, 1),
+            "fiber_g":          round(final_nutrients.fiber_g, 1) if final_nutrients.fiber_g is not None else None,
+            "sugar_g":          round(final_nutrients.sugar_g, 1) if final_nutrients.sugar_g is not None else None,
+            "sodium_mg":        round(final_nutrients.sodium_mg, 0) if final_nutrients.sodium_mg is not None else None,
+            "potassium_mg":     round(final_nutrients.potassium_mg, 0) if final_nutrients.potassium_mg is not None else None,
+            "saturated_fat_g":  round(final_nutrients.saturated_fat_g, 1) if final_nutrients.saturated_fat_g is not None else None,
+            "trans_fat_g":      round(final_nutrients.trans_fat_g, 1) if final_nutrients.trans_fat_g is not None else None,
+            "cholesterol_mg":   round(final_nutrients.cholesterol_mg, 0) if final_nutrients.cholesterol_mg is not None else None,
+            "vitamin_a_mcg":    round(final_nutrients.vitamin_a_mcg, 1) if final_nutrients.vitamin_a_mcg is not None else None,
+            "vitamin_c_mg":     round(final_nutrients.vitamin_c_mg, 1) if final_nutrients.vitamin_c_mg is not None else None,
+            "vitamin_d_mcg":    round(final_nutrients.vitamin_d_mcg, 1) if final_nutrients.vitamin_d_mcg is not None else None,
+            "calcium_mg":       round(final_nutrients.calcium_mg, 0) if final_nutrients.calcium_mg is not None else None,
+            "iron_mg":          round(final_nutrients.iron_mg, 1) if final_nutrients.iron_mg is not None else None,
+        }
+
+        # ---------- persist to meal_logs (manual flow) ----------
+        # Writes a frozen nutrition snapshot so history is never affected by
+        # future model or data updates.  No-op when device_id is absent
+        # (label-preview mode: client will confirm before saving).
+        meal_log_id: Optional[int] = None
+        if req.device_id:
+            try:
+                dish_id_int: Optional[int] = None
+                try:
+                    dish_id_int = int(best_match.dish_id)
+                except (ValueError, TypeError):
+                    pass
+
+                with engine.connect() as conn:
+                    user_id = get_or_create_user_id(req.device_id, conn)
+                    meal_log_id = conn.execute(
+                        text("""
+                            INSERT INTO meal_logs (
+                                user_id, dish_id, entry_source,
+                                logged_dish_name, logged_calories,
+                                nutrition_label, serving_multiplier,
+                                match_confidence, logged_at, created_at
+                            ) VALUES (
+                                :user_id, :dish_id, 'manual',
+                                :dish_name, :calories,
+                                :nutrition_label::jsonb, :serving_multiplier,
+                                :confidence, now(), now()
+                            )
+                            RETURNING id
+                        """),
+                        {
+                            "user_id": user_id,
+                            "dish_id": dish_id_int,
+                            "dish_name": best_match.name,
+                            "calories": nutrition_dict["calories"],
+                            "nutrition_label": json.dumps(nutrition_dict),
+                            "serving_multiplier": round(scaling_factor, 4),
+                            "confidence": round(confidence_result.score, 4),
+                        },
+                    ).fetchone()[0]
+                    conn.commit()
+            except Exception:
+                # Persistence failure must not break the label response.
+                traceback.print_exc()
+        # --------------------------------------------------------
+
         return LabelResponse(
             matched_dish=best_match.name,
-            nutrition={
-                "calories": round(final_nutrients.calories, 1),
-                "protein_g": round(final_nutrients.protein_g, 1),
-                "carbs_g": round(final_nutrients.carbs_g, 1),
-                "fat_g": round(final_nutrients.fat_g, 1),
-                "sugar_g": round(final_nutrients.sugar_g, 1) if final_nutrients.sugar_g > 0 else None,
-                "fiber_g": round(final_nutrients.fiber_g, 1) if final_nutrients.fiber_g > 0 else None,
-                "sodium_mg": round(final_nutrients.sodium_mg, 0) if final_nutrients.sodium_mg > 0 else None,
-                "potassium_mg": None  # Not tracked in current schema, can add later
-            },
+            nutrition=nutrition_dict,
             confidence=round(confidence_result.score, 2),
-            explanation=confidence_result.explanation
+            explanation=confidence_result.explanation,
+            meal_log_id=meal_log_id,
         )
     
     except ValueError as e:

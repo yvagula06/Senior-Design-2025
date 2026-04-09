@@ -298,6 +298,10 @@ class VisionResponse(BaseModel):
         None,
         description="Additional metadata about the estimation process"
     )
+    estimate_id: Optional[str] = Field(
+        None,
+        description="vision_estimates row ID \u2014 pass this when saving to meal_logs or submitting feedback",
+    )
 
 
 # ============================================================================

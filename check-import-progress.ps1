@@ -18,9 +18,9 @@ docker exec nutrition_db psql -U postgres -d nutrition -t -c "SELECT COUNT(*) FR
     Write-Host "$count" -ForegroundColor Green
 }
 
-docker exec nutrition_db psql -U postgres -d nutrition -t -c "SELECT COUNT(*) FROM embeddings" 2>$null | ForEach-Object {
+docker exec nutrition_db psql -U postgres -d nutrition -t -c "SELECT COUNT(*) FROM dish_variants" 2>$null | ForEach-Object {
     $count = $_.Trim()
-    Write-Host "   Embeddings: " -NoNewline
+    Write-Host "   Variants: " -NoNewline
     Write-Host "$count" -ForegroundColor Green
 }
 

@@ -135,8 +135,11 @@ class VisionOrchestrator:
             volume_result["uncertainty"] = 0.5  # High uncertainty
         
         # STEP 5: Nutrition Mapping
-        nutrition_result = nutrition_mapper.map_to_calories(
-            dish_id=selected_dish.dish_id,
+        # The classifier returns a human-readable dish name, not a real DB
+        # primary key. map_by_name resolves it via pgvector semantic search so
+        # nutrient data always comes from the canonical dishes table.
+        nutrition_result = nutrition_mapper.map_by_name(
+            dish_name=selected_dish.dish_name,
             volume_ml=volume_result["volume_ml"]
         )
         
@@ -188,10 +191,11 @@ class VisionOrchestrator:
             confidence=volume_result["confidence"]
         )
         
-        # Suggested meal log
+        # Suggested meal log — use dish_id resolved from DB (not the fake
+        # string ID that the classifier returns).
         suggested_meal_log = SuggestedMealLog(
-            dish_id=selected_dish.dish_id,
-            dish_name=selected_dish.dish_name,
+            dish_id=nutrition_result.get("dish_id", selected_dish.dish_id),
+            dish_name=nutrition_result.get("dish_name", selected_dish.dish_name),
             calories=round(calories, 1),
             serving_size=f"~{round(volume_result['volume_ml'])}ml",
             timestamp=datetime.now(),

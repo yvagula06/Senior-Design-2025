@@ -1,13 +1,16 @@
 """
-Import USDA branded food dishes into the database.
-Works with the existing schema: dishes/nutrients/embeddings tables.
+Import USDA branded food dishes into the canonical flat-schema database.
+
+Canonical schema (no separate nutrients / embeddings tables):
+  dishes         — flat nutrition table (all macros/micros inline, per 100 g)
+  dish_variants  — one row per search alias, with 384-dim pgvector embedding
 
 Usage:
     python scripts/import_usda_fixed.py data/usda_branded_foods_reduced.csv [--limit N]
 
 Features:
 - Batch processing for memory efficiency
-- Automatic embedding generation
+- Automatic 384-dim embedding generation (all-MiniLM-L6-v2)
 - Duplicate detection and skipping
 - Progress tracking
 """
@@ -15,6 +18,7 @@ Features:
 import sys
 import csv
 import time
+import json
 import argparse
 from pathlib import Path
 from typing import List, Dict, Optional
@@ -60,43 +64,51 @@ def generate_embeddings(texts: List[str], model: SentenceTransformer) -> List[Li
 
 
 def parse_usda_row(row: Dict[str, str]) -> Optional[Dict]:
-    """Parse a USDA CSV row into dish data."""
+    """Parse a USDA CSV row into canonical dishes schema."""
     name = row.get('food_name', '').strip()
     brand = row.get('brand_owner', '').strip()
-    
+
     if not name:
         return None
-    
-    # Combine name and brand for better searchability
-    full_name = f"{name} ({brand})" if brand else name
-    full_name = normalize_name(full_name)
-    
-    # Parse nutrition values (USDA provides per 100g)
+
+    full_name = normalize_name(f"{name} ({brand})" if brand else name)
+
+    # Core macros — calories required; default others to 0 if missing
     calories = normalize_value(row.get('energy_kcal'))
-    protein = normalize_value(row.get('protein_g'))
-    carbs = normalize_value(row.get('carbohydrates_g'))
-    fat = normalize_value(row.get('fat_total_g'))
-    
-    # Skip rows missing critical nutrition data
     if calories is None:
         return None
-    
+
     return {
+        # dishes columns (canonical flat schema — no nutrients/embeddings tables)
         'name': full_name,
-        'cuisine': brand or 'USDA',
-        'kcal': calories,
-        'protein_g': protein,
-        'carbs_g': carbs,
-        'fat_g': fat,
+        'calories': calories,
+        'protein_g': normalize_value(row.get('protein_g')) or 0.0,
+        'fat_g': normalize_value(row.get('fat_total_g')) or 0.0,
+        'carbs_g': normalize_value(row.get('carbohydrates_g')) or 0.0,
         'fiber_g': normalize_value(row.get('fiber_g')),
         'sugar_g': normalize_value(row.get('sugars_g')),
         'sodium_mg': normalize_value(row.get('sodium_mg')),
-        'variant_text': name.lower(),  # Use original name for search
+        'potassium_mg': normalize_value(row.get('potassium_mg')),
+        'saturated_fat_g': normalize_value(row.get('saturated_fat_g')),
+        'trans_fat_g': normalize_value(row.get('trans_fat_g')),
+        'cholesterol_mg': normalize_value(row.get('cholesterol_mg')),
+        'vitamin_a_mcg': normalize_value(row.get('vitamin_a_mcg')),
+        'vitamin_c_mg': normalize_value(row.get('vitamin_c_mg')),
+        'vitamin_d_mcg': normalize_value(row.get('vitamin_d_mcg')),
+        'calcium_mg': normalize_value(row.get('calcium_mg')),
+        'iron_mg': normalize_value(row.get('iron_mg')),
+        'data_source': 'USDA',
+        'confidence_score': 0.95,
+        'is_active': True,
+        'version': 1,
+        # variant metadata — extracted during batch insert, not a dishes column
+        '_variant_text': name.lower(),
     }
 
 
-def import_dishes(csv_path: Path, engine, model: SentenceTransformer, limit: Optional[int] = None):
-    """Import dishes from CSV file."""
+def import_dishes(csv_path: Path, engine, model: SentenceTransformer,
+                  limit: Optional[int] = None):
+    """Import dishes from CSV file using canonical flat schema."""
     
     if not csv_path.exists():
         print(f"❌ Error: File not found: {csv_path}")
@@ -152,7 +164,7 @@ def import_dishes(csv_path: Path, engine, model: SentenceTransformer, limit: Opt
                 pbar.postfix = [f"{total_inserted:,}", f"{total_skipped:,}"]
                 pbar.update(1)
                 continue
-            
+
             existing_names.add(dish_data['name'].lower())
             batch_dishes.append(dish_data)
             
@@ -161,12 +173,12 @@ def import_dishes(csv_path: Path, engine, model: SentenceTransformer, limit: Opt
                 inserted = process_batch(batch_dishes, model, engine)
                 total_inserted += inserted
                 batch_dishes = []
-            
+
             pbar.postfix = [f"{total_inserted:,}", f"{total_skipped:,}"]
             pbar.update(1)
-        
+
         pbar.close()
-        
+
         # Process remaining dishes
         if batch_dishes:
             print("\n🔄 Processing final batch...")
@@ -184,79 +196,68 @@ def import_dishes(csv_path: Path, engine, model: SentenceTransformer, limit: Opt
 
 
 def process_batch(batch_dishes: List[Dict], model: SentenceTransformer, engine) -> int:
-    """Process a batch of dishes: insert into dishes/nutrients/embeddings tables."""
-    
+    """Insert a batch of dishes + primary variants into the canonical schema."""
+
     if not batch_dishes:
         return 0
-    
-    # Generate embeddings for all variant texts in this batch
-    variant_texts = [dish['variant_text'] for dish in batch_dishes]
+
+    # _variant_text is metadata, not a dishes column
+    variant_texts = [d['_variant_text'] for d in batch_dishes]
     embeddings = generate_embeddings(variant_texts, model)
-    
+
     with Session(engine) as session:
         try:
             inserted_count = 0
-            
+
             for dish_data, embedding in zip(batch_dishes, embeddings):
-                variant_text = dish_data.pop('variant_text')
-                cuisine = dish_data.pop('cuisine', None)
-                
-                # Extract nutrition data
-                kcal = dish_data.pop('kcal')
-                protein_g = dish_data.pop('protein_g', None)
-                carbs_g = dish_data.pop('carbs_g', None)
-                fat_g = dish_data.pop('fat_g', None)
-                fiber_g = dish_data.pop('fiber_g', None)
-                sugar_g = dish_data.pop('sugar_g', None)
-                sodium_mg = dish_data.pop('sodium_mg', None)
-                
-                # Insert dish
+                variant_text = dish_data.pop('_variant_text')
+
+                # Insert into the flat canonical dishes table
                 result = session.execute(
                     text("""
-                        INSERT INTO dishes (name, cuisine)
-                        VALUES (:name, :cuisine)
-                        RETURNING dish_id
+                        INSERT INTO dishes (
+                            name, calories, protein_g, fat_g, carbs_g,
+                            fiber_g, sugar_g, sodium_mg, potassium_mg,
+                            saturated_fat_g, trans_fat_g, cholesterol_mg,
+                            vitamin_a_mcg, vitamin_c_mg, vitamin_d_mcg,
+                            calcium_mg, iron_mg,
+                            data_source, confidence_score, is_active, version
+                        ) VALUES (
+                            :name, :calories, :protein_g, :fat_g, :carbs_g,
+                            :fiber_g, :sugar_g, :sodium_mg, :potassium_mg,
+                            :saturated_fat_g, :trans_fat_g, :cholesterol_mg,
+                            :vitamin_a_mcg, :vitamin_c_mg, :vitamin_d_mcg,
+                            :calcium_mg, :iron_mg,
+                            :data_source, :confidence_score, :is_active, :version
+                        )
+                        RETURNING id
                     """),
-                    {"name": dish_data['name'], "cuisine": cuisine}
+                    dish_data,
                 )
                 dish_id = result.fetchone()[0]
-                
-                # Insert nutrients
+
+                # Insert variant with 384-dim embedding
                 session.execute(
                     text("""
-                        INSERT INTO nutrients (dish_id, kcal, protein_g, carbs_g, fat_g, fiber_g, sugar_g, sodium_mg, source)
-                        VALUES (:dish_id, :kcal, :protein_g, :carbs_g, :fat_g, :fiber_g, :sugar_g, :sodium_mg, 'USDA')
+                        INSERT INTO dish_variants
+                            (dish_id, variant_text, embedding, variant_type,
+                             language_code, search_count)
+                        VALUES
+                            (:dish_id, :variant_text, CAST(:embedding AS vector),
+                             'original', 'en', 0)
+                        ON CONFLICT DO NOTHING
                     """),
                     {
-                        "dish_id": dish_id,
-                        "kcal": kcal,
-                        "protein_g": protein_g,
-                        "carbs_g": carbs_g,
-                        "fat_g": fat_g,
-                        "fiber_g": fiber_g,
-                        "sugar_g": sugar_g,
-                        "sodium_mg": sodium_mg
-                    }
+                        'dish_id': dish_id,
+                        'variant_text': variant_text,
+                        'embedding': json.dumps(embedding),
+                    },
                 )
-                
-                # Insert embedding
-                session.execute(
-                    text("""
-                        INSERT INTO embeddings (dish_id, text, vector)
-                        VALUES (:dish_id, :text, :vector)
-                    """),
-                    {
-                        "dish_id": dish_id,
-                        "text": variant_text,
-                        "vector": embedding
-                    }
-                )
-                
                 inserted_count += 1
-            
+
             session.commit()
             return inserted_count
-            
+
         except Exception as e:
             session.rollback()
             print(f"❌ Error processing batch: {e}")

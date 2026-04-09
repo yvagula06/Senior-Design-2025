@@ -243,7 +243,16 @@ def _weighted_average_nutrients(
         fat_g=weighted_avg_field("fat_g"),
         fiber_g=weighted_avg_field("fiber_g"),
         sugar_g=weighted_avg_field("sugar_g"),
-        sodium_mg=weighted_avg_field("sodium_mg")
+        sodium_mg=weighted_avg_field("sodium_mg"),
+        potassium_mg=weighted_avg_field("potassium_mg"),
+        saturated_fat_g=weighted_avg_field("saturated_fat_g"),
+        trans_fat_g=weighted_avg_field("trans_fat_g"),
+        cholesterol_mg=weighted_avg_field("cholesterol_mg"),
+        vitamin_a_mcg=weighted_avg_field("vitamin_a_mcg"),
+        vitamin_c_mg=weighted_avg_field("vitamin_c_mg"),
+        vitamin_d_mcg=weighted_avg_field("vitamin_d_mcg"),
+        calcium_mg=weighted_avg_field("calcium_mg"),
+        iron_mg=weighted_avg_field("iron_mg"),
     )
 
 

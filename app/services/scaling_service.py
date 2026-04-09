@@ -19,7 +19,7 @@ Assumptions:
 """
 
 from typing import Optional
-from app.schemas.label import Nutrients
+from app.schemas.label import Nutrients  # noqa: F401 (Optional used in _scale helper)
 
 
 # Configuration
@@ -86,19 +86,27 @@ def scale_nutrients(
         elif scaling_factor > MAX_SCALING_FACTOR:
             scaling_factor = MAX_SCALING_FACTOR
     
-    # Apply scaling to all nutrients
-    def scale_value(value: float) -> float:
-        """Scale a single nutrient value."""
-        return value * scaling_factor
-    
+    def _scale(value: Optional[float]) -> Optional[float]:
+        """Scale a single nutrient value; propagates None."""
+        return value * scaling_factor if value is not None else None
+
     return Nutrients(
         calories=canonical_nutrients.calories * scaling_factor,
-        protein_g=scale_value(canonical_nutrients.protein_g),
-        carbs_g=scale_value(canonical_nutrients.carbs_g),
-        fat_g=scale_value(canonical_nutrients.fat_g),
-        fiber_g=scale_value(canonical_nutrients.fiber_g),
-        sugar_g=scale_value(canonical_nutrients.sugar_g),
-        sodium_mg=scale_value(canonical_nutrients.sodium_mg)
+        protein_g=_scale(canonical_nutrients.protein_g),
+        carbs_g=_scale(canonical_nutrients.carbs_g),
+        fat_g=_scale(canonical_nutrients.fat_g),
+        fiber_g=_scale(canonical_nutrients.fiber_g),
+        sugar_g=_scale(canonical_nutrients.sugar_g),
+        sodium_mg=_scale(canonical_nutrients.sodium_mg),
+        potassium_mg=_scale(canonical_nutrients.potassium_mg),
+        saturated_fat_g=_scale(canonical_nutrients.saturated_fat_g),
+        trans_fat_g=_scale(canonical_nutrients.trans_fat_g),
+        cholesterol_mg=_scale(canonical_nutrients.cholesterol_mg),
+        vitamin_a_mcg=_scale(canonical_nutrients.vitamin_a_mcg),
+        vitamin_c_mg=_scale(canonical_nutrients.vitamin_c_mg),
+        vitamin_d_mcg=_scale(canonical_nutrients.vitamin_d_mcg),
+        calcium_mg=_scale(canonical_nutrients.calcium_mg),
+        iron_mg=_scale(canonical_nutrients.iron_mg),
     )
 
 

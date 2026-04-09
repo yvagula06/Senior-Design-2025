@@ -17,7 +17,7 @@ app.add_middleware(
 
 app.include_router(dishes_router.router, prefix="/dishes", tags=["dishes"])
 app.include_router(label_router.router, tags=["label"])  # Router already has /label prefix
-app.include_router(feedback_router.router, prefix="/feedback", tags=["feedback"])
+app.include_router(feedback_router.router, tags=["meal-logs"])
 app.include_router(vision_router.router, prefix="/vision", tags=["vision"])
 
 @app.get("/health")

@@ -7,6 +7,8 @@ Phase 3: Added feedback collection endpoints.
 """
 
 from fastapi import APIRouter, HTTPException, status
+import traceback
+from typing import Optional
 from app.schemas.vision import (
     VisionRequest,
     VisionResponse,
@@ -64,7 +66,76 @@ def estimate_meal(request: VisionRequest) -> VisionResponse:
         
         # Execute vision estimation pipeline
         response = vision_orchestrator.estimate_meal(request)
-        
+
+        # ------ persist prediction to vision_estimates ------
+        # Stored immediately so feedback and meal-log confirms can link back.
+        # Raw base64 images are NOT stored here.  In production, the mobile
+        # client should upload images to object storage (S3 / GCS) before
+        # calling this endpoint and pass back the storage keys; for now
+        # image_storage_keys is left null.
+        estimate_id: Optional[str] = None
+        try:
+            predicted_dish_id: Optional[int] = None
+            try:
+                predicted_dish_id = int(response.suggested_meal_log.dish_id)
+            except (ValueError, TypeError):
+                pass
+
+            _ve_id = VisionFeedbackService.store_estimate(
+                device_id=request.metadata.user_id,
+                capture_mode=request.metadata.capture_mode.value,
+                num_images=len(request.images),
+                device_type=request.metadata.device_type.value,
+                has_depth_data=request.depth_data is not None,
+                predicted_dish_name=response.selected_dish.dish_name,
+                predicted_confidence=response.selected_dish.confidence,
+                calorie_estimate=response.calorie_estimate.value,
+                calorie_range_min=response.calorie_estimate.range.min,
+                calorie_range_max=response.calorie_estimate.range.max,
+                volume_ml=(
+                    response.volume_estimate.value
+                    if response.volume_estimate else None
+                ),
+                volume_confidence=(
+                    response.volume_estimate.confidence
+                    if response.volume_estimate else None
+                ),
+                alternative_dishes=[
+                    {
+                        "dish_id": p.dish_id,
+                        "dish_name": p.dish_name,
+                        "confidence": p.confidence,
+                    }
+                    for p in response.dish_predictions[1:]
+                ],
+                estimation_mode=response.estimation_mode.value,
+                processing_time_ms=(
+                    response.metadata.processing_time_ms
+                    if response.metadata else None
+                ),
+                image_storage_keys=None,
+                classifier_version=(
+                    response.metadata.model_versions.classifier
+                    if response.metadata and response.metadata.model_versions else None
+                ),
+                segmentation_version=(
+                    response.metadata.model_versions.segmentation
+                    if response.metadata and response.metadata.model_versions else None
+                ),
+                volume_estimator_version=(
+                    response.metadata.model_versions.volume_estimator
+                    if response.metadata and response.metadata.model_versions else None
+                ),
+                predicted_dish_id=predicted_dish_id,
+            )
+            estimate_id = str(_ve_id)
+        except Exception:
+            # DB write failure must never abort the estimation response.
+            traceback.print_exc()
+
+        response = response.model_copy(update={"estimate_id": estimate_id})
+        # ----------------------------------------------------
+
         # Check if estimation was successful
         if response.accuracy_score < 0.2:
             raise HTTPException(

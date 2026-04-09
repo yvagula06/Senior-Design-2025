@@ -93,6 +93,7 @@ def parse_usda_row(row: Dict[str, str]) -> Optional[Dict]:
         'fiber_g': normalize_value(row.get('fiber_g')),
         'sugar_g': normalize_value(row.get('sugars_g')),
         'sodium_mg': normalize_value(row.get('sodium_mg')),
+        'potassium_mg': normalize_value(row.get('potassium_mg')),
         'data_source': 'USDA',
         'confidence_score': 0.95,
         'is_active': True,

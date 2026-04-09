@@ -31,89 +31,128 @@ class NutritionMapper:
         """Initialize nutrition mapper."""
         pass
     
+    def map_by_name(
+        self,
+        dish_name: str,
+        volume_ml: float,
+        density_override: Optional[float] = None,
+    ) -> Dict[str, any]:
+        """
+        Map a dish name and volume to a calorie estimate.
+
+        This is the primary entry point for the camera path.  The classifier
+        returns a human-readable dish name; this method resolves it to the
+        closest canonical DB record via pgvector semantic search, then
+        scales the nutrient data by the estimated volume.
+
+        Args:
+            dish_name: Predicted or entered dish name (e.g. "grilled chicken")
+            volume_ml: Estimated plate volume in millilitres
+            density_override: Optional density (g/ml); default is name-derived
+
+        Returns:
+            Dict with calories, nutrients, dish_id, dish_name, success flag
+        """
+        try:
+            results = retrieval_service.retrieve_candidates(
+                dish_name=dish_name, k=1, similarity_threshold=0.0
+            )
+            if not results:
+                return self._error_result(
+                    dish_name, volume_ml, f"No DB match found for: '{dish_name}'"
+                )
+            candidate, nutrients = results[0]
+            return self._map_with_candidate(candidate, nutrients, volume_ml, density_override)
+        except Exception as exc:
+            return self._error_result(dish_name, volume_ml, f"Nutrition mapping failed: {exc}")
+
     def map_to_calories(
         self,
         dish_id: str,
         volume_ml: float,
-        density_override: Optional[float] = None
+        density_override: Optional[float] = None,
     ) -> Dict[str, any]:
         """
-        Map dish_id and volume to calorie estimate.
-        
+        Map a known DB dish_id and volume to a calorie estimate.
+
+        Used when the caller already holds a verified BIGINT dish id
+        (e.g. from a previous search result or confirmed meal log).
+
         Args:
-            dish_id: Database dish identifier
-            volume_ml: Estimated volume in milliliters
-            density_override: Optional density (g/ml) for conversion
-            
+            dish_id: Database dish primary key (as string)
+            volume_ml: Estimated plate volume in millilitres
+            density_override: Optional density (g/ml)
+
         Returns:
-            Dict with calories, nutrients, and metadata
+            Dict with calories, nutrients, dish_id, dish_name, success flag
         """
         try:
-            # Retrieve dish from database
             candidate, nutrients = retrieval_service.get_dish_by_id(int(dish_id))
-            
-            # Convert volume to weight
-            density = density_override or self._estimate_density(candidate.name)
-            estimated_weight_g = volume_ml * density
-            
-            # Get reference serving size (assume database is per 100g)
-            reference_weight_g = 100.0
-            
-            # Calculate target calories based on weight
-            calories_per_g = nutrients.calories / reference_weight_g
-            target_calories = calories_per_g * estimated_weight_g
-            
-            # Scale all nutrients proportionally
-            scaled_nutrients = scaling_service.scale_nutrients(
-                canonical_nutrients=nutrients,
-                target_calories=target_calories,
-                clamp=True
-            )
-            
-            return {
-                "dish_id": dish_id,
-                "dish_name": candidate.name,
-                "calories": scaled_nutrients.calories,
-                "nutrients": {
-                    "protein_g": scaled_nutrients.protein_g,
-                    "carbs_g": scaled_nutrients.carbs_g,
-                    "fat_g": scaled_nutrients.fat_g,
-                    "fiber_g": scaled_nutrients.fiber_g,
-                    "sugar_g": scaled_nutrients.sugar_g,
-                    "sodium_mg": scaled_nutrients.sodium_mg,
-                },
-                "estimated_weight_g": estimated_weight_g,
-                "volume_ml": volume_ml,
-                "density_used": density,
-                "success": True
-            }
-            
-        except ValueError as e:
-            # Dish not found in database
-            return {
-                "dish_id": dish_id,
-                "dish_name": "Unknown Dish",
-                "calories": 0.0,
-                "nutrients": {},
-                "estimated_weight_g": 0.0,
-                "volume_ml": volume_ml,
-                "density_used": 0.0,
-                "success": False,
-                "error": str(e)
-            }
-        except Exception as e:
-            # Other errors
-            return {
-                "dish_id": dish_id,
-                "dish_name": "Error",
-                "calories": 0.0,
-                "nutrients": {},
-                "estimated_weight_g": 0.0,
-                "volume_ml": volume_ml,
-                "density_used": 0.0,
-                "success": False,
-                "error": f"Nutrition mapping failed: {str(e)}"
-            }
+            return self._map_with_candidate(candidate, nutrients, volume_ml, density_override)
+        except ValueError as exc:
+            return self._error_result(dish_id, volume_ml, str(exc))
+        except Exception as exc:
+            return self._error_result(dish_id, volume_ml, f"Nutrition mapping failed: {exc}")
+
+    # ------------------------------------------------------------------
+    # Internal helpers
+    # ------------------------------------------------------------------
+
+    def _map_with_candidate(
+        self,
+        candidate: "Candidate",
+        nutrients: "Nutrients",
+        volume_ml: float,
+        density_override: Optional[float],
+    ) -> Dict[str, any]:
+        """Shared compute logic once we have a resolved (Candidate, Nutrients)."""
+        density = density_override or self._estimate_density(candidate.name)
+        estimated_weight_g = volume_ml * density
+
+        # Dishes are stored as per-100 g values
+        reference_weight_g = 100.0
+        calories_per_g = nutrients.calories / reference_weight_g
+        target_calories = calories_per_g * estimated_weight_g
+
+        scaled = scaling_service.scale_nutrients(
+            canonical_nutrients=nutrients,
+            target_calories=target_calories,
+            clamp=True,
+        )
+
+        return {
+            "dish_id": candidate.dish_id,
+            "dish_name": candidate.name,
+            "calories": scaled.calories,
+            "nutrients": {
+                "protein_g":  scaled.protein_g,
+                "carbs_g":    scaled.carbs_g,
+                "fat_g":      scaled.fat_g,
+                "fiber_g":    scaled.fiber_g,
+                "sugar_g":    scaled.sugar_g,
+                "sodium_mg":  scaled.sodium_mg,
+            },
+            "estimated_weight_g": estimated_weight_g,
+            "volume_ml": volume_ml,
+            "density_used": density,
+            "success": True,
+        }
+
+    @staticmethod
+    def _error_result(
+        dish_ref: str, volume_ml: float, error: str
+    ) -> Dict[str, any]:
+        return {
+            "dish_id": dish_ref,
+            "dish_name": "Unknown Dish",
+            "calories": 0.0,
+            "nutrients": {},
+            "estimated_weight_g": 0.0,
+            "volume_ml": volume_ml,
+            "density_used": 0.0,
+            "success": False,
+            "error": error,
+        }
     
     def _estimate_density(self, dish_name: str) -> float:
         """
@@ -155,19 +194,43 @@ def get_nutrition_mapper() -> NutritionMapper:
     return _nutrition_mapper_instance
 
 
+def map_by_name(
+    dish_name: str,
+    volume_ml: float,
+    density_override: Optional[float] = None,
+) -> Dict[str, any]:
+    """
+    Resolve a dish name via semantic search then map to calories (convenience function).
+
+    This is the correct entry point for the camera pipeline: the classifier
+    returns a dish_name string, which is resolved to a real DB record through
+    pgvector similarity search before nutrition scaling.
+
+    Args:
+        dish_name: Predicted or entered dish name
+        volume_ml: Estimated plate volume in millilitres
+        density_override: Optional density (g/ml)
+
+    Returns:
+        Calorie and nutrient data dict
+    """
+    mapper = get_nutrition_mapper()
+    return mapper.map_by_name(dish_name, volume_ml, density_override)
+
+
 def map_to_calories(
     dish_id: str,
     volume_ml: float,
-    density_override: Optional[float] = None
+    density_override: Optional[float] = None,
 ) -> Dict[str, any]:
     """
-    Map dish and volume to calories (convenience function).
-    
+    Map a known DB dish_id and volume to calories (convenience function).
+
     Args:
-        dish_id: Database dish identifier
-        volume_ml: Estimated volume in milliliters
-        density_override: Optional density (g/ml) for conversion
-        
+        dish_id: Database dish primary key (as string)
+        volume_ml: Estimated plate volume in millilitres
+        density_override: Optional density (g/ml)
+
     Returns:
         Calorie and nutrient data
     """

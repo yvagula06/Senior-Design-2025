@@ -101,30 +101,36 @@ def _search_similar_dishes(
     query_vector_list = query_embedding.tolist()
     
     # pgvector similarity query
-    # <=> is the cosine distance operator (0 = identical, 2 = opposite)
-    # similarity = 1 - distance
+    # <=> is cosine distance (0 = identical). similarity = 1 - distance.
+    # Joins dish_variants + dishes (canonical flat schema).
     query = text("""
-        SELECT 
-            d.dish_id as id,
+        SELECT
+            d.id,
             d.name,
-            n.kcal as calories,
-            COALESCE(n.protein_g, 0.0) as protein_g,
-            COALESCE(n.carbs_g, 0.0) as carbs_g,
-            COALESCE(n.fat_g, 0.0) as fat_g,
-            COALESCE(n.fiber_g, 0.0) as fiber_g,
-            COALESCE(n.sugar_g, 0.0) as sugar_g,
-            COALESCE(n.sodium_mg, 0.0) as sodium_mg,
-            0.0 as saturated_fat_g,
-            0.0 as cholesterol_mg,
-            n.source as data_source,
-            1.0 as confidence_score,
-            e.text as variant_text,
-            1 - (e.vector <=> CAST(:query_vector AS vector)) AS similarity
-        FROM embeddings e
-        JOIN dishes d ON e.dish_id = d.dish_id
-        JOIN nutrients n ON d.dish_id = n.dish_id
-        WHERE (1 - (e.vector <=> CAST(:query_vector AS vector))) >= :threshold
-        ORDER BY e.vector <=> CAST(:query_vector AS vector)
+            d.category_name,
+            d.calories,
+            COALESCE(d.protein_g, 0.0)        AS protein_g,
+            COALESCE(d.carbs_g,  0.0)         AS carbs_g,
+            COALESCE(d.fat_g,    0.0)         AS fat_g,
+            d.fiber_g,
+            d.sugar_g,
+            d.sodium_mg,
+            d.potassium_mg,
+            d.saturated_fat_g,
+            d.trans_fat_g,
+            d.cholesterol_mg,
+            d.vitamin_a_mcg,
+            d.vitamin_c_mg,
+            d.vitamin_d_mcg,
+            d.calcium_mg,
+            d.iron_mg,
+            dv.variant_text,
+            1 - (dv.embedding <=> CAST(:query_vector AS vector)) AS similarity
+        FROM dish_variants dv
+        JOIN dishes d ON dv.dish_id = d.id
+        WHERE d.is_active = TRUE
+          AND (1 - (dv.embedding <=> CAST(:query_vector AS vector))) >= :threshold
+        ORDER BY dv.embedding <=> CAST(:query_vector AS vector)
         LIMIT :k
     """)
     
@@ -145,39 +151,49 @@ def _search_similar_dishes(
     
     for row in rows:
         dish_id = row[0]
-        
-        # Skip if we've already seen this dish (multiple variants matched)
+
+        # Skip duplicates (multiple variants may match the same dish)
         if dish_id in seen_dish_ids:
             continue
         seen_dish_ids.add(dish_id)
-        
-        # Extract fields
-        (
-            dish_id, name, calories, protein_g, carbs_g, fat_g,
-            fiber_g, sugar_g, sodium_mg, saturated_fat_g, cholesterol_mg,
-            data_source, confidence_score, variant_text, similarity
+
+(
+            dish_id, name, category_name,
+            calories, protein_g, carbs_g, fat_g,
+            fiber_g, sugar_g, sodium_mg,
+            potassium_mg, saturated_fat_g, trans_fat_g, cholesterol_mg,
+            vitamin_a_mcg, vitamin_c_mg, vitamin_d_mcg, calcium_mg, iron_mg,
+            variant_text, similarity,
         ) = row
-        
-        # Create Candidate
+
         candidate = Candidate(
             dish_id=str(dish_id),
             name=name,
-            sim=float(similarity)
+            sim=float(similarity),
+            category=category_name,
         )
-        
-        # Create Nutrients
+
         nutrients = Nutrients(
             calories=float(calories),
-            protein_g=float(protein_g) if protein_g is not None else None,
-            carbs_g=float(carbs_g) if carbs_g is not None else None,
-            fat_g=float(fat_g) if fat_g is not None else None,
+            protein_g=float(protein_g),
+            carbs_g=float(carbs_g),
+            fat_g=float(fat_g),
             fiber_g=float(fiber_g) if fiber_g is not None else None,
             sugar_g=float(sugar_g) if sugar_g is not None else None,
-            sodium_mg=float(sodium_mg) if sodium_mg is not None else None
+            sodium_mg=float(sodium_mg) if sodium_mg is not None else None,
+            potassium_mg=float(potassium_mg) if potassium_mg is not None else None,
+            saturated_fat_g=float(saturated_fat_g) if saturated_fat_g is not None else None,
+            trans_fat_g=float(trans_fat_g) if trans_fat_g is not None else None,
+            cholesterol_mg=float(cholesterol_mg) if cholesterol_mg is not None else None,
+            vitamin_a_mcg=float(vitamin_a_mcg) if vitamin_a_mcg is not None else None,
+            vitamin_c_mg=float(vitamin_c_mg) if vitamin_c_mg is not None else None,
+            vitamin_d_mcg=float(vitamin_d_mcg) if vitamin_d_mcg is not None else None,
+            calcium_mg=float(calcium_mg) if calcium_mg is not None else None,
+            iron_mg=float(iron_mg) if iron_mg is not None else None,
         )
-        
+
         candidates.append((candidate, nutrients))
-    
+
     return candidates
 
 
@@ -195,9 +211,10 @@ def get_dish_by_id(dish_id: int) -> Tuple[Candidate, Nutrients]:
         ValueError: If dish_id not found or dish is inactive
     """
     query = text("""
-        SELECT 
+        SELECT
             d.id,
             d.name,
+            d.category_name,
             d.calories,
             d.protein_g,
             d.carbs_g,
@@ -205,6 +222,15 @@ def get_dish_by_id(dish_id: int) -> Tuple[Candidate, Nutrients]:
             d.fiber_g,
             d.sugar_g,
             d.sodium_mg,
+            d.potassium_mg,
+            d.saturated_fat_g,
+            d.trans_fat_g,
+            d.cholesterol_mg,
+            d.vitamin_a_mcg,
+            d.vitamin_c_mg,
+            d.vitamin_d_mcg,
+            d.calcium_mg,
+            d.iron_mg,
             d.confidence_score
         FROM dishes d
         WHERE d.id = :dish_id
@@ -217,29 +243,58 @@ def get_dish_by_id(dish_id: int) -> Tuple[Candidate, Nutrients]:
     
     if not row:
         raise ValueError(f"Dish with id={dish_id} not found or inactive")
-    
+
     (
-        dish_id, name, calories, protein_g, carbs_g, fat_g,
-        fiber_g, sugar_g, sodium_mg, confidence_score
+        dish_id, name, category_name,
+        calories, protein_g, carbs_g, fat_g,
+        fiber_g, sugar_g, sodium_mg,
+        potassium_mg, saturated_fat_g, trans_fat_g, cholesterol_mg,
+        vitamin_a_mcg, vitamin_c_mg, vitamin_d_mcg, calcium_mg, iron_mg,
+        confidence_score,
     ) = row
-    
+
     candidate = Candidate(
         dish_id=str(dish_id),
         name=name,
-        sim=1.0  # Direct lookup, not similarity-based
+        sim=1.0,  # Direct lookup, not similarity-based
+        category=category_name,
     )
-    
+
     nutrients = Nutrients(
         calories=float(calories),
-        protein_g=float(protein_g) if protein_g is not None else None,
-        carbs_g=float(carbs_g) if carbs_g is not None else None,
-        fat_g=float(fat_g) if fat_g is not None else None,
+        protein_g=float(protein_g) if protein_g is not None else 0.0,
+        carbs_g=float(carbs_g) if carbs_g is not None else 0.0,
+        fat_g=float(fat_g) if fat_g is not None else 0.0,
         fiber_g=float(fiber_g) if fiber_g is not None else None,
         sugar_g=float(sugar_g) if sugar_g is not None else None,
-        sodium_mg=float(sodium_mg) if sodium_mg is not None else None
+        sodium_mg=float(sodium_mg) if sodium_mg is not None else None,
+        potassium_mg=float(potassium_mg) if potassium_mg is not None else None,
+        saturated_fat_g=float(saturated_fat_g) if saturated_fat_g is not None else None,
+        trans_fat_g=float(trans_fat_g) if trans_fat_g is not None else None,
+        cholesterol_mg=float(cholesterol_mg) if cholesterol_mg is not None else None,
+        vitamin_a_mcg=float(vitamin_a_mcg) if vitamin_a_mcg is not None else None,
+        vitamin_c_mg=float(vitamin_c_mg) if vitamin_c_mg is not None else None,
+        vitamin_d_mcg=float(vitamin_d_mcg) if vitamin_d_mcg is not None else None,
+        calcium_mg=float(calcium_mg) if calcium_mg is not None else None,
+        iron_mg=float(iron_mg) if iron_mg is not None else None,
     )
-    
+
     return candidate, nutrients
+
+
+def retrieve_best_match(
+    dish_name: str,
+    similarity_threshold: float = 0.0,
+) -> "tuple[Candidate, Nutrients] | None":
+    """
+    Return the single best-matching (Candidate, Nutrients) pair for a dish name,
+    or None if no match meets the threshold.
+
+    Used by the camera path so the classifier's predicted dish name is always
+    resolved through the canonical dish_variants → dishes lookup.
+    """
+    results = retrieve_candidates(dish_name, k=1, similarity_threshold=similarity_threshold)
+    return results[0] if results else None
 
 
 # Utility: Clear cache if needed (for testing or when embeddings change)

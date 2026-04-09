@@ -28,7 +28,12 @@ class LabelRequest(BaseModel):
         max_length=50,
         description="Cuisine or preparation style: home, restaurant, or fast_food"
     )
-    
+    device_id: Optional[str] = Field(
+        None,
+        max_length=255,
+        description="Mobile device UUID — when provided, the result is saved to meal_logs",
+    )
+
     @field_validator('dish_name')
     @classmethod
     def validate_dish_name(cls, v: str) -> str:
@@ -64,18 +69,33 @@ class LabelResponse(BaseModel):
     explanation: str = Field(
         description="Short explanation of confidence level"
     )
+    meal_log_id: Optional[int] = Field(
+        None,
+        description="meal_logs row ID created for this request (null when device_id was not provided)",
+    )
 
 
 # Internal schemas for service layer (not exposed to API)
 class Nutrients(BaseModel):
-    """Internal nutrition facts schema for service layer."""
+    """Internal nutrition facts schema for service layer (all fields per 100 g)."""
+    # Core macros — always present
     calories: float = Field(ge=0)
     protein_g: float = Field(ge=0)
     carbs_g: float = Field(ge=0)
     fat_g: float = Field(ge=0)
-    fiber_g: float = Field(ge=0)
-    sugar_g: float = Field(ge=0)
-    sodium_mg: float = Field(ge=0)
+    # FDA-required micronutrients — optional because source data may be missing
+    fiber_g: Optional[float] = Field(default=None, ge=0)
+    sugar_g: Optional[float] = Field(default=None, ge=0)
+    sodium_mg: Optional[float] = Field(default=None, ge=0)
+    potassium_mg: Optional[float] = Field(default=None, ge=0)
+    saturated_fat_g: Optional[float] = Field(default=None, ge=0)
+    trans_fat_g: Optional[float] = Field(default=None, ge=0)
+    cholesterol_mg: Optional[float] = Field(default=None, ge=0)
+    vitamin_a_mcg: Optional[float] = Field(default=None, ge=0)
+    vitamin_c_mg: Optional[float] = Field(default=None, ge=0)
+    vitamin_d_mcg: Optional[float] = Field(default=None, ge=0)
+    calcium_mg: Optional[float] = Field(default=None, ge=0)
+    iron_mg: Optional[float] = Field(default=None, ge=0)
 
 
 class Candidate(BaseModel):
@@ -83,4 +103,5 @@ class Candidate(BaseModel):
     dish_id: str
     name: str
     sim: float  # similarity score
+    category: Optional[str] = None  # food category from dishes.category_name
     weight: Optional[float] = None
