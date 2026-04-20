@@ -48,6 +48,15 @@ def normalize_name(name: str) -> str:
     return name.strip()[:255]  # Max 255 chars
 
 
+def clamp_value(value: Optional[float], max_val: float = 999999.99) -> Optional[float]:
+    """Clamp numeric values to NUMERIC(8,2) safe range. Drops implausibly large values."""
+    if value is None:
+        return None
+    if abs(value) > max_val:
+        return None  # skip garbage data (e.g. per-100g condiment sodium > 999999 mg)
+    return value
+
+
 def load_embedding_model() -> SentenceTransformer:
     """Load the sentence-transformers model."""
     print(f"Loading embedding model: sentence-transformers/all-MiniLM-L6-v2")
@@ -81,22 +90,22 @@ def parse_usda_row(row: Dict[str, str]) -> Optional[Dict]:
     return {
         # dishes columns (canonical flat schema — no nutrients/embeddings tables)
         'name': full_name,
-        'calories': calories,
-        'protein_g': normalize_value(row.get('protein_g')) or 0.0,
-        'fat_g': normalize_value(row.get('fat_total_g')) or 0.0,
-        'carbs_g': normalize_value(row.get('carbohydrates_g')) or 0.0,
-        'fiber_g': normalize_value(row.get('fiber_g')),
-        'sugar_g': normalize_value(row.get('sugars_g')),
-        'sodium_mg': normalize_value(row.get('sodium_mg')),
-        'potassium_mg': normalize_value(row.get('potassium_mg')),
-        'saturated_fat_g': normalize_value(row.get('saturated_fat_g')),
-        'trans_fat_g': normalize_value(row.get('trans_fat_g')),
-        'cholesterol_mg': normalize_value(row.get('cholesterol_mg')),
-        'vitamin_a_mcg': normalize_value(row.get('vitamin_a_mcg')),
-        'vitamin_c_mg': normalize_value(row.get('vitamin_c_mg')),
-        'vitamin_d_mcg': normalize_value(row.get('vitamin_d_mcg')),
-        'calcium_mg': normalize_value(row.get('calcium_mg')),
-        'iron_mg': normalize_value(row.get('iron_mg')),
+        'calories': clamp_value(calories),
+        'protein_g': clamp_value(normalize_value(row.get('protein_g'))) or 0.0,
+        'fat_g': clamp_value(normalize_value(row.get('fat_total_g'))) or 0.0,
+        'carbs_g': clamp_value(normalize_value(row.get('carbohydrates_g'))) or 0.0,
+        'fiber_g': clamp_value(normalize_value(row.get('fiber_g'))),
+        'sugar_g': clamp_value(normalize_value(row.get('sugars_g'))),
+        'sodium_mg': clamp_value(normalize_value(row.get('sodium_mg'))),
+        'potassium_mg': clamp_value(normalize_value(row.get('potassium_mg'))),
+        'saturated_fat_g': clamp_value(normalize_value(row.get('saturated_fat_g'))),
+        'trans_fat_g': clamp_value(normalize_value(row.get('trans_fat_g'))),
+        'cholesterol_mg': clamp_value(normalize_value(row.get('cholesterol_mg'))),
+        'vitamin_a_mcg': clamp_value(normalize_value(row.get('vitamin_a_mcg'))),
+        'vitamin_c_mg': clamp_value(normalize_value(row.get('vitamin_c_mg'))),
+        'vitamin_d_mcg': clamp_value(normalize_value(row.get('vitamin_d_mcg'))),
+        'calcium_mg': clamp_value(normalize_value(row.get('calcium_mg'))),
+        'iron_mg': clamp_value(normalize_value(row.get('iron_mg'))),
         'data_source': 'USDA',
         'confidence_score': 0.95,
         'is_active': True,

@@ -157,7 +157,7 @@ def _search_similar_dishes(
             continue
         seen_dish_ids.add(dish_id)
 
-(
+        (
             dish_id, name, category_name,
             calories, protein_g, carbs_g, fat_g,
             fiber_g, sugar_g, sodium_mg,
