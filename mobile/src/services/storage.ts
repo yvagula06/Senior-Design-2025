@@ -34,6 +34,18 @@ export interface UserSettings {
   
   // Daily calorie goal
   calorieGoal: number;
+
+  // Daily macro goals (grams)
+  proteinGoal: number;
+  carbsGoal: number;
+  fatGoal: number;
+
+  // Body stats for BMR/TDEE
+  weightKg: number | null;
+  heightCm: number | null;
+  ageYears: number | null;
+  sex: 'male' | 'female' | null;
+  activityLevel: 'sedentary' | 'light' | 'moderate' | 'active' | 'very_active' | null;
   
   // Display preferences
   showDetailedView: boolean; // Default view style for labels
@@ -43,6 +55,14 @@ export interface UserSettings {
   
   // Theme (future feature)
   darkMode: boolean;
+
+  // Active theme
+  isDark: boolean;
+  accentColor: string;
+
+  // Profile
+  displayName: string;
+  profilePicUri: string;
   
   // Last sync timestamp
   lastSyncedAt?: string;
@@ -52,9 +72,21 @@ export const DEFAULT_SETTINGS: UserSettings = {
   useMetric: false,
   defaultPrepStyle: 'ask',
   calorieGoal: 2000,
+  proteinGoal: 150,
+  carbsGoal: 200,
+  fatGoal: 65,
+  weightKg: null,
+  heightCm: null,
+  ageYears: null,
+  sex: null,
+  activityLevel: null,
   showDetailedView: false,
   notificationsEnabled: true,
   darkMode: false,
+  isDark: true,
+  accentColor: 'amber',
+  displayName: '',
+  profilePicUri: '',
 };
 
 // ============================================================================
@@ -200,6 +232,8 @@ export async function clearHistoryCache(): Promise<void> {
 // FOOD ENTRIES PERSISTENCE
 // ============================================================================
 
+export type MealCategory = 'breakfast' | 'lunch' | 'dinner' | 'snack';
+
 export interface StoredFoodEntry {
   id: string;
   foodName: string;
@@ -208,6 +242,8 @@ export interface StoredFoodEntry {
   carbs: number;
   fats: number;
   timestamp: string;
+  date: string; // YYYY-MM-DD
+  mealCategory: MealCategory;
   // Extended fields from label API
   matchedDish?: string;
   confidence?: number;

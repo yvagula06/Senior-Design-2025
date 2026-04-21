@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
 import {
   View,
   Text,
@@ -16,12 +16,15 @@ import { useNavigation } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import type { ExploreStackNavigationProp } from '../navigation/types';
 import { DishCard, CategoryHeader, type DishCardData } from '../components/Explore';
-import { AppColors, Spacing, Typography, BorderRadius, Shadows } from '../theme';
+import { Spacing, Typography, BorderRadius, Shadows } from '../theme';
+import { useAppTheme } from '../context/ThemeContext';
 import { fetchFeaturedDishes } from '../services/api';
 import { cacheFeaturedDishes, loadCachedDishes } from '../services/storage';
 
 export const ExploreScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const navigation = useNavigation<ExploreStackNavigationProp>();
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -362,7 +365,7 @@ export const ExploreScreen: React.FC = () => {
   if (isLoading) {
     return (
       <View style={[styles.container, styles.centerContent]}>
-        <ActivityIndicator size="large" color={AppColors.accent} />
+        <ActivityIndicator size="large" color={colors.accent} />
         <Text style={styles.loadingText}>Loading dishes...</Text>
       </View>
     );
@@ -378,8 +381,8 @@ export const ExploreScreen: React.FC = () => {
           <RefreshControl
             refreshing={isRefreshing}
             onRefresh={onRefresh}
-            tintColor={AppColors.accent}
-            colors={[AppColors.accent]}
+            tintColor={colors.accent}
+            colors={[colors.accent]}
           />
         }
       >
@@ -400,7 +403,7 @@ export const ExploreScreen: React.FC = () => {
               <MaterialCommunityIcons 
                 name={showSearch ? "close" : "magnify"} 
                 size={24} 
-                color={AppColors.accent} 
+                color={colors.accent} 
               />
             </TouchableOpacity>
           </View>
@@ -418,13 +421,13 @@ export const ExploreScreen: React.FC = () => {
             <MaterialCommunityIcons 
               name="magnify" 
               size={20} 
-              color={AppColors.textSecondary} 
+              color={colors.textSecondary} 
               style={styles.searchIcon}
             />
             <TextInput
               style={styles.searchInput}
               placeholder="Search for healthy foods..."
-              placeholderTextColor={AppColors.textTertiary}
+              placeholderTextColor={colors.textTertiary}
               value={searchQuery}
               onChangeText={setSearchQuery}
               autoFocus={showSearch}
@@ -434,7 +437,7 @@ export const ExploreScreen: React.FC = () => {
                 <MaterialCommunityIcons 
                   name="close-circle" 
                   size={20} 
-                  color={AppColors.textSecondary} 
+                  color={colors.textSecondary} 
                 />
               </TouchableOpacity>
             )}
@@ -481,7 +484,7 @@ export const ExploreScreen: React.FC = () => {
                 <MaterialCommunityIcons 
                   name="camera" 
                   size={32} 
-                  color={AppColors.accent} 
+                  color={colors.accent} 
                 />
               </View>
               <View style={styles.cameraTextContainer}>
@@ -493,7 +496,7 @@ export const ExploreScreen: React.FC = () => {
               <MaterialCommunityIcons 
                 name="chevron-right" 
                 size={24} 
-                color={AppColors.textSecondary} 
+                color={colors.textSecondary} 
               />
             </View>
           </TouchableOpacity>
@@ -514,7 +517,7 @@ export const ExploreScreen: React.FC = () => {
         {/* No Results Message */}
         {hasNoResults && (
           <View style={styles.noResultsContainer}>
-            <MaterialCommunityIcons name="food-off" size={64} color={AppColors.textTertiary} />
+            <MaterialCommunityIcons name="food-off" size={64} color={colors.textTertiary} />
             <Text style={styles.noResultsTitle}>No dishes found</Text>
             <Text style={styles.noResultsText}>
               Try adjusting your search or browse our popular dishes
@@ -535,7 +538,7 @@ export const ExploreScreen: React.FC = () => {
               <MaterialCommunityIcons
                 name="food-variant"
                 size={32}
-                color={AppColors.primary}
+                color={colors.primary}
               />
               <Text style={styles.statValue}>{allDishes.length}</Text>
               <Text style={styles.statLabel}>Dishes</Text>
@@ -545,7 +548,7 @@ export const ExploreScreen: React.FC = () => {
               <MaterialCommunityIcons
                 name="silverware-fork-knife"
                 size={32}
-                color={AppColors.accent}
+                color={colors.accent}
               />
               <Text style={styles.statValue}>{restaurantDishes.length}</Text>
               <Text style={styles.statLabel}>Restaurants</Text>
@@ -555,7 +558,7 @@ export const ExploreScreen: React.FC = () => {
               <MaterialCommunityIcons
                 name="home-heart"
                 size={32}
-                color={AppColors.error}
+                color={colors.error}
               />
               <Text style={styles.statValue}>{homeCookedMeals.length}</Text>
               <Text style={styles.statLabel}>Home Cooked</Text>
@@ -599,7 +602,7 @@ export const ExploreScreen: React.FC = () => {
               <MaterialCommunityIcons
                 name="information-outline"
                 size={24}
-                color={AppColors.accent}
+                color={colors.accent}
               />
             </View>
             <View style={styles.infoContent}>
@@ -619,10 +622,12 @@ export const ExploreScreen: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
+type C2 = ReturnType<typeof useAppTheme>['colors'];
+function createStyles(colors: C2) {
+  return StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: AppColors.background,
+    backgroundColor: colors.background,
   },
   scrollView: {
     flex: 1,
@@ -637,16 +642,16 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: Spacing.md,
     fontSize: Typography.fontSize.base,
-    color: AppColors.textSecondary,
+    color: colors.textSecondary,
     fontWeight: Typography.fontWeight.medium,
   },
   header: {
     paddingHorizontal: Spacing.lg,
     paddingTop: Spacing.xl,
     paddingBottom: Spacing.md,
-    backgroundColor: AppColors.cardBackground,
+    backgroundColor: colors.cardBackground,
     borderBottomWidth: 1,
-    borderBottomColor: AppColors.border,
+    borderBottomColor: colors.border,
   },
   headerContent: {
     flexDirection: 'row',
@@ -662,34 +667,34 @@ const styles = StyleSheet.create({
     fontFamily: 'CrimsonPro_700Bold',
     fontSize: Typography.fontSize.xxxl,
     fontWeight: Typography.fontWeight.bold,
-    color: AppColors.text,
+    color: colors.text,
     marginBottom: Spacing.xs,
   },
   headerSubtitle: {
     fontSize: Typography.fontSize.md,
-    color: AppColors.textSecondary,
+    color: colors.textSecondary,
     lineHeight: Typography.lineHeight.normal * Typography.fontSize.md,
   },
   searchButton: {
     width: 44,
     height: 44,
     borderRadius: BorderRadius.full,
-    backgroundColor: AppColors.background,
+    backgroundColor: colors.background,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: AppColors.accent,
+    borderColor: colors.accent,
   },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: AppColors.background,
+    backgroundColor: colors.background,
     borderRadius: BorderRadius.md,
     paddingHorizontal: Spacing.md,
     marginTop: Spacing.md,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: AppColors.border,
+    borderColor: colors.border,
   },
   searchIcon: {
     marginRight: Spacing.sm,
@@ -697,7 +702,7 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: Typography.fontSize.base,
-    color: AppColors.text,
+    color: colors.text,
     paddingVertical: Spacing.sm,
   },
   // Category Chips
@@ -713,32 +718,32 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.sm,
     borderRadius: BorderRadius.full,
-    backgroundColor: AppColors.surface,
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: AppColors.border,
+    borderColor: colors.border,
   },
   categoryChipActive: {
-    backgroundColor: AppColors.accent,
-    borderColor: AppColors.accent,
+    backgroundColor: colors.accent,
+    borderColor: colors.accent,
   },
   categoryChipText: {
     fontSize: Typography.fontSize.sm,
     fontWeight: Typography.fontWeight.semibold,
-    color: AppColors.textSecondary,
+    color: colors.textSecondary,
   },
   categoryChipTextActive: {
     color: '#FFF',
   },
   // Camera Card
   cameraCard: {
-    backgroundColor: AppColors.cardBackground,
+    backgroundColor: colors.cardBackground,
     borderRadius: BorderRadius.lg,
     marginHorizontal: Spacing.lg,
     marginTop: Spacing.md,
     marginBottom: Spacing.lg,
     padding: Spacing.lg,
     borderWidth: 2,
-    borderColor: AppColors.accent,
+    borderColor: colors.accent,
     ...Shadows.md,
   },
   cameraCardContent: {
@@ -750,7 +755,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: BorderRadius.lg,
-    backgroundColor: `${AppColors.accent}15`,
+    backgroundColor: `${colors.accent}15`,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -761,11 +766,11 @@ const styles = StyleSheet.create({
   cameraCardTitle: {
     fontSize: Typography.fontSize.md,
     fontWeight: Typography.fontWeight.bold,
-    color: AppColors.text,
+    color: colors.text,
   },
   cameraCardSubtitle: {
     fontSize: Typography.fontSize.sm,
-    color: AppColors.textSecondary,
+    color: colors.textSecondary,
     lineHeight: Typography.lineHeight.relaxed * Typography.fontSize.sm,
   },
   searchResultsInfo: {
@@ -774,7 +779,7 @@ const styles = StyleSheet.create({
   },
   searchResultsText: {
     fontSize: Typography.fontSize.sm,
-    color: AppColors.textSecondary,
+    color: colors.textSecondary,
     fontWeight: Typography.fontWeight.semibold,
   },
   noResultsContainer: {
@@ -785,13 +790,13 @@ const styles = StyleSheet.create({
   noResultsTitle: {
     fontSize: Typography.fontSize.lg,
     fontWeight: Typography.fontWeight.bold,
-    color: AppColors.text,
+    color: colors.text,
     marginTop: Spacing.md,
     marginBottom: Spacing.xs,
   },
   noResultsText: {
     fontSize: Typography.fontSize.sm,
-    color: AppColors.textSecondary,
+    color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: Typography.lineHeight.relaxed * Typography.fontSize.sm,
     marginBottom: Spacing.lg,
@@ -799,7 +804,7 @@ const styles = StyleSheet.create({
   clearSearchButton: {
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.sm,
-    backgroundColor: AppColors.accent,
+    backgroundColor: colors.accent,
     borderRadius: BorderRadius.md,
   },
   clearSearchButtonText: {
@@ -809,14 +814,14 @@ const styles = StyleSheet.create({
   },
   statsCard: {
     flexDirection: 'row',
-    backgroundColor: AppColors.cardBackground,
+    backgroundColor: colors.cardBackground,
     borderRadius: BorderRadius.lg,
     marginHorizontal: Spacing.lg,
     marginVertical: Spacing.lg,
     padding: Spacing.lg,
     ...Shadows.md,
     borderWidth: 1,
-    borderColor: AppColors.border,
+    borderColor: colors.border,
   },
   statItem: {
     flex: 1,
@@ -827,16 +832,16 @@ const styles = StyleSheet.create({
     fontFamily: 'CrimsonPro_700Bold',
     fontSize: Typography.fontSize.xl,
     fontWeight: Typography.fontWeight.bold,
-    color: AppColors.text,
+    color: colors.text,
   },
   statLabel: {
     fontSize: Typography.fontSize.xs,
-    color: AppColors.textSecondary,
+    color: colors.textSecondary,
     fontWeight: Typography.fontWeight.medium,
   },
   statDivider: {
     width: 1,
-    backgroundColor: AppColors.border,
+    backgroundColor: colors.border,
     marginHorizontal: Spacing.md,
   },
   horizontalList: {
@@ -848,24 +853,24 @@ const styles = StyleSheet.create({
   },
   infoCard: {
     flexDirection: 'row',
-    backgroundColor: AppColors.cardBackground,
+    backgroundColor: colors.cardBackground,
     borderRadius: BorderRadius.lg,
     marginHorizontal: Spacing.lg,
     marginTop: Spacing.xl,
     padding: Spacing.lg,
     borderWidth: 1,
-    borderColor: AppColors.accent,
+    borderColor: colors.accent,
   },
   infoIconContainer: {
     width: 40,
     height: 40,
     borderRadius: BorderRadius.full,
-    backgroundColor: AppColors.background,
+    backgroundColor: colors.background,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: Spacing.md,
     borderWidth: 1,
-    borderColor: AppColors.accent,
+    borderColor: colors.accent,
   },
   infoContent: {
     flex: 1,
@@ -873,19 +878,19 @@ const styles = StyleSheet.create({
   infoTitle: {
     fontSize: Typography.fontSize.md,
     fontWeight: Typography.fontWeight.bold,
-    color: AppColors.text,
+    color: colors.text,
     marginBottom: Spacing.xs,
   },
   infoText: {
     fontSize: Typography.fontSize.sm,
-    color: AppColors.textSecondary,
+    color: colors.textSecondary,
     lineHeight: Typography.lineHeight.relaxed * Typography.fontSize.sm,
   },
   cameraButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: AppColors.primary,
+    backgroundColor: colors.primary,
     marginHorizontal: Spacing.lg,
     marginVertical: Spacing.md,
     paddingVertical: Spacing.md,
@@ -896,10 +901,11 @@ const styles = StyleSheet.create({
   },
   cameraButtonText: {
     ...Typography.button,
-    color: AppColors.textInverse,
+    color: colors.textInverse,
     fontWeight: '600',
   },
   bottomPadding: {
     height: Spacing.xl,
   },
-});
+  });
+}

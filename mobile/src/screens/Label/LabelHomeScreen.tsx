@@ -6,6 +6,7 @@ import {
   ScrollView,
   Animated,
   TouchableOpacity,
+  Modal,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -57,8 +58,16 @@ export const LabelHomeScreen: React.FC = () => {
     setToastVisible(true);
   };
   
+  // Meal category picker state
+  const [mealPickerVisible, setMealPickerVisible] = useState(false);
+  const [pendingEntry, setPendingEntry] = useState<{
+    dishName: string; matchedDish: string; calories: number; protein: number;
+    carbs: number; fats: number; confidence: number;
+    fiber?: number | null; sugar?: number | null; sodium?: number | null;
+  } | null>(null);
+
   // Food context for saving entries
-  const { addLabelEntry } = useFoodContext();
+  const { addLabelEntry, recentEntries } = useFoodContext();
 
   // Animation values
   const headerFade = useRef(new Animated.Value(0)).current;
@@ -127,32 +136,49 @@ export const LabelHomeScreen: React.FC = () => {
   };
 
   /**
-   * Save label result to daily totals
+   * Save label result to daily totals — open meal picker first
    */
   const handleSave = () => {
     if (!labelResult) return;
+    setPendingEntry({
+      dishName,
+      matchedDish: labelResult.matched_dish,
+      calories: labelResult.nutrition.calories,
+      protein: labelResult.nutrition.protein_g,
+      carbs: labelResult.nutrition.carbs_g,
+      fats: labelResult.nutrition.fat_g,
+      confidence: labelResult.confidence,
+      fiber: labelResult.nutrition.fiber_g,
+      sugar: labelResult.nutrition.sugar_g,
+      sodium: labelResult.nutrition.sodium_mg,
+    });
+    setMealPickerVisible(true);
+  };
 
+  const confirmSave = (category: 'breakfast' | 'lunch' | 'dinner' | 'snack') => {
+    if (!pendingEntry) return;
     try {
-      addLabelEntry({
-        dishName: dishName,
-        matchedDish: labelResult.matched_dish,
-        calories: labelResult.nutrition.calories,
-        protein: labelResult.nutrition.protein_g,
-        carbs: labelResult.nutrition.carbs_g,
-        fats: labelResult.nutrition.fat_g,
-        confidence: labelResult.confidence,
-        fiber: labelResult.nutrition.fiber_g,
-        sugar: labelResult.nutrition.sugar_g,
-        sodium: labelResult.nutrition.sodium_mg,
-      });
-
+      addLabelEntry({ ...pendingEntry, mealCategory: category });
       setIsSaved(true);
-      showToast(`Added "${labelResult.matched_dish}" to your daily totals!`);
-      console.log('✅ [Label] Saved to daily totals');
-    } catch (error) {
-      console.error('❌ [Label] Failed to save:', error);
+      setMealPickerVisible(false);
+      setPendingEntry(null);
+      showToast(`Added to ${category.charAt(0).toUpperCase() + category.slice(1)}!`);
+    } catch (e) {
       showToast('Failed to save entry. Please try again.', 'error');
     }
+  };
+
+  const handleQuickAdd = (recent: { foodName: string; calories: number; protein: number; carbs: number; fats: number }) => {
+    setPendingEntry({
+      dishName: recent.foodName,
+      matchedDish: recent.foodName,
+      calories: recent.calories,
+      protein: recent.protein,
+      carbs: recent.carbs,
+      fats: recent.fats,
+      confidence: 1,
+    });
+    setMealPickerVisible(true);
   };
 
   const handleTipPress = () => {
@@ -261,6 +287,27 @@ export const LabelHomeScreen: React.FC = () => {
           <MaterialCommunityIcons name="chevron-right" size={22} color={AppColors.textSecondary} />
         </TouchableOpacity>
       </Animated.View>
+
+      {/* Quick-add recents */}
+      {recentEntries.length > 0 && (
+        <Animated.View style={{ opacity: headerFade, paddingHorizontal: Spacing.md, marginBottom: Spacing.md }}>
+          <Text style={styles.recentsTitle}>Quick Add</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+            {recentEntries.map((r) => (
+              <TouchableOpacity
+                key={r.foodName}
+                style={styles.recentChip}
+                onPress={() => handleQuickAdd(r)}
+                activeOpacity={0.8}
+              >
+                <MaterialCommunityIcons name="plus-circle-outline" size={14} color={AppColors.accent} />
+                <Text style={styles.recentChipText} numberOfLines={1}>{r.foodName}</Text>
+                <Text style={styles.recentChipCal}>{Math.round(r.calories)} kcal</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </Animated.View>
+      )}
 
       {/* LOADING STATE - Centered overlay with large spinner */}
       {isGenerating && (
@@ -475,6 +522,33 @@ export const LabelHomeScreen: React.FC = () => {
         type={toastType}
         onHide={() => setToastVisible(false)}
       />
+
+      {/* Meal Category Picker */}
+      <Modal visible={mealPickerVisible} transparent animationType="slide"
+        onRequestClose={() => { setMealPickerVisible(false); setPendingEntry(null); }}>
+        <View style={styles.mealOverlay}>
+          <View style={styles.mealSheet}>
+            <Text style={styles.mealSheetTitle}>Add to Meal</Text>
+            <Text style={styles.mealSheetSub}>Which meal is this for?</Text>
+            <View style={styles.mealGrid}>
+              {([
+                { key: 'breakfast', icon: 'weather-sunset-up', label: 'Breakfast' },
+                { key: 'lunch',     icon: 'weather-sunny',     label: 'Lunch'     },
+                { key: 'dinner',    icon: 'weather-night',     label: 'Dinner'    },
+                { key: 'snack',     icon: 'cookie',            label: 'Snack'     },
+              ] as { key: 'breakfast'|'lunch'|'dinner'|'snack'; icon: string; label: string }[]).map(({ key, icon, label }) => (
+                <TouchableOpacity key={key} style={styles.mealOptionBtn} onPress={() => confirmSave(key)} activeOpacity={0.8}>
+                  <MaterialCommunityIcons name={icon as any} size={28} color={AppColors.accent} />
+                  <Text style={styles.mealOptionText}>{label}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            <TouchableOpacity style={styles.mealCancelBtn} onPress={() => { setMealPickerVisible(false); setPendingEntry(null); }}>
+              <Text style={styles.mealCancelText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -984,5 +1058,93 @@ const styles = StyleSheet.create({
     color: AppColors.textSecondary,
     fontSize: Typography.fontSize.xs,
     marginTop: 1,
+  },
+  // Recents
+  recentsTitle: {
+    fontSize: Typography.fontSize.sm,
+    fontWeight: '700',
+    color: AppColors.textSecondary,
+    marginBottom: Spacing.sm,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+  },
+  recentChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: AppColors.cardBackground,
+    borderRadius: BorderRadius.full,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderWidth: 1,
+    borderColor: AppColors.border,
+    maxWidth: 200,
+  },
+  recentChipText: {
+    fontSize: Typography.fontSize.sm,
+    color: AppColors.text,
+    fontWeight: '600',
+    maxWidth: 120,
+  },
+  recentChipCal: {
+    fontSize: 11,
+    color: AppColors.textSecondary,
+  },
+  // Meal picker
+  mealOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.8)',
+    justifyContent: 'flex-end',
+  },
+  mealSheet: {
+    backgroundColor: AppColors.cardBackground,
+    borderTopLeftRadius: BorderRadius.xl,
+    borderTopRightRadius: BorderRadius.xl,
+    padding: Spacing.xl,
+    paddingBottom: Spacing.xxxl,
+  },
+  mealSheetTitle: {
+    fontSize: Typography.fontSize.xl,
+    fontWeight: '700',
+    color: AppColors.text,
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+  mealSheetSub: {
+    fontSize: Typography.fontSize.sm,
+    color: AppColors.textSecondary,
+    textAlign: 'center',
+    marginBottom: Spacing.xl,
+  },
+  mealGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.md,
+    justifyContent: 'center',
+    marginBottom: Spacing.lg,
+  },
+  mealOptionBtn: {
+    width: '44%',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    backgroundColor: AppColors.surface,
+    borderRadius: BorderRadius.lg,
+    paddingVertical: Spacing.lg,
+    borderWidth: 1,
+    borderColor: AppColors.border,
+  },
+  mealOptionText: {
+    fontSize: Typography.fontSize.md,
+    fontWeight: '600',
+    color: AppColors.text,
+  },
+  mealCancelBtn: {
+    alignSelf: 'center',
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.xxl,
+  },
+  mealCancelText: {
+    fontSize: Typography.fontSize.md,
+    color: AppColors.textSecondary,
   },
 });

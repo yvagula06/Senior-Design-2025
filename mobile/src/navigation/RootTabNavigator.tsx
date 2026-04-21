@@ -1,27 +1,29 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { Platform, Easing } from 'react-native';
+import { Platform } from 'react-native';
 import { RootTabParamList } from './types';
 import { LabelStackNavigator } from './LabelStackNavigator';
 import { HistoryStackNavigator } from './HistoryStackNavigator';
 import { ExploreStackNavigator } from './ExploreStackNavigator';
 import { ProfileScreen } from '../screens';
 import { DailyConsumerScreen } from '../screens/DailyConsumerScreen';
-import { AppColors, Spacing } from '../theme';
+import { Spacing } from '../theme';
+import { useAppTheme } from '../context/ThemeContext';
 
 const Tab = createBottomTabNavigator<RootTabParamList>();
 
 export const RootTabNavigator: React.FC = () => {
+  const { colors } = useAppTheme();
   return (
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: AppColors.accent,
-        tabBarInactiveTintColor: AppColors.textTertiary,
+        tabBarActiveTintColor: colors.accent,
+        tabBarInactiveTintColor: colors.textTertiary,
         tabBarStyle: {
-          backgroundColor: AppColors.cardBackground,
-          borderTopColor: AppColors.border,
+          backgroundColor: colors.cardBackground,
+          borderTopColor: colors.border,
           borderTopWidth: 1,
           paddingBottom: Platform.OS === 'ios' ? Spacing.lg : Spacing.sm,
           paddingTop: Spacing.sm,

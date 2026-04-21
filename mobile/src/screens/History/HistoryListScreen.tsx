@@ -213,6 +213,22 @@ export const HistoryListScreen: React.FC = () => {
   // Calculate totals once to avoid multiple calls
   const historyTotals = calculateHistoryTotals();
 
+  // Weekly calorie data from FoodContext entries (last 7 days)
+  const weeklyData = React.useMemo(() => {
+    const days: { label: string; date: string; calories: number }[] = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const dateStr = d.toISOString().split('T')[0];
+      const label = d.toLocaleDateString('en-US', { weekday: 'short' }).substring(0, 3);
+      const calories = foodEntries
+        .filter((e) => e.date === dateStr)
+        .reduce((sum, e) => sum + e.calories, 0);
+      days.push({ label, date: dateStr, calories });
+    }
+    return days;
+  }, [foodEntries]);
+
   // Handle delete
   const handleDelete = (itemId: string, dishName: string) => {
     Alert.alert(
@@ -362,28 +378,6 @@ export const HistoryListScreen: React.FC = () => {
         <TouchableOpacity
           style={[
             styles.filterChip,
-            filterType === 'today' && styles.filterChipActive,
-          ]}
-          onPress={() => setFilterType('today')}
-        >
-          <MaterialCommunityIcons
-            name="calendar-today"
-            size={16}
-            color={filterType === 'today' ? AppColors.white : AppColors.textSecondary}
-            style={styles.filterChipIcon}
-          />
-          <Text
-            style={[
-              styles.filterChipText,
-              filterType === 'today' && styles.filterChipTextActive,
-            ]}
-          >
-            Today
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            styles.filterChip,
             filterType === 'home' && styles.filterChipActive,
           ]}
           onPress={() => setFilterType('home')}
@@ -449,14 +443,46 @@ export const HistoryListScreen: React.FC = () => {
         }
         ListHeaderComponent={
           historyData.length > 0 ? (
-            <View style={styles.chartCard}>
-              <Text style={styles.chartTitle}>Total Macronutrient Breakdown</Text>
-              <MacroPieChart
-                protein={historyTotals.protein}
-                carbs={historyTotals.carbs}
-                fats={historyTotals.fats}
-                size={200}
-              />
+            <View>
+              {/* Weekly calorie bar chart */}
+              {weeklyData.some((d) => d.calories > 0) && (
+                <View style={styles.weeklyCard}>
+                  <Text style={styles.weeklyTitle}>7-Day Calorie Trend</Text>
+                  <View style={styles.weeklyChart}>
+                    {(() => {
+                      const maxCal = Math.max(...weeklyData.map((d) => d.calories), 1);
+                      const today = new Date().toISOString().split('T')[0];
+                      return weeklyData.map((day) => (
+                        <View key={day.date} style={styles.weeklyBar}>
+                          <Text style={styles.weeklyBarCal}>
+                            {day.calories > 0 ? Math.round(day.calories) : ''}
+                          </Text>
+                          <View style={styles.weeklyBarTrack}>
+                            <View style={[
+                              styles.weeklyBarFill,
+                              { height: `${Math.max((day.calories / maxCal) * 100, day.calories > 0 ? 4 : 0)}%` as any },
+                              day.date === today && { backgroundColor: AppColors.accent },
+                            ]} />
+                          </View>
+                          <Text style={[styles.weeklyDayLabel, day.date === today && { color: AppColors.accent, fontWeight: '700' }]}>
+                            {day.label}
+                          </Text>
+                        </View>
+                      ));
+                    })()}
+                  </View>
+                </View>
+              )}
+
+              <View style={styles.chartCard}>
+                <Text style={styles.chartTitle}>Total Macronutrient Breakdown</Text>
+                <MacroPieChart
+                  protein={historyTotals.protein}
+                  carbs={historyTotals.carbs}
+                  fats={historyTotals.fats}
+                  size={200}
+                />
+              </View>
             </View>
           ) : null
         }
@@ -675,5 +701,58 @@ const styles = StyleSheet.create({
     fontSize: Typography.fontSize.sm,
     color: AppColors.text,
     fontWeight: Typography.fontWeight.medium,
+  },
+  // Weekly bar chart
+  weeklyCard: {
+    backgroundColor: AppColors.cardBackground,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.lg,
+    marginBottom: Spacing.md,
+    borderWidth: 1,
+    borderColor: AppColors.border,
+  },
+  weeklyTitle: {
+    fontSize: Typography.fontSize.sm,
+    fontWeight: '700',
+    color: AppColors.textSecondary,
+    marginBottom: Spacing.md,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+  },
+  weeklyChart: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: 6,
+    height: 100,
+  },
+  weeklyBar: {
+    flex: 1,
+    alignItems: 'center',
+    height: '100%',
+    justifyContent: 'flex-end',
+  },
+  weeklyBarCal: {
+    fontSize: 9,
+    color: AppColors.textTertiary,
+    marginBottom: 2,
+    textAlign: 'center',
+  },
+  weeklyBarTrack: {
+    width: '100%',
+    height: 72,
+    backgroundColor: AppColors.surface,
+    borderRadius: 4,
+    justifyContent: 'flex-end',
+    overflow: 'hidden',
+  },
+  weeklyBarFill: {
+    width: '100%',
+    backgroundColor: AppColors.success,
+    borderRadius: 4,
+  },
+  weeklyDayLabel: {
+    fontSize: 10,
+    color: AppColors.textSecondary,
+    marginTop: 4,
   },
 });
