@@ -1,4 +1,4 @@
-﻿/**
+/**
  * DishPredictionList Component
  * 
  * List of predicted dishes with confidence scores.
@@ -18,11 +18,11 @@ interface DishPredictionListProps {
 }
 
 export const DishPredictionList: React.FC<DishPredictionListProps> = ({
-  const { colors } = useAppTheme();
-  const styles = useMemo(() => createStyles(colors), [colors]);
   predictions,
   selectedDishId,
 }) => {
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const renderPrediction = ({ item, index }: { item: DishPrediction; index: number }) => {
     const isSelected = item.dish_id === selectedDishId;
     const confidencePercent = Math.round(item.confidence * 100);

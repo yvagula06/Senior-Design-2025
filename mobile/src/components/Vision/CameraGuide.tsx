@@ -15,8 +15,10 @@ interface CameraGuideProps {
 }
 
 export const CameraGuide: React.FC<CameraGuideProps> = ({
+  captureMode,
+}) => {
   const { colors } = useAppTheme();
-  const styles = useMemo(() => createStyles(colors), [colors]); captureMode }) => {
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const getInstructions = () => {
     switch (captureMode) {
       case 'single':

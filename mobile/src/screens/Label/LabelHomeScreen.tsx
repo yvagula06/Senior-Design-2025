@@ -13,7 +13,7 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import type { RouteProp } from '@react-navigation/native';
 import type { LabelStackNavigationProp, LabelStackParamList } from '../../navigation/types';
 import { DishSearchInput, StyleOption } from '../../components/Label';
-import { Spacing, Typography, BorderRadius, fadeIn, slideIn, scaleIn } from '../../theme';
+import { Spacing, Typography, BorderRadius, Shadows, fadeIn, slideIn, scaleIn } from '../../theme';
 import { useAppTheme } from '../../context/ThemeContext';
 import { requestLabel } from '../../services/label';
 import type { LabelResponse } from '../../types/label';
@@ -106,6 +106,10 @@ export const LabelHomeScreen: React.FC = () => {
   /**
    * Generate nutrition label using backend API
    */
+  const handleOpenCamera = () => {
+    navigation.getParent()?.navigate('ExploreStack' as never, { screen: 'CameraCapture' } as never);
+  };
+
   const handleGenerate = async () => {
     if (!dishName.trim()) return;
 
@@ -217,7 +221,7 @@ export const LabelHomeScreen: React.FC = () => {
           {
             opacity: headerFade,
             transform: [{ translateY: headerSlide }],
-            paddingTop: insets.top + Spacing.md,
+            paddingTop: insets.top + Spacing.lg,
           },
         ]}
       >
@@ -286,6 +290,18 @@ export const LabelHomeScreen: React.FC = () => {
           <View style={{ flex: 1 }}>
             <Text style={styles.barcodeBannerTitle}>Scan a Barcode</Text>
             <Text style={styles.barcodeBannerSub}>Packaged food? Get instant nutrition info</Text>
+          </View>
+          <MaterialCommunityIcons name="chevron-right" size={22} color={colors.textSecondary} />
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.barcodeBanner, { marginTop: Spacing.sm, borderColor: colors.accent + '40' }]}
+          onPress={handleOpenCamera}
+          activeOpacity={0.8}
+        >
+          <MaterialCommunityIcons name="camera" size={28} color={colors.primary} />
+          <View style={{ flex: 1 }}>
+            <Text style={styles.barcodeBannerTitle}>Estimate from Photo</Text>
+            <Text style={styles.barcodeBannerSub}>Take a photo to identify your meal</Text>
           </View>
           <MaterialCommunityIcons name="chevron-right" size={22} color={colors.textSecondary} />
         </TouchableOpacity>
@@ -390,7 +406,7 @@ export const LabelHomeScreen: React.FC = () => {
                 style={[
                   styles.confidenceFill, 
                   { 
-                    width: `${labelResult.confidence * 100}%`,
+                    width: `${Math.min(labelResult.confidence * 100, 100)}%`,
                     backgroundColor: labelResult.confidence > 0.7 
                       ? colors.success 
                       : labelResult.confidence > 0.5 
@@ -400,9 +416,17 @@ export const LabelHomeScreen: React.FC = () => {
                 ]} 
               />
             </View>
-            <Text style={styles.confidenceValue}>
-              {(labelResult.confidence * 100).toFixed(0)}% confidence
-            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+              <Text style={styles.confidenceValue}>
+                {(labelResult.confidence * 100).toFixed(1)}% match confidence
+              </Text>
+              <Text style={[styles.confidenceValue, { 
+                color: labelResult.confidence > 0.7 ? colors.success : labelResult.confidence > 0.5 ? colors.warning : colors.error,
+                fontWeight: '700'
+              }]}>
+                {labelResult.confidence > 0.7 ? 'High' : labelResult.confidence > 0.5 ? 'Medium' : 'Low'}
+              </Text>
+            </View>
           </View>
 
           {/* Macronutrients Card */}

@@ -1,4 +1,4 @@
-﻿import React, { useMemo, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Spacing, Typography, BorderRadius } from '../../theme';
@@ -12,13 +12,13 @@ interface CategoryHeaderProps {
 }
 
 export const CategoryHeader: React.FC<CategoryHeaderProps> = ({
-  const { colors } = useAppTheme();
-  const styles = useMemo(() => createStyles(colors), [colors]);
   title,
   subtitle,
   icon,
   onSeeAllPress,
 }) => {
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   return (
     <View style={styles.container}>
       <View style={styles.leftSection}>

@@ -1,4 +1,4 @@
-﻿import React, { useMemo, useMemo } from 'react';
+﻿import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Spacing, Typography, BorderRadius, Shadows } from '../../theme';
@@ -22,8 +22,11 @@ interface DishCardProps {
 }
 
 export const DishCard: React.FC<DishCardProps> = ({
+  dish,
+  onPress,
+}) => {
   const { colors } = useAppTheme();
-  const styles = useMemo(() => createStyles(colors), [colors]); dish, onPress }) => {
+  const styles = useMemo(() => createStyles(colors), [colors]);
   return (
     <TouchableOpacity
       style={styles.card}

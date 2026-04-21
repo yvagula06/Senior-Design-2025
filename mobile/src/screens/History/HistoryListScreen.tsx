@@ -16,7 +16,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SwipeListView } from 'react-native-swipe-list-view';
 import type { HistoryStackNavigationProp } from '../../navigation/types';
 import { HistoryItemCard, type HistoryEntry } from '../../components/History';
-import { Spacing, Typography, BorderRadius } from '../../theme';
+import { Spacing, Typography, BorderRadius, Shadows } from '../../theme';
 import { useAppTheme } from '../../context/ThemeContext';
 import { MacroPieChart } from '../../components/MacroPieChart';
 import { 
@@ -308,7 +308,7 @@ export const HistoryListScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={[styles.header, { paddingTop: insets.top + Spacing.md }]}>
+      <View style={[styles.header, { paddingTop: insets.top + Spacing.lg }]}>
         <Text style={styles.headerTitle}>History</Text>
       </View>
 
@@ -579,7 +579,7 @@ function createStyles(colors: CS) {
       flexDirection: 'row',
       paddingHorizontal: Spacing.md,
       paddingBottom: Spacing.md,
-      gap: Spacing.xs,
+      gap: Spacing.sm,
     },
     chartCard: {
       backgroundColor: colors.background,

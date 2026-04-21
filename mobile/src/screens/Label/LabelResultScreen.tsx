@@ -20,7 +20,7 @@ import {
   type VariantBottomSheetRef,
   type CanonicalRecipe,
 } from '../../components/Label';
-import { Spacing, Typography, BorderRadius } from '../../theme';
+import { Spacing, Typography, BorderRadius, Shadows } from '../../theme';
 import { useAppTheme } from '../../context/ThemeContext';
 
 // Import API and type definitions

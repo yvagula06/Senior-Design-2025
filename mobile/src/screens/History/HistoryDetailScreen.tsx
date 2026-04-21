@@ -17,7 +17,7 @@ import {
   NutritionLabelCard,
   type NutritionData,
 } from '../../components/Label';
-import { Spacing, Typography, BorderRadius } from '../../theme';
+import { Spacing, Typography, BorderRadius, Shadows } from '../../theme';
 import { useAppTheme } from '../../context/ThemeContext';
 
 type HistoryDetailRouteProp = RouteProp<HistoryStackParamList, 'HistoryDetail'>;

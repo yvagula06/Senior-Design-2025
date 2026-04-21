@@ -183,9 +183,9 @@ export const ProfileScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: Spacing.xxxl }}>
         {/* ── Header / Avatar ─────────────────────────────────────────── */}
-        <View style={[styles.header, { paddingTop: insets.top + Spacing.md }]}>
+        <View style={[styles.header, { paddingTop: insets.top + Spacing.lg }]}>
           <TouchableOpacity onPress={handlePickAvatar} onLongPress={profilePicUri ? handleRemoveAvatar : undefined}>
             {profilePicUri ? (
               <View style={styles.avatarWrapper}>
@@ -281,6 +281,7 @@ export const ProfileScreen: React.FC = () => {
           <SettingsItem icon="information" label="About NutriLabelAI" type="info" onPress={handleAboutPress} />
         </View>
 
+        <View style={{ height: Spacing.xl }} />
         <InfoCard icon="database" title="Smart Recipe Database"
           description="We use PostgreSQL with pgvector to search thousands of recipes using semantic embeddings." />
         <InfoCard icon="brain" title="AI-Powered Analysis"

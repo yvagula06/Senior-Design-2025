@@ -1,4 +1,4 @@
-﻿/**
+/**
  * EstimationResultScreen
  * 
  * Displays the results of meal estimation from the vision API.
@@ -151,12 +151,12 @@ export const EstimationResultScreen: React.FC = () => {
 
       setIsLogged(true);
       Alert.alert(
-        'Meal Logged! âœ“',
+        'Meal Logged! ✓',
         `${selectedDish.dish_name} (${adjustedCalories} kcal, ${portionSize} portion) has been added to your history.`,
         [{ text: 'OK' }]
       );
     } catch (error: any) {
-      console.error('âŒ [EstimationResult] Failed to log meal:', error);
+      console.error('❌ [EstimationResult] Failed to log meal:', error);
       Alert.alert(
         'Logging Failed',
         error.message || 'Failed to log meal. Please try again.',
@@ -205,12 +205,12 @@ export const EstimationResultScreen: React.FC = () => {
       setFeedbackSubmitted(true);
       
       Alert.alert(
-        'Thank You! ðŸŽ‰',
+        'Thank You! 🎉',
         'Your feedback helps improve our estimates.',
         [{ text: 'OK' }]
       );
     } catch (error) {
-      console.error('âŒ [EstimationResult] Failed to submit feedback:', error);
+      console.error('❌ [EstimationResult] Failed to submit feedback:', error);
       // Don't show error to user - feedback is optional
     }
   };
@@ -281,7 +281,7 @@ export const EstimationResultScreen: React.FC = () => {
               >
                 Small
               </Text>
-              <Text style={styles.portionMultiplier}>Ã—0.75</Text>
+              <Text style={styles.portionMultiplier}>×0.75</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -304,7 +304,7 @@ export const EstimationResultScreen: React.FC = () => {
               >
                 Normal
               </Text>
-              <Text style={styles.portionMultiplier}>Ã—1.0</Text>
+              <Text style={styles.portionMultiplier}>×1.0</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -327,7 +327,7 @@ export const EstimationResultScreen: React.FC = () => {
               >
                 Large
               </Text>
-              <Text style={styles.portionMultiplier}>Ã—1.25</Text>
+              <Text style={styles.portionMultiplier}>×1.25</Text>
             </TouchableOpacity>
           </View>
           <Text style={styles.portionHint}>
@@ -536,7 +536,7 @@ export const EstimationResultScreen: React.FC = () => {
             </TouchableOpacity>
           </View>
           {feedbackSubmitted && (
-            <Text style={styles.feedbackThankYou}>âœ“ Thank you for your feedback!</Text>
+            <Text style={styles.feedbackThankYou}>✓ Thank you for your feedback!</Text>
           )}
         </View>
 
@@ -654,7 +654,7 @@ export const EstimationResultScreen: React.FC = () => {
                 color={colors.textInverse}
               />
               <Text style={styles.buttonTextPrimary}>
-                {isLogged ? 'Logged âœ“' : 'Confirm Log'}
+                {isLogged ? 'Logged ✓' : 'Confirm Log'}
               </Text>
             </>
           )}
@@ -998,7 +998,7 @@ function createStyles(colors: CV) {
     paddingVertical: Spacing.lg,
     backgroundColor: colors.surface,
     gap: Spacing.md,
-    ...Shadows.medium,
+    ...Shadows.md,
   },
   button: {
     flex: 1,
@@ -1012,7 +1012,7 @@ function createStyles(colors: CV) {
   },
   buttonPrimary: {
     backgroundColor: colors.primary,
-    ...Shadows.small,
+    ...Shadows.sm,
   },
   buttonSecondary: {
     backgroundColor: colors.backgroundSecondary,

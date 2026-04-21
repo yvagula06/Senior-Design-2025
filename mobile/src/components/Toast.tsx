@@ -1,9 +1,8 @@
-﻿import React, { useEffect, useRef, useMemo } from 'react';
+import React, { useEffect, useRef, useMemo } from 'react';
 import { Animated, Text, StyleSheet, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Spacing, Typography, BorderRadius } from '../theme';
 import { useAppTheme } from '../context/ThemeContext';
-import { useAppTheme } from '../../context/ThemeContext';
 
 type ToastType = 'success' | 'error' | 'info';
 
@@ -16,14 +15,14 @@ interface ToastProps {
 }
 
 export const Toast: React.FC<ToastProps> = ({
-  const { colors } = useAppTheme();
-  const styles = useMemo(() => createStyles(colors), [colors]);
   visible,
   message,
   type = 'success',
   duration = 2500,
   onHide,
 }) => {
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const translateY = useRef(new Animated.Value(100)).current;
   const opacity = useRef(new Animated.Value(0)).current;
 

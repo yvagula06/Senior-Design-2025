@@ -1,4 +1,4 @@
-﻿import React, { useMemo, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Switch } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Spacing, Typography, BorderRadius } from '../../theme';
@@ -14,8 +14,6 @@ interface SettingsItemProps {
 }
 
 export const SettingsItem: React.FC<SettingsItemProps> = ({
-  const { colors } = useAppTheme();
-  const styles = useMemo(() => createStyles(colors), [colors]);
   icon,
   label,
   type,
@@ -23,6 +21,8 @@ export const SettingsItem: React.FC<SettingsItemProps> = ({
   onPress,
   onToggle,
 }) => {
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const renderRight = () => {
     switch (type) {
       case 'toggle':

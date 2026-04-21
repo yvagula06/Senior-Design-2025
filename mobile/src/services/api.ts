@@ -31,7 +31,7 @@ const API_BASE_URL = (() => {
     if (Platform.OS === 'android') {
       if (isDevice) {
         // Physical Android device - use LAN IP
-        const PHYSICAL_DEVICE_IP = '192.168.1.191';
+        const PHYSICAL_DEVICE_IP = '172.20.114.0';
         return `http://${PHYSICAL_DEVICE_IP}:8000`;
       } else {
         // Android emulator - use special alias to host
@@ -40,7 +40,7 @@ const API_BASE_URL = (() => {
     } else if (Platform.OS === 'ios') {
       if (isDevice) {
         // Physical iOS device - use LAN IP
-        const PHYSICAL_DEVICE_IP = '192.168.1.191';
+        const PHYSICAL_DEVICE_IP = '172.20.114.0';
         return `http://${PHYSICAL_DEVICE_IP}:8000`;
       } else {
         // iOS simulator - use localhost
@@ -66,7 +66,7 @@ const API_BASE_URL = (() => {
  */
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 10000,
+  timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
   },

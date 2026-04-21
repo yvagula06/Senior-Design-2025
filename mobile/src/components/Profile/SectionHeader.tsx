@@ -1,4 +1,4 @@
-﻿import React, { useMemo, useMemo } from 'react';
+﻿import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Spacing, Typography } from '../../theme';
 import { useAppTheme } from '../../context/ThemeContext';
@@ -8,8 +8,10 @@ interface SectionHeaderProps {
 }
 
 export const SectionHeader: React.FC<SectionHeaderProps> = ({
+  title,
+}) => {
   const { colors } = useAppTheme();
-  const styles = useMemo(() => createStyles(colors), [colors]); title }) => {
+  const styles = useMemo(() => createStyles(colors), [colors]);
   return (
     <View style={styles.container}>
       <Text style={styles.title}>{title}</Text>

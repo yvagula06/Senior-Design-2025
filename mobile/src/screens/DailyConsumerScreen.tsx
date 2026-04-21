@@ -90,7 +90,7 @@ export const DailyConsumerScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <View style={[styles.header, { paddingTop: insets.top + Spacing.md }]}>
+      <View style={[styles.header, { paddingTop: insets.top + Spacing.lg }]}>
         <View style={styles.headerRow}>
           <View>
             <Text style={styles.headerTitle}>{greetingText}</Text>
@@ -100,7 +100,7 @@ export const DailyConsumerScreen: React.FC = () => {
           </View>
           {streak > 0 && (
             <View style={styles.streakBadge}>
-              <MaterialCommunityIcons name="fire" size={16} color={colors.gold}old} />
+              <MaterialCommunityIcons name="fire" size={16} color={colors.gold} />
               <Text style={styles.streakText}>{streak}</Text>
               <Text style={styles.streakLabel}>day streak</Text>
             </View>
@@ -221,10 +221,10 @@ type C = ReturnType<typeof useAppTheme>['colors'];
 function createStyles(colors: C) {
   return StyleSheet.create({
     container: { flex: 1, backgroundColor: colors.background },
-    scroll: { padding: Spacing.lg },
+    scroll: { padding: Spacing.lg, paddingBottom: Spacing.xxxl },
     header: {
       paddingHorizontal: Spacing.lg,
-      paddingBottom: Spacing.md,
+      paddingBottom: Spacing.lg,
       backgroundColor: colors.cardBackground,
       borderBottomWidth: 1,
       borderBottomColor: colors.border,
@@ -241,10 +241,10 @@ function createStyles(colors: C) {
       paddingHorizontal: Spacing.md,
       paddingVertical: Spacing.xs,
       borderWidth: 1,
-      borderColor: colors.gold + 'old + '44',
+      borderColor: colors.gold + '44',
     },
     streakText: { fontSize: Typography.fontSize.md, fontWeight: '700', color: colors.gold },
-    streakLabel: { fontSize: 11, color: colors.goldld, opacity: 0.8 },
+    streakLabel: { fontSize: 11, color: colors.gold, opacity: 0.8 },
     progressCard: {
       backgroundColor: colors.cardBackground,
       borderRadius: BorderRadius.lg,

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * CalorieRangeDisplay Component
  * 
  * Visual display of calorie estimate with range and confidence indicator.
@@ -17,11 +17,11 @@ interface CalorieRangeDisplayProps {
 }
 
 export const CalorieRangeDisplay: React.FC<CalorieRangeDisplayProps> = ({
-  const { colors } = useAppTheme();
-  const styles = useMemo(() => createStyles(colors), [colors]);
   calorieEstimate,
   accuracyScore,
 }) => {
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const getAccuracyColor = (score?: number): string => {
     if (!score) return colors.textSecondary;
     if (score >= 0.8) return colors.success;

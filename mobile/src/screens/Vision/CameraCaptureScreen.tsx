@@ -1,4 +1,4 @@
-﻿/**
+/**
  * CameraCaptureScreen
  * 
  * Screen for capturing meal photos using expo-image-picker.
@@ -94,7 +94,7 @@ export const CameraCaptureScreen: React.FC = () => {
       setArCapable(hasLidar);
       
       if (hasLidar) {
-        console.log('âœ… LiDAR/AR depth capable device detected');
+        console.log('✅ LiDAR/AR depth capable device detected');
       }
     } else if (Platform.OS === 'android') {
       // For Android, ARCore support detection would require native module
@@ -104,7 +104,7 @@ export const CameraCaptureScreen: React.FC = () => {
       setArCapable(hasArCore);
       
       if (hasArCore) {
-        console.log('âœ… ARCore capable device detected');
+        console.log('✅ ARCore capable device detected');
       }
     }
   };
@@ -157,7 +157,7 @@ export const CameraCaptureScreen: React.FC = () => {
         }
       }
     } catch (error) {
-      console.error('âŒ [Camera] Failed to capture image:', error);
+      console.error('❌ [Camera] Failed to capture image:', error);
       Alert.alert('Error', 'Failed to capture image. Please try again.');
     }
   };
@@ -192,7 +192,7 @@ export const CameraCaptureScreen: React.FC = () => {
         }
       }
     } catch (error) {
-      console.error('âŒ [Camera] Failed to pick image:', error);
+      console.error('❌ [Camera] Failed to pick image:', error);
       Alert.alert('Error', 'Failed to select image. Please try again.');
     }
   };
@@ -271,19 +271,19 @@ export const CameraCaptureScreen: React.FC = () => {
         camera_intrinsics: captureMode === 'depth' ? cameraIntrinsics : undefined,
       };
 
-      console.log('ðŸ“¸ [CameraCapture] Calling vision API...');
-      console.log('ðŸ“¸ [CameraCapture] Mode:', captureMode, 'Images:', images.length);
+      console.log('📸 [CameraCapture] Calling vision API...');
+      console.log('📸 [CameraCapture] Mode:', captureMode, 'Images:', images.length);
       if (captureMode === 'depth') {
-        console.log('ðŸ”¬ [CameraCapture] Including depth data and intrinsics');
+        console.log('🔬 [CameraCapture] Including depth data and intrinsics');
       }
       
       const response = await estimateMeal(request);
-      console.log('âœ… [CameraCapture] Received estimation:', response);
+      console.log('✅ [CameraCapture] Received estimation:', response);
 
       // Navigate to result screen
       navigation.navigate('EstimationResult', { response });
     } catch (error: any) {
-      console.error('âŒ [CameraCapture] Estimation failed:', error);
+      console.error('❌ [CameraCapture] Estimation failed:', error);
       Alert.alert(
         'Estimation Failed',
         error.message || 'Failed to estimate meal. Please try again.'
@@ -328,7 +328,7 @@ export const CameraCaptureScreen: React.FC = () => {
     // - Android: ARCore depth API
     
     try {
-      console.log('ðŸ”¬ Starting AR depth scanning...');
+      console.log('🔬 Starting AR depth scanning...');
       
       // Simulate initialization delay
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -396,7 +396,7 @@ export const CameraCaptureScreen: React.FC = () => {
       }
       
     } catch (error) {
-      console.error('âŒ AR scanning failed:', error);
+      console.error('❌ AR scanning failed:', error);
       setScanningStatus('error');
       Alert.alert(
         'Scanning Failed',
@@ -504,7 +504,7 @@ export const CameraCaptureScreen: React.FC = () => {
             depthQuality={depthQuality}
             distanceToSubject={0.4}
             onScanComplete={() => {
-              console.log('âœ… AR Scan complete');
+              console.log('✅ AR Scan complete');
             }}
           />
         </View>
@@ -524,7 +524,7 @@ export const CameraCaptureScreen: React.FC = () => {
           <View style={styles.controlsContainer}>
             <Text style={styles.stepText}>
               {captureMode === 'multi_angle' ? 'Step 1 of 2: ' : ''}
-              ðŸ“¸ Take a photo from directly above
+              📸 Take a photo from directly above
             </Text>
 
             <View style={styles.actionButtons}>
@@ -549,7 +549,7 @@ export const CameraCaptureScreen: React.FC = () => {
               style={styles.backButton}
               onPress={() => setCurrentStep('select-mode')}
             >
-              <Text style={styles.backText}>â† Back to Mode Selection</Text>
+              <Text style={styles.backText}>← Back to Mode Selection</Text>
             </TouchableOpacity>
           </View>
         </>
@@ -563,7 +563,7 @@ export const CameraCaptureScreen: React.FC = () => {
               {topImageUri && (
                 <View style={styles.thumbnailContainer}>
                   <Image source={{ uri: topImageUri }} style={styles.thumbnailImage} />
-                  <Text style={styles.thumbnailLabel}>âœ“ Top View</Text>
+                  <Text style={styles.thumbnailLabel}>✓ Top View</Text>
                 </View>
               )}
               {sideImageUri ? (
@@ -580,7 +580,7 @@ export const CameraCaptureScreen: React.FC = () => {
 
           <View style={styles.controlsContainer}>
             <Text style={styles.stepText}>
-              Step 2 of 2: ðŸ“¸ Take a photo from the side
+              Step 2 of 2: 📸 Take a photo from the side
             </Text>
 
             <View style={styles.actionButtons}>
@@ -609,7 +609,7 @@ export const CameraCaptureScreen: React.FC = () => {
                 setCurrentStep('capture-top');
               }}
             >
-              <Text style={styles.backText}>â† Back</Text>
+              <Text style={styles.backText}>← Back</Text>
             </TouchableOpacity>
           </View>
         </>
@@ -729,7 +729,7 @@ function createStyles(colors: CV) {
     alignItems: 'center',
     borderWidth: 2,
     borderColor: colors.border,
-    ...Shadows.medium,
+    ...Shadows.md,
   },
   modeCardFeatured: {
     borderColor: colors.success,
@@ -814,7 +814,7 @@ function createStyles(colors: CV) {
     borderRadius: BorderRadius.md,
     padding: Spacing.sm,
     alignItems: 'center',
-    ...Shadows.small,
+    ...Shadows.sm,
   },
   previewCardImage: {
     width: '100%',
@@ -848,7 +848,7 @@ function createStyles(colors: CV) {
     backgroundColor: colors.surface,
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.xl,
-    ...Shadows.medium,
+    ...Shadows.md,
   },
   stepText: {
     ...Typography.body,
@@ -874,7 +874,7 @@ function createStyles(colors: CV) {
   },
   buttonPrimary: {
     backgroundColor: colors.primary,
-    ...Shadows.small,
+    ...Shadows.sm,
   },
   buttonSecondary: {
     backgroundColor: colors.backgroundSecondary,

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * AngleIndicator Component
  * 
  * Visual indicator showing current capture angle for multi-angle mode.
@@ -18,11 +18,11 @@ interface AngleIndicatorProps {
 }
 
 export const AngleIndicator: React.FC<AngleIndicatorProps> = ({
-  const { colors } = useAppTheme();
-  const styles = useMemo(() => createStyles(colors), [colors]);
   capturedAngles,
   currentAngle,
 }) => {
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const angles: CaptureAngle[] = ['top', 'side', 'diagonal'];
 
   const getAngleIcon = (angle: CaptureAngle): keyof typeof MaterialCommunityIcons.glyphMap => {

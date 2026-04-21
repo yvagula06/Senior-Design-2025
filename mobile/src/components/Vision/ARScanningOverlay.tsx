@@ -1,4 +1,4 @@
-﻿/**
+/**
  * AR Scanning Component (Phase 2)
  * 
  * Guides users through depth/AR scanning for accurate volume estimation.
@@ -33,14 +33,14 @@ interface ARScanningOverlayProps {
 }
 
 export const ARScanningOverlay: React.FC<ARScanningOverlayProps> = ({
-  const { colors } = useAppTheme();
-  const styles = useMemo(() => createStyles(colors), [colors]);
   status,
   progress,
   depthQuality = 0,
   distanceToSubject,
   onScanComplete,
 }) => {
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [pulseAnim] = useState(new Animated.Value(1));
   const [rotateAnim] = useState(new Animated.Value(0));
 
@@ -248,7 +248,7 @@ export const ARScanningOverlay: React.FC<ARScanningOverlayProps> = ({
         {status === 'scanning' && (
           <View style={styles.instructionsContainer}>
             <Text style={styles.instructionsText}>
-              Keep the plate in view â€¢ Move slowly in a circle
+              Keep the plate in view • Move slowly in a circle
             </Text>
           </View>
         )}

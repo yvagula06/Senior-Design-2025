@@ -13,7 +13,10 @@ import os
 import base64
 import logging
 from typing import List, Dict, Optional, Tuple
+from dotenv import load_dotenv
 from clarifai_grpc.channel.clarifai_channel import ClarifaiChannel
+
+load_dotenv()
 from clarifai_grpc.grpc.api import resources_pb2, service_pb2, service_pb2_grpc
 from clarifai_grpc.grpc.api.status import status_code_pb2
 import time
@@ -99,7 +102,11 @@ class ClarifaiClient:
         
         if not image_base64:
             raise ValueError("Image data cannot be empty")
-        
+
+        # Strip data URI prefix if present (e.g. "data:image/jpeg;base64,...")
+        if "," in image_base64:
+            image_base64 = image_base64.split(",", 1)[1]
+
         # Decode base64 to bytes
         try:
             image_bytes = base64.b64decode(image_base64)
