@@ -7,6 +7,7 @@ import { LabelStackNavigator } from './LabelStackNavigator';
 import { HistoryStackNavigator } from './HistoryStackNavigator';
 import { ExploreStackNavigator } from './ExploreStackNavigator';
 import { ProfileScreen } from '../screens';
+import { DailyConsumerScreen } from '../screens/DailyConsumerScreen';
 import { AppColors, Spacing } from '../theme';
 
 const Tab = createBottomTabNavigator<RootTabParamList>();
@@ -49,6 +50,16 @@ export const RootTabNavigator: React.FC = () => {
           tabBarLabel: 'Label',
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="tag" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Today"
+        component={DailyConsumerScreen}
+        options={{
+          tabBarLabel: 'Today',
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="chart-donut" size={size} color={color} />
           ),
         }}
       />

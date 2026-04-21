@@ -32,6 +32,9 @@ export interface UserSettings {
   // Default meal style
   defaultPrepStyle: 'home' | 'restaurant' | 'ask';
   
+  // Daily calorie goal
+  calorieGoal: number;
+  
   // Display preferences
   showDetailedView: boolean; // Default view style for labels
   
@@ -48,6 +51,7 @@ export interface UserSettings {
 export const DEFAULT_SETTINGS: UserSettings = {
   useMetric: false,
   defaultPrepStyle: 'ask',
+  calorieGoal: 2000,
   showDetailedView: false,
   notificationsEnabled: true,
   darkMode: false,

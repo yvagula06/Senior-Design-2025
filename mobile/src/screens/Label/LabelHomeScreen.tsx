@@ -4,10 +4,10 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  Alert,
   Animated,
   TouchableOpacity,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { RouteProp } from '@react-navigation/native';
 import type { LabelStackNavigationProp, LabelStackParamList } from '../../navigation/types';
@@ -18,6 +18,7 @@ import type { LabelResponse } from '../../types/label';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { ActivityIndicator } from 'react-native';
 import { useFoodContext } from '../../context/FoodContext';
+import { Toast } from '../../components';
 
 type LabelHomeRouteProp = RouteProp<LabelStackParamList, 'LabelHome'>;
 
@@ -33,6 +34,7 @@ const PRO_TIPS = [
 ];
 
 export const LabelHomeScreen: React.FC = () => {
+  const insets = useSafeAreaInsets();
   const navigation = useNavigation<LabelStackNavigationProp>();
   const route = useRoute<LabelHomeRouteProp>();
   const [dishName, setDishName] = useState('');
@@ -45,6 +47,15 @@ export const LabelHomeScreen: React.FC = () => {
   const [labelResult, setLabelResult] = useState<LabelResponse | null>(null);
   const [apiError, setApiError] = useState<string | null>(null);
   const [isSaved, setIsSaved] = useState(false);
+  const [toastVisible, setToastVisible] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const [toastType, setToastType] = useState<'success' | 'error'>('success');
+
+  const showToast = (msg: string, type: 'success' | 'error' = 'success') => {
+    setToastMessage(msg);
+    setToastType(type);
+    setToastVisible(true);
+  };
   
   // Food context for saving entries
   const { addLabelEntry } = useFoodContext();
@@ -136,19 +147,11 @@ export const LabelHomeScreen: React.FC = () => {
       });
 
       setIsSaved(true);
-      Alert.alert(
-        'Saved!',
-        `Added "${labelResult.matched_dish}" to your daily totals.`,
-        [{ text: 'OK' }]
-      );
+      showToast(`Added "${labelResult.matched_dish}" to your daily totals!`);
       console.log('✅ [Label] Saved to daily totals');
     } catch (error) {
       console.error('❌ [Label] Failed to save:', error);
-      Alert.alert(
-        'Error',
-        'Failed to save entry. Please try again.',
-        [{ text: 'OK' }]
-      );
+      showToast('Failed to save entry. Please try again.', 'error');
     }
   };
 
@@ -172,8 +175,9 @@ export const LabelHomeScreen: React.FC = () => {
   };
 
   return (
+    <View style={styles.container}>
     <ScrollView 
-      style={styles.container}
+      style={{ flex: 1 }}
       contentContainerStyle={styles.scrollContent}
       showsVerticalScrollIndicator={false}
     >
@@ -184,6 +188,7 @@ export const LabelHomeScreen: React.FC = () => {
           {
             opacity: headerFade,
             transform: [{ translateY: headerSlide }],
+            paddingTop: insets.top + Spacing.md,
           },
         ]}
       >
@@ -197,6 +202,13 @@ export const LabelHomeScreen: React.FC = () => {
               AI-powered nutrition insights
             </Text>
           </View>
+          <TouchableOpacity
+            style={styles.barcodeIconBtn}
+            onPress={() => navigation.navigate('BarcodeScanner')}
+            activeOpacity={0.8}
+          >
+            <MaterialCommunityIcons name="barcode-scan" size={22} color={AppColors.accent} />
+          </TouchableOpacity>
         </View>
       </Animated.View>
 
@@ -232,6 +244,22 @@ export const LabelHomeScreen: React.FC = () => {
           onGenerate={handleGenerate}
           isGenerating={isGenerating}
         />
+      </Animated.View>
+
+      {/* Barcode scan shortcut */}
+      <Animated.View style={{ opacity: headerFade, paddingHorizontal: Spacing.md, marginBottom: Spacing.sm }}>
+        <TouchableOpacity
+          style={styles.barcodeBanner}
+          onPress={() => navigation.navigate('BarcodeScanner')}
+          activeOpacity={0.8}
+        >
+          <MaterialCommunityIcons name="barcode-scan" size={28} color={AppColors.accent} />
+          <View style={{ flex: 1 }}>
+            <Text style={styles.barcodeBannerTitle}>Scan a Barcode</Text>
+            <Text style={styles.barcodeBannerSub}>Packaged food? Get instant nutrition info</Text>
+          </View>
+          <MaterialCommunityIcons name="chevron-right" size={22} color={AppColors.textSecondary} />
+        </TouchableOpacity>
       </Animated.View>
 
       {/* LOADING STATE - Centered overlay with large spinner */}
@@ -441,6 +469,13 @@ export const LabelHomeScreen: React.FC = () => {
         </TouchableOpacity>
       </Animated.View>
     </ScrollView>
+      <Toast
+        visible={toastVisible}
+        message={toastMessage}
+        type={toastType}
+        onHide={() => setToastVisible(false)}
+      />
+    </View>
   );
 };
 
@@ -454,8 +489,8 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: Spacing.xl,
-    paddingTop: Spacing.xxxl,
-    paddingBottom: Spacing.md,
+    paddingTop: Spacing.xl,
+    paddingBottom: Spacing.lg,
     backgroundColor: AppColors.cardBackground,
     borderBottomWidth: 1,
     borderBottomColor: AppColors.border,
@@ -918,5 +953,36 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontSize: Typography.fontSize.base,
     fontWeight: Typography.fontWeight.bold,
+  },
+  barcodeIconBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: AppColors.surface,
+    borderWidth: 1,
+    borderColor: AppColors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  barcodeBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.md,
+    backgroundColor: AppColors.cardBackground,
+    borderRadius: BorderRadius.lg,
+    borderWidth: 1,
+    borderColor: AppColors.border,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.md,
+  },
+  barcodeBannerTitle: {
+    color: AppColors.text,
+    fontSize: Typography.fontSize.base,
+    fontWeight: '700',
+  },
+  barcodeBannerSub: {
+    color: AppColors.textSecondary,
+    fontSize: Typography.fontSize.xs,
+    marginTop: 1,
   },
 });

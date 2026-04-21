@@ -3,6 +3,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { LabelStackParamList } from './types';
 import { LabelHomeScreen } from '../screens/Label/LabelHomeScreen';
 import { LabelResultScreen } from '../screens/Label/LabelResultScreen';
+import { BarcodeScannerScreen } from '../screens/Label/BarcodeScannerScreen';
 import { AppColors } from '../theme/colors';
 
 const Stack = createNativeStackNavigator<LabelStackParamList>();
@@ -36,6 +37,11 @@ export const LabelStackNavigator: React.FC = () => {
         name="LabelResult"
         component={LabelResultScreen}
         options={{ title: 'Nutrition Results' }}
+      />
+      <Stack.Screen
+        name="BarcodeScanner"
+        component={BarcodeScannerScreen}
+        options={{ headerShown: false }}
       />
     </Stack.Navigator>
   );

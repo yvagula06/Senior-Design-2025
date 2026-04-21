@@ -1,17 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Alert, Modal, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Alert, Modal, TouchableOpacity, TextInput } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SettingsItem, SectionHeader, InfoCard } from '../components/Profile';
 import { AppColors, Spacing, Typography, BorderRadius } from '../theme';
 import { loadSettings, saveSettings } from '../services/storage';
+import { useFoodContext } from '../context/FoodContext';
 
 type UnitSystem = 'imperial' | 'metric';
 type DefaultStyle = 'home' | 'restaurant' | 'ask';
 
 export const ProfileScreen: React.FC = () => {
+  const insets = useSafeAreaInsets();
+  const { calorieGoal, setCalorieGoal } = useFoodContext();
   const [useMetric, setUseMetric] = useState(false);
   const [defaultStyle, setDefaultStyle] = useState<DefaultStyle>('ask');
   const [styleModalVisible, setStyleModalVisible] = useState(false);
+  const [calorieGoalModalVisible, setCalorieGoalModalVisible] = useState(false);
+  const [calorieGoalInput, setCalorieGoalInput] = useState('');
   const [isLoading, setIsLoading] = useState(true);
 
   /**
@@ -34,6 +40,16 @@ export const ProfileScreen: React.FC = () => {
       console.error('❌ [Profile] Failed to load settings:', error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleCalorieGoalSave = () => {
+    const parsed = parseInt(calorieGoalInput, 10);
+    if (!isNaN(parsed) && parsed >= 500 && parsed <= 10000) {
+      setCalorieGoal(parsed);
+      setCalorieGoalModalVisible(false);
+    } else {
+      Alert.alert('Invalid Value', 'Please enter a calorie goal between 500 and 10,000.');
     }
   };
 
@@ -97,7 +113,7 @@ export const ProfileScreen: React.FC = () => {
     <View style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Header */}
-        <View style={styles.header}>
+        <View style={[styles.header, { paddingTop: insets.top + Spacing.md }]}>
           <View style={styles.avatarContainer}>
             <MaterialCommunityIcons name="account-circle" size={80} color={AppColors.accent} />
           </View>
@@ -121,6 +137,16 @@ export const ProfileScreen: React.FC = () => {
             type="select"
             value={getStyleLabel()}
             onPress={() => setStyleModalVisible(true)}
+          />
+          <SettingsItem
+            icon="fire"
+            label="Daily Calorie Goal"
+            type="select"
+            value={`${calorieGoal} kcal`}
+            onPress={() => {
+              setCalorieGoalInput(calorieGoal.toString());
+              setCalorieGoalModalVisible(true);
+            }}
           />
         </View>
 
@@ -262,6 +288,66 @@ export const ProfileScreen: React.FC = () => {
           </View>
         </View>
       </Modal>
+
+      {/* Calorie Goal Modal */}
+      <Modal
+        visible={calorieGoalModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setCalorieGoalModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.calorieGoalModal}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Daily Calorie Goal</Text>
+              <TouchableOpacity onPress={() => setCalorieGoalModalVisible(false)}>
+                <MaterialCommunityIcons name="close" size={24} color={AppColors.text} />
+              </TouchableOpacity>
+            </View>
+            <View style={styles.calorieGoalContent}>
+              <MaterialCommunityIcons name="fire" size={40} color={AppColors.accent} style={{ marginBottom: Spacing.md }} />
+              <Text style={styles.calorieGoalDescription}>
+                Set your daily calorie target to track progress toward your goal.
+              </Text>
+              <View style={styles.calorieGoalInputRow}>
+                <TextInput
+                  style={styles.calorieGoalInput}
+                  value={calorieGoalInput}
+                  onChangeText={setCalorieGoalInput}
+                  keyboardType="numeric"
+                  placeholder="e.g. 2000"
+                  placeholderTextColor={AppColors.textTertiary}
+                  maxLength={5}
+                  selectTextOnFocus
+                />
+                <Text style={styles.calorieGoalUnit}>kcal</Text>
+              </View>
+              <View style={styles.calorieGoalPresets}>
+                {[1500, 1800, 2000, 2500].map((preset) => (
+                  <TouchableOpacity
+                    key={preset}
+                    style={[
+                      styles.presetChip,
+                      calorieGoalInput === preset.toString() && styles.presetChipActive,
+                    ]}
+                    onPress={() => setCalorieGoalInput(preset.toString())}
+                  >
+                    <Text style={[
+                      styles.presetChipText,
+                      calorieGoalInput === preset.toString() && styles.presetChipTextActive,
+                    ]}>
+                      {preset}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+              <TouchableOpacity style={styles.calorieGoalSaveButton} onPress={handleCalorieGoalSave}>
+                <Text style={styles.calorieGoalSaveButtonText}>Save Goal</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -273,7 +359,7 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: 'center',
-    paddingTop: Spacing.xxxl,
+    paddingTop: Spacing.xl,
     paddingBottom: Spacing.lg,
     backgroundColor: AppColors.cardBackground,
     borderBottomWidth: 1,
@@ -369,5 +455,82 @@ const styles = StyleSheet.create({
     fontSize: Typography.fontSize.sm,
     fontWeight: Typography.fontWeight.regular,
     color: AppColors.textSecondary,
+  },
+  calorieGoalModal: {
+    backgroundColor: AppColors.cardBackground,
+    borderRadius: BorderRadius.xl,
+    marginHorizontal: Spacing.lg,
+    overflow: 'hidden',
+  },
+  calorieGoalContent: {
+    padding: Spacing.xl,
+    alignItems: 'center',
+  },
+  calorieGoalDescription: {
+    fontSize: Typography.fontSize.sm,
+    color: AppColors.textSecondary,
+    textAlign: 'center',
+    marginBottom: Spacing.xl,
+    lineHeight: 20,
+  },
+  calorieGoalInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    marginBottom: Spacing.lg,
+  },
+  calorieGoalInput: {
+    backgroundColor: AppColors.background,
+    borderWidth: 2,
+    borderColor: AppColors.accent,
+    borderRadius: BorderRadius.md,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+    fontSize: 28,
+    fontWeight: Typography.fontWeight.bold,
+    color: AppColors.text,
+    textAlign: 'center',
+    minWidth: 120,
+  },
+  calorieGoalUnit: {
+    fontSize: Typography.fontSize.xl,
+    fontWeight: Typography.fontWeight.semibold,
+    color: AppColors.textSecondary,
+  },
+  calorieGoalPresets: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+    marginBottom: Spacing.xl,
+  },
+  presetChip: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.full,
+    backgroundColor: AppColors.background,
+    borderWidth: 1,
+    borderColor: AppColors.border,
+  },
+  presetChipActive: {
+    backgroundColor: AppColors.accent,
+    borderColor: AppColors.accent,
+  },
+  presetChipText: {
+    fontSize: Typography.fontSize.sm,
+    fontWeight: Typography.fontWeight.semibold,
+    color: AppColors.textSecondary,
+  },
+  presetChipTextActive: {
+    color: AppColors.white,
+  },
+  calorieGoalSaveButton: {
+    backgroundColor: AppColors.accent,
+    borderRadius: BorderRadius.md,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.xxl,
+  },
+  calorieGoalSaveButtonText: {
+    fontSize: Typography.fontSize.md,
+    fontWeight: Typography.fontWeight.bold,
+    color: AppColors.white,
   },
 });

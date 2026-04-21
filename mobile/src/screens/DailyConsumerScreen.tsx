@@ -1,163 +1,92 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, FlatList, Alert, RefreshControl, Pressable } from 'react-native';
-import { Card, Text, IconButton } from 'react-native-paper';
+﻿import React, { useState } from 'react';
+import { View, Text, StyleSheet, FlatList, Alert, RefreshControl, TouchableOpacity } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Animatable from 'react-native-animatable';
 import { useFoodContext } from '../context/FoodContext';
-import { AppColors } from '../theme/colors';
+import { AppColors, Spacing, Typography, BorderRadius } from '../theme';
 import { FoodEntry } from '../types/nutrition';
 
 export const DailyConsumerScreen: React.FC = () => {
-  const { foodEntries, deleteFoodEntry, getTotals } = useFoodContext();
+  const insets = useSafeAreaInsets();
+  const { foodEntries, deleteFoodEntry, getTotals, calorieGoal } = useFoodContext();
   const [refreshing, setRefreshing] = useState(false);
   const totals = getTotals();
 
   const onRefresh = () => {
     setRefreshing(true);
-    setTimeout(() => setRefreshing(false), 1000);
+    setTimeout(() => setRefreshing(false), 800);
   };
 
   const handleDelete = (entry: FoodEntry) => {
     Alert.alert(
       'Delete Entry',
-      `Are you sure you want to delete "${entry.foodName}"?`,
+      `Remove "${entry.foodName}" from today?`,
       [
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Delete',
           style: 'destructive',
-          onPress: () => {
-            deleteFoodEntry(entry.id);
-            Alert.alert('Deleted', `Deleted entry for "${entry.foodName}"`);
-          },
+          onPress: () => deleteFoodEntry(entry.id),
         },
       ]
     );
   };
 
   const renderFoodItem = ({ item, index }: { item: FoodEntry; index: number }) => (
-    <Animatable.View
-      animation="fadeInUp"
-      delay={index * 100}
-      duration={600}
-    >
-      <Card style={styles.foodCard} elevation={4}>
-        <Card.Content>
-          <View style={styles.foodItemHeader}>
-            <View style={styles.foodNameContainer}>
-              <Text style={styles.foodEmoji}>🍽️</Text>
-              <Text style={styles.foodName}>{item.foodName}</Text>
+    <Animatable.View animation="fadeInUp" delay={index * 80} duration={400}>
+      <View style={styles.foodCard}>
+        <View style={styles.foodItemHeader}>
+          <View style={styles.foodNameContainer}>
+            <View style={styles.foodIconBadge}>
+              <MaterialCommunityIcons name="silverware-fork-knife" size={18} color={AppColors.accent} />
             </View>
-            <Pressable
-              onPress={() => handleDelete(item)}
-              style={({ pressed }) => [
-                styles.deleteButton,
-                pressed && styles.deleteButtonPressed
-              ]}
-            >
-              <IconButton
-                icon="delete"
-                iconColor={AppColors.white}
-                size={20}
-                style={styles.deleteIcon}
-              />
-            </Pressable>
+            <Text style={styles.foodName} numberOfLines={1}>{item.foodName}</Text>
           </View>
-          <View style={styles.nutritionGrid}>
-            <View style={styles.nutritionItem}>
-              <Text style={styles.nutritionIcon}>🔥</Text>
-              <Text style={styles.nutritionValue}>{item.calories.toFixed(0)}</Text>
-              <Text style={styles.nutritionLabel}>kcal</Text>
-            </View>
-            <View style={styles.nutritionItem}>
-              <Text style={styles.nutritionIcon}>💪</Text>
-              <Text style={styles.nutritionValue}>{item.protein.toFixed(1)}</Text>
-              <Text style={styles.nutritionLabel}>Protein</Text>
-            </View>
-            <View style={styles.nutritionItem}>
-              <Text style={styles.nutritionIcon}>🍞</Text>
-              <Text style={styles.nutritionValue}>{item.carbs.toFixed(1)}</Text>
-              <Text style={styles.nutritionLabel}>Carbs</Text>
-            </View>
-            <View style={styles.nutritionItem}>
-              <Text style={styles.nutritionIcon}>🥑</Text>
-              <Text style={styles.nutritionValue}>{item.fats.toFixed(1)}</Text>
-              <Text style={styles.nutritionLabel}>Fats</Text>
-            </View>
+          <TouchableOpacity onPress={() => handleDelete(item)} style={styles.deleteButton} activeOpacity={0.7}>
+            <MaterialCommunityIcons name="delete-outline" size={20} color={AppColors.textSecondary} />
+          </TouchableOpacity>
+        </View>
+        <View style={styles.nutritionGrid}>
+          <View style={styles.nutritionItem}>
+            <Text style={styles.nutritionValue}>{item.calories.toFixed(0)}</Text>
+            <Text style={styles.nutritionLabel}>kcal</Text>
           </View>
-        </Card.Content>
-      </Card>
+          <View style={styles.nutritionDivider} />
+          <View style={styles.nutritionItem}>
+            <Text style={styles.nutritionValue}>{item.protein.toFixed(1)}g</Text>
+            <Text style={styles.nutritionLabel}>Protein</Text>
+          </View>
+          <View style={styles.nutritionDivider} />
+          <View style={styles.nutritionItem}>
+            <Text style={styles.nutritionValue}>{item.carbs.toFixed(1)}g</Text>
+            <Text style={styles.nutritionLabel}>Carbs</Text>
+          </View>
+          <View style={styles.nutritionDivider} />
+          <View style={styles.nutritionItem}>
+            <Text style={styles.nutritionValue}>{item.fats.toFixed(1)}g</Text>
+            <Text style={styles.nutritionLabel}>Fat</Text>
+          </View>
+        </View>
+      </View>
     </Animatable.View>
   );
 
-  if (foodEntries.length === 0) {
-    return (
-      <View style={styles.emptyContainer}>
-        <Animatable.View animation="bounceIn" duration={1200}>
-          <Text style={styles.emptyEmoji}>🍽️</Text>
-          <Text style={styles.emptyText}>No entries yet</Text>
-          <Text style={styles.emptySubtext}>
-            Add your first food entry to start tracking your nutrition!
-          </Text>
-        </Animatable.View>
-      </View>
-    );
-  }
+  const progressPercent = Math.min(totals.calories / calorieGoal, 1);
+  const progressColor =
+    progressPercent >= 1 ? AppColors.error :
+    progressPercent >= 0.85 ? AppColors.warning :
+    AppColors.success;
+  const caloriesRemaining = Math.max(calorieGoal - totals.calories, 0);
 
   return (
     <View style={styles.container}>
-      <Animatable.View animation="fadeInDown" duration={800}>
-        <Card style={styles.totalsCard} elevation={4}>
-          <Card.Content>
-            <Text style={styles.totalsTitle}>📊 Daily Totals</Text>
-            <View style={styles.totalsGrid}>
-              <Animatable.View 
-                animation="bounceIn" 
-                delay={200}
-                style={styles.totalItem}
-              >
-                <View style={styles.totalCircle}>
-                  <Text style={styles.totalEmoji}>🔥</Text>
-                  <Text style={styles.totalValue}>{totals.calories.toFixed(0)}</Text>
-                  <Text style={styles.totalLabel}>Calories</Text>
-                </View>
-              </Animatable.View>
-              <Animatable.View 
-                animation="bounceIn" 
-                delay={300}
-                style={styles.totalItem}
-              >
-                <View style={styles.totalCircle}>
-                  <Text style={styles.totalEmoji}>💪</Text>
-                  <Text style={styles.totalValue}>{totals.protein.toFixed(1)}g</Text>
-                  <Text style={styles.totalLabel}>Protein</Text>
-                </View>
-              </Animatable.View>
-              <Animatable.View 
-                animation="bounceIn" 
-                delay={400}
-                style={styles.totalItem}
-              >
-                <View style={styles.totalCircle}>
-                  <Text style={styles.totalEmoji}>🍞</Text>
-                  <Text style={styles.totalValue}>{totals.carbs.toFixed(1)}g</Text>
-                  <Text style={styles.totalLabel}>Carbs</Text>
-                </View>
-              </Animatable.View>
-              <Animatable.View 
-                animation="bounceIn" 
-                delay={500}
-                style={styles.totalItem}
-              >
-                <View style={styles.totalCircle}>
-                  <Text style={styles.totalEmoji}>🥑</Text>
-                  <Text style={styles.totalValue}>{totals.fats.toFixed(1)}g</Text>
-                  <Text style={styles.totalLabel}>Fats</Text>
-                </View>
-              </Animatable.View>
-            </View>
-          </Card.Content>
-        </Card>
-      </Animatable.View>
+      <View style={[styles.header, { paddingTop: insets.top + Spacing.md }]}>
+        <Text style={styles.headerTitle}>Today</Text>
+        <Text style={styles.headerSubtitle}>
+          {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
+        </Text>
+      </View>
 
       <FlatList
         data={foodEntries}
@@ -173,163 +102,172 @@ export const DailyConsumerScreen: React.FC = () => {
             tintColor={AppColors.accent}
           />
         }
+        ListHeaderComponent={
+          <Animatable.View animation="fadeInDown" duration={600}>
+            <View style={styles.progressCard}>
+              <View style={styles.progressHeader}>
+                <View>
+                  <Text style={styles.progressCalories}>{Math.round(totals.calories)}</Text>
+                  <Text style={styles.progressLabel}>of {calorieGoal} kcal goal</Text>
+                </View>
+                <View style={styles.remainingBadge}>
+                  <MaterialCommunityIcons name="fire" size={18} color={progressColor} />
+                  <Text style={[styles.remainingText, { color: progressColor }]}>
+                    {progressPercent >= 1 ? 'Goal reached!' : `${Math.round(caloriesRemaining)} left`}
+                  </Text>
+                </View>
+              </View>
+              <View style={styles.progressBarTrack}>
+                <View style={[styles.progressBarFill, { width: `${Math.round(progressPercent * 100)}%` as any, backgroundColor: progressColor }]} />
+              </View>
+              <Text style={styles.progressPercent}>{Math.round(progressPercent * 100)}% of daily goal</Text>
+            </View>
+
+            <View style={styles.macroRow}>
+              <View style={styles.macroItem}>
+                <Text style={styles.macroValue}>{totals.protein.toFixed(1)}g</Text>
+                <Text style={styles.macroLabel}>Protein</Text>
+              </View>
+              <View style={styles.macroDivider} />
+              <View style={styles.macroItem}>
+                <Text style={styles.macroValue}>{totals.carbs.toFixed(1)}g</Text>
+                <Text style={styles.macroLabel}>Carbs</Text>
+              </View>
+              <View style={styles.macroDivider} />
+              <View style={styles.macroItem}>
+                <Text style={styles.macroValue}>{totals.fats.toFixed(1)}g</Text>
+                <Text style={styles.macroLabel}>Fat</Text>
+              </View>
+            </View>
+
+            {foodEntries.length > 0 && (
+              <Text style={styles.entriesLabel}>
+                {foodEntries.length} {foodEntries.length === 1 ? 'entry' : 'entries'} today
+              </Text>
+            )}
+          </Animatable.View>
+        }
+        ListEmptyComponent={
+          <View style={styles.emptyContainer}>
+            <Animatable.View animation="bounceIn" duration={1200}>
+              <MaterialCommunityIcons name="food-off" size={64} color={AppColors.textTertiary} style={{ alignSelf: 'center', marginBottom: Spacing.lg }} />
+              <Text style={styles.emptyText}>No entries yet</Text>
+              <Text style={styles.emptySubtext}>
+                Analyze a dish on the Label tab and save it to start tracking!
+              </Text>
+            </Animatable.View>
+          </View>
+        }
       />
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: AppColors.background,
+  container: { flex: 1, backgroundColor: AppColors.background },
+  header: {
+    paddingHorizontal: Spacing.lg,
+    paddingBottom: Spacing.md,
+    backgroundColor: AppColors.cardBackground,
+    borderBottomWidth: 1,
+    borderBottomColor: AppColors.border,
   },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 40,
-    backgroundColor: AppColors.background,
-  },
-  emptyEmoji: {
-    fontSize: 80,
-    textAlign: 'center',
-    marginBottom: 16,
-  },
-  emptyText: {
-    fontSize: 24,
-    fontWeight: 'bold',
+  headerTitle: {
+    fontFamily: 'CrimsonPro_700Bold',
+    fontSize: Typography.fontSize.xxl,
     color: AppColors.text,
-    marginBottom: 12,
-    textAlign: 'center',
   },
-  emptySubtext: {
-    fontSize: 16,
-    color: AppColors.mediumGray,
-    textAlign: 'center',
-    lineHeight: 24,
+  headerSubtitle: { fontSize: Typography.fontSize.sm, color: AppColors.textSecondary, marginTop: 2 },
+  listContent: { padding: Spacing.lg, paddingBottom: 80 },
+  progressCard: {
+    backgroundColor: AppColors.cardBackground,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.lg,
+    marginBottom: Spacing.md,
+    borderWidth: 1,
+    borderColor: AppColors.border,
   },
-  totalsCard: {
-    margin: 20,
-    marginBottom: 12,
-    backgroundColor: AppColors.accent,
-    borderRadius: 20,
-    shadowColor: AppColors.accent,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-  },
-  totalsTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: AppColors.white,
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-  totalsGrid: {
+  progressHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: Spacing.md,
   },
-  totalItem: {
+  progressCalories: { fontSize: 36, fontWeight: '700', color: AppColors.text, lineHeight: 40 },
+  progressLabel: { fontSize: Typography.fontSize.sm, color: AppColors.textSecondary, marginTop: 2 },
+  remainingBadge: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: 8,
+    gap: 4,
+    backgroundColor: AppColors.surface,
+    borderRadius: 20,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xs,
+    borderWidth: 1,
+    borderColor: AppColors.border,
   },
-  totalCircle: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    borderRadius: 50,
-    width: 80,
-    height: 80,
-    padding: 8,
+  remainingText: { fontSize: Typography.fontSize.sm, fontWeight: '600' },
+  progressBarTrack: {
+    height: 8,
+    backgroundColor: AppColors.surface,
+    borderRadius: 4,
+    overflow: 'hidden',
+    marginBottom: Spacing.sm,
   },
-  totalEmoji: {
-    fontSize: 20,
-    marginBottom: 2,
+  progressBarFill: { height: '100%', borderRadius: 4 },
+  progressPercent: { fontSize: 11, color: AppColors.textTertiary, textAlign: 'right' },
+  macroRow: {
+    flexDirection: 'row',
+    backgroundColor: AppColors.cardBackground,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.md,
+    marginBottom: Spacing.md,
+    borderWidth: 1,
+    borderColor: AppColors.border,
   },
-  totalValue: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: AppColors.white,
-  },
-  totalLabel: {
-    fontSize: 10,
-    color: AppColors.white,
-    marginTop: 2,
-    opacity: 0.9,
-  },
-  listContent: {
-    padding: 20,
-    paddingTop: 8,
-  },
+  macroItem: { flex: 1, alignItems: 'center' },
+  macroDivider: { width: 1, backgroundColor: AppColors.border },
+  macroValue: { fontSize: Typography.fontSize.lg, fontWeight: '700', color: AppColors.text },
+  macroLabel: { fontSize: 11, color: AppColors.textSecondary, marginTop: 2 },
+  entriesLabel: { fontSize: Typography.fontSize.sm, color: AppColors.textSecondary, marginBottom: Spacing.sm, marginLeft: 2 },
   foodCard: {
-    marginBottom: 16,
-    backgroundColor: AppColors.white,
-    borderRadius: 16,
-    shadowColor: AppColors.shadow,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
+    backgroundColor: AppColors.cardBackground,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.md,
+    marginBottom: Spacing.sm,
+    borderWidth: 1,
+    borderColor: AppColors.border,
   },
   foodItemHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: Spacing.sm,
   },
-  foodNameContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-    gap: 8,
-  },
-  foodEmoji: {
-    fontSize: 24,
-  },
-  foodName: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: AppColors.text,
-    flex: 1,
-  },
-  deleteButton: {
-    backgroundColor: AppColors.error,
-    borderRadius: 12,
-    width: 40,
-    height: 40,
+  foodNameContainer: { flexDirection: 'row', alignItems: 'center', flex: 1, gap: Spacing.sm },
+  foodIconBadge: {
+    width: 34,
+    height: 34,
+    borderRadius: BorderRadius.md,
+    backgroundColor: AppColors.surface,
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: AppColors.border,
   },
-  deleteButtonPressed: {
-    backgroundColor: '#D32F2F',
-    transform: [{ scale: 0.95 }],
-  },
-  deleteIcon: {
-    margin: 0,
-  },
+  foodName: { fontSize: Typography.fontSize.md, fontWeight: '600', color: AppColors.text, flex: 1 },
+  deleteButton: { padding: 4, borderRadius: BorderRadius.sm },
   nutritionGrid: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    backgroundColor: AppColors.lightGray,
-    borderRadius: 12,
-    padding: 12,
+    backgroundColor: AppColors.surface,
+    borderRadius: BorderRadius.md,
+    padding: Spacing.sm,
   },
-  nutritionItem: {
-    alignItems: 'center',
-    flex: 1,
-  },
-  nutritionIcon: {
-    fontSize: 20,
-    marginBottom: 4,
-  },
-  nutritionValue: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: AppColors.text,
-  },
-  nutritionLabel: {
-    fontSize: 11,
-    color: AppColors.mediumGray,
-    marginTop: 2,
-  },
+  nutritionItem: { flex: 1, alignItems: 'center' },
+  nutritionDivider: { width: 1, backgroundColor: AppColors.border },
+  nutritionValue: { fontSize: Typography.fontSize.sm, fontWeight: '600', color: AppColors.text },
+  nutritionLabel: { fontSize: 10, color: AppColors.textSecondary, marginTop: 2 },
+  emptyContainer: { paddingTop: 40, alignItems: 'center', paddingHorizontal: Spacing.xl },
+  emptyText: { fontSize: Typography.fontSize.xl, fontWeight: '700', color: AppColors.text, textAlign: 'center', marginBottom: Spacing.sm },
+  emptySubtext: { fontSize: Typography.fontSize.sm, color: AppColors.textSecondary, textAlign: 'center', lineHeight: 22 },
 });

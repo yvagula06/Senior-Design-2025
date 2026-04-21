@@ -2,6 +2,7 @@ export { Button } from './Button';
 export { Card, NutritionCard } from './Card';
 export { TextInput } from './TextInput';
 export { LoadingSpinner } from './LoadingSpinner';
+export { Toast } from './Toast';
 
 // Label-specific components
 export * from './Label';

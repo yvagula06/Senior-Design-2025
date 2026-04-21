@@ -11,6 +11,7 @@ import {
   TextInput,
   Animated,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import type { ExploreStackNavigationProp } from '../navigation/types';
@@ -20,6 +21,7 @@ import { fetchFeaturedDishes } from '../services/api';
 import { cacheFeaturedDishes, loadCachedDishes } from '../services/storage';
 
 export const ExploreScreen: React.FC = () => {
+  const insets = useSafeAreaInsets();
   const navigation = useNavigation<ExploreStackNavigationProp>();
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -382,7 +384,7 @@ export const ExploreScreen: React.FC = () => {
         }
       >
         {/* Header */}
-        <View style={styles.header}>
+        <View style={[styles.header, { paddingTop: insets.top + Spacing.md }]}>
           <View style={styles.headerContent}>
             <View style={styles.headerTextContainer}>
               <Text style={styles.headerTitle}>Explore</Text>
@@ -640,7 +642,7 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.xxxl,
+    paddingTop: Spacing.xl,
     paddingBottom: Spacing.md,
     backgroundColor: AppColors.cardBackground,
     borderBottomWidth: 1,

@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   RefreshControl,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SwipeListView } from 'react-native-swipe-list-view';
@@ -28,9 +29,10 @@ import {
 } from '../../services/storage';
 import { useFoodContext } from '../../context/FoodContext';
 
-type FilterType = 'all' | 'home' | 'restaurant';
+type FilterType = 'all' | 'today' | 'home' | 'restaurant';
 
 export const HistoryListScreen: React.FC = () => {
+  const insets = useSafeAreaInsets();
   const navigation = useNavigation<HistoryStackNavigationProp>();
   const { foodEntries, getTotals, deleteFoodEntry } = useFoodContext();
   const [searchQuery, setSearchQuery] = useState('');
@@ -161,10 +163,12 @@ export const HistoryListScreen: React.FC = () => {
   };
 
   // Filter logic
+  const today = new Date().toISOString().split('T')[0];
   const filteredData = historyData.filter((item) => {
     const matchesSearch = item.dishName.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesFilter =
       filterType === 'all' ||
+      (filterType === 'today' && item.date === today) ||
       item.prepStyle === filterType;
     return matchesSearch && matchesFilter;
   });
@@ -285,7 +289,7 @@ export const HistoryListScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + Spacing.md }]}>
         <Text style={styles.headerTitle}>History</Text>
       </View>
 
@@ -331,6 +335,50 @@ export const HistoryListScreen: React.FC = () => {
             ]}
           >
             All
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[
+            styles.filterChip,
+            filterType === 'today' && styles.filterChipActive,
+          ]}
+          onPress={() => setFilterType('today')}
+        >
+          <MaterialCommunityIcons
+            name="calendar-today"
+            size={16}
+            color={filterType === 'today' ? AppColors.white : AppColors.textSecondary}
+            style={styles.filterChipIcon}
+          />
+          <Text
+            style={[
+              styles.filterChipText,
+              filterType === 'today' && styles.filterChipTextActive,
+            ]}
+          >
+            Today
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[
+            styles.filterChip,
+            filterType === 'today' && styles.filterChipActive,
+          ]}
+          onPress={() => setFilterType('today')}
+        >
+          <MaterialCommunityIcons
+            name="calendar-today"
+            size={16}
+            color={filterType === 'today' ? AppColors.white : AppColors.textSecondary}
+            style={styles.filterChipIcon}
+          />
+          <Text
+            style={[
+              styles.filterChipText,
+              filterType === 'today' && styles.filterChipTextActive,
+            ]}
+          >
+            Today
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -461,8 +509,8 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.xxxl,
-    paddingBottom: Spacing.md,
+    paddingTop: Spacing.xl,
+    paddingBottom: Spacing.lg,
     backgroundColor: AppColors.cardBackground,
     borderBottomWidth: 1,
     borderBottomColor: AppColors.border,
@@ -476,7 +524,7 @@ const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: AppColors.cardBackground,
+    backgroundColor: AppColors.surface,
     marginHorizontal: Spacing.lg,
     marginTop: Spacing.md,
     marginBottom: Spacing.sm,
@@ -484,7 +532,7 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.sm,
     borderRadius: BorderRadius.lg,
     borderWidth: 1,
-    borderColor: AppColors.lightGray,
+    borderColor: AppColors.border,
     ...Shadows.sm,
   },
   searchIcon: {
@@ -524,9 +572,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
     borderRadius: BorderRadius.full,
-    backgroundColor: AppColors.white,
+    backgroundColor: AppColors.surface,
     borderWidth: 1,
-    borderColor: AppColors.lightGray,
+    borderColor: AppColors.border,
   },
   filterChipActive: {
     backgroundColor: AppColors.primary,
@@ -538,7 +586,7 @@ const styles = StyleSheet.create({
   filterChipText: {
     fontSize: Typography.fontSize.sm,
     fontWeight: Typography.fontWeight.semibold,
-    color: AppColors.mediumGray,
+    color: AppColors.textSecondary,
   },
   filterChipTextActive: {
     color: AppColors.white,

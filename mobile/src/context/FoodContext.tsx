@@ -1,9 +1,11 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { FoodEntry, NutritionInfo } from '../types/nutrition';
-import { saveFoodEntries, loadFoodEntries, StoredFoodEntry } from '../services/storage';
+import { saveFoodEntries, loadFoodEntries, StoredFoodEntry, loadSettings, saveSettings } from '../services/storage';
 
 interface FoodContextType {
   foodEntries: FoodEntry[];
+  calorieGoal: number;
+  setCalorieGoal: (goal: number) => void;
   addFoodEntry: (entry: NutritionInfo) => void;
   addLabelEntry: (entry: {
     dishName: string;
@@ -31,12 +33,30 @@ const FoodContext = createContext<FoodContextType | undefined>(undefined);
 
 export const FoodProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [foodEntries, setFoodEntries] = useState<FoodEntry[]>([]);
+  const [calorieGoal, setCalorieGoalState] = useState(2000);
   const [isLoading, setIsLoading] = useState(true);
 
   // Load entries from AsyncStorage on mount
   useEffect(() => {
     loadEntriesFromStorage();
+    loadCalorieGoal();
   }, []);
+
+  const loadCalorieGoal = async () => {
+    try {
+      const settings = await loadSettings();
+      setCalorieGoalState(settings.calorieGoal ?? 2000);
+    } catch {}
+  };
+
+  const setCalorieGoal = async (goal: number) => {
+    setCalorieGoalState(goal);
+    try {
+      await saveSettings({ calorieGoal: goal });
+    } catch (e) {
+      console.error('❌ [FoodContext] Failed to save calorieGoal:', e);
+    }
+  };
 
   // Save entries to AsyncStorage whenever they change
   useEffect(() => {
@@ -132,7 +152,7 @@ export const FoodProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   return (
-    <FoodContext.Provider value={{ foodEntries, addFoodEntry, addLabelEntry, deleteFoodEntry, getTotals, isLoading }}>
+    <FoodContext.Provider value={{ foodEntries, calorieGoal, setCalorieGoal, addFoodEntry, addLabelEntry, deleteFoodEntry, getTotals, isLoading }}>
       {children}
     </FoodContext.Provider>
   );

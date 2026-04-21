@@ -4,6 +4,7 @@ import type { VisionResponse } from '../types/vision';
 // Root Bottom Tab Navigator
 export type RootTabParamList = {
   LabelStack: NavigatorScreenParams<LabelStackParamList>;
+  Today: undefined;
   HistoryStack: NavigatorScreenParams<HistoryStackParamList>;
   ExploreStack: NavigatorScreenParams<ExploreStackParamList>;
   Profile: undefined;
@@ -23,6 +24,7 @@ export type LabelStackParamList = {
     calories?: number;
     style: 'standard' | 'detailed';
   };
+  BarcodeScanner: undefined;
 };
 
 // History Stack Navigator

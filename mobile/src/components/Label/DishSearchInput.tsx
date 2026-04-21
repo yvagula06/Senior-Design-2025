@@ -217,12 +217,13 @@ const styles = StyleSheet.create({
     backgroundColor: AppColors.cardBackground,
     borderRadius: BorderRadius.lg,
     padding: Spacing.lg,
+    gap: Spacing.xs,
     ...Shadows.md,
     borderWidth: 1,
     borderColor: AppColors.border,
   },
   inputGroup: {
-    marginBottom: Spacing.lg,
+    marginBottom: Spacing.md,
   },
   label: {
     fontSize: Typography.fontSize.sm,
@@ -324,7 +325,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: AppColors.accent,
     borderRadius: BorderRadius.md,
-    paddingVertical: Spacing.md,
+    paddingVertical: 16,
+    marginTop: Spacing.sm,
     ...Shadows.sm,
   },
   generateButtonDisabled: {
