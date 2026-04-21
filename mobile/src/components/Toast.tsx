@@ -1,7 +1,9 @@
-﻿import React, { useEffect, useRef } from 'react';
+﻿import React, { useEffect, useRef, useMemo } from 'react';
 import { Animated, Text, StyleSheet, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { AppColors, Spacing, Typography, BorderRadius } from '../theme';
+import { Spacing, Typography, BorderRadius } from '../theme';
+import { useAppTheme } from '../context/ThemeContext';
+import { useAppTheme } from '../../context/ThemeContext';
 
 type ToastType = 'success' | 'error' | 'info';
 
@@ -14,6 +16,8 @@ interface ToastProps {
 }
 
 export const Toast: React.FC<ToastProps> = ({
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   visible,
   message,
   type = 'success',
@@ -47,7 +51,7 @@ export const Toast: React.FC<ToastProps> = ({
   if (!visible) return null;
 
   const iconName = type === 'success' ? 'check-circle' : type === 'error' ? 'alert-circle' : 'information';
-  const iconColor = type === 'success' ? AppColors.success : type === 'error' ? AppColors.error : AppColors.accent;
+  const iconColor = type === 'success' ? colors.success : type === 'error' ? colors.error : colors.accent;
 
   return (
     <Animated.View style={[styles.container, { transform: [{ translateY }], opacity }]}>
@@ -59,7 +63,9 @@ export const Toast: React.FC<ToastProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+type CV = ReturnType<typeof useAppTheme>['colors'];
+function createStyles(colors: CV) {
+  return StyleSheet.create({
   container: {
     position: 'absolute',
     bottom: 32,
@@ -72,12 +78,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    backgroundColor: AppColors.cardBackground,
+    backgroundColor: colors.cardBackground,
     borderRadius: BorderRadius.lg,
     paddingVertical: 14,
     paddingHorizontal: Spacing.lg,
     borderWidth: 1,
-    borderColor: AppColors.border,
+    borderColor: colors.border,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
@@ -89,6 +95,9 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: Typography.fontSize.sm,
     fontWeight: '600',
-    color: AppColors.text,
+    color: colors.text,
   },
-});
+  });
+}
+
+

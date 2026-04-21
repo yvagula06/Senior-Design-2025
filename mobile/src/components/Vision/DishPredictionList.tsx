@@ -1,14 +1,15 @@
-/**
+﻿/**
  * DishPredictionList Component
  * 
  * List of predicted dishes with confidence scores.
  * Shows top N predictions from the vision model.
  */
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, FlatList } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { AppColors, Typography, Spacing, BorderRadius } from '../../theme';
+import { Typography, Spacing, BorderRadius } from '../../theme';
+import { useAppTheme } from '../../context/ThemeContext';
 import type { DishPrediction } from '../../types/vision';
 
 interface DishPredictionListProps {
@@ -17,6 +18,8 @@ interface DishPredictionListProps {
 }
 
 export const DishPredictionList: React.FC<DishPredictionListProps> = ({
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   predictions,
   selectedDishId,
 }) => {
@@ -44,7 +47,7 @@ export const DishPredictionList: React.FC<DishPredictionListProps> = ({
               <MaterialCommunityIcons
                 name="check-circle"
                 size={20}
-                color={AppColors.success}
+                color={colors.success}
                 style={styles.selectedIcon}
               />
             )}
@@ -88,20 +91,22 @@ export const DishPredictionList: React.FC<DishPredictionListProps> = ({
 };
 
 const getConfidenceColor = (confidence: number): string => {
-  if (confidence >= 0.8) return AppColors.success;
-  if (confidence >= 0.6) return AppColors.warning;
-  return AppColors.error;
+  if (confidence >= 0.8) return colors.success;
+  if (confidence >= 0.6) return colors.warning;
+  return colors.error;
 };
 
-const styles = StyleSheet.create({
+type CV = ReturnType<typeof useAppTheme>['colors'];
+function createStyles(colors: CV) {
+  return StyleSheet.create({
   container: {
-    backgroundColor: AppColors.surface,
+    backgroundColor: colors.surface,
     borderRadius: BorderRadius.lg,
     padding: Spacing.lg,
   },
   title: {
     ...Typography.h3,
-    color: AppColors.text,
+    color: colors.text,
     marginBottom: Spacing.md,
   },
   predictionItem: {
@@ -110,7 +115,7 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.sm,
   },
   predictionItemSelected: {
-    backgroundColor: AppColors.primaryLight + '10',
+    backgroundColor: colors.primaryLight + '10',
     marginHorizontal: -Spacing.sm,
     paddingHorizontal: Spacing.sm,
     borderRadius: BorderRadius.md,
@@ -119,14 +124,14 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: AppColors.backgroundSecondary,
+    backgroundColor: colors.backgroundSecondary,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: Spacing.md,
   },
   rankText: {
     ...Typography.caption,
-    color: AppColors.textSecondary,
+    color: colors.textSecondary,
     fontWeight: '700',
   },
   dishInfo: {
@@ -139,7 +144,7 @@ const styles = StyleSheet.create({
   },
   dishName: {
     ...Typography.body,
-    color: AppColors.text,
+    color: colors.text,
     fontWeight: '600',
     flex: 1,
   },
@@ -148,7 +153,7 @@ const styles = StyleSheet.create({
   },
   dishCategory: {
     ...Typography.caption,
-    color: AppColors.textSecondary,
+    color: colors.textSecondary,
     marginTop: 2,
   },
   confidenceContainer: {
@@ -157,14 +162,14 @@ const styles = StyleSheet.create({
   },
   confidenceText: {
     ...Typography.caption,
-    color: AppColors.textSecondary,
+    color: colors.textSecondary,
     fontWeight: '600',
     marginBottom: 4,
   },
   confidenceBarBackground: {
     width: 60,
     height: 6,
-    backgroundColor: AppColors.border,
+    backgroundColor: colors.border,
     borderRadius: 3,
     overflow: 'hidden',
   },
@@ -174,7 +179,9 @@ const styles = StyleSheet.create({
   },
   separator: {
     height: 1,
-    backgroundColor: AppColors.border,
+    backgroundColor: colors.border,
     marginVertical: Spacing.xs,
   },
-});
+  });
+}
+

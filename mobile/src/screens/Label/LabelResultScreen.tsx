@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+﻿import React, { useState, useRef, useMemo } from 'react';
 import {
   View,
   Text,
@@ -20,7 +20,8 @@ import {
   type VariantBottomSheetRef,
   type CanonicalRecipe,
 } from '../../components/Label';
-import { AppColors, Spacing, Typography, BorderRadius, Shadows } from '../../theme';
+import { Spacing, Typography, BorderRadius } from '../../theme';
+import { useAppTheme } from '../../context/ThemeContext';
 
 // Import API and type definitions
 // NOTE: saveHistoryEntry and deleteHistoryEntry must be implemented in '../../services/api.ts'
@@ -31,6 +32,8 @@ import { useFoodContext } from '../../context/FoodContext';
 type LabelResultRouteProp = RouteProp<LabelStackParamList, 'LabelResult'>;
 
 export const LabelResultScreen: React.FC = () => {
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const route = useRoute<LabelResultRouteProp>();
   const navigation = useNavigation();
   const { dishName, calories } = route.params;
@@ -101,7 +104,7 @@ export const LabelResultScreen: React.FC = () => {
         savedHistoryId.current = null;
         Alert.alert('Unsaved', `${dishName} removed from history.`);
       } catch (error) {
-        console.error('❌ Failed to delete history entry:', error);
+        console.error('âŒ Failed to delete history entry:', error);
         Alert.alert('Error', 'Failed to remove entry from history.');
       }
     } else {
@@ -133,7 +136,7 @@ export const LabelResultScreen: React.FC = () => {
         Alert.alert('Saved', `${dishName} added to history!`);
 
       } catch (error) {
-        console.error('❌ Failed to save history entry:', error);
+        console.error('âŒ Failed to save history entry:', error);
         Alert.alert('Error', 'Failed to save entry to history.');
       }
     }
@@ -150,9 +153,9 @@ export const LabelResultScreen: React.FC = () => {
 
   // Helper to get confidence color and label
   const getConfidenceColor = () => {
-    if (confidence > 80) return AppColors.success;
-    if (confidence > 60) return AppColors.warning;
-    return AppColors.error;
+    if (confidence > 80) return colors.success;
+    if (confidence > 60) return colors.warning;
+    return colors.error;
   };
 
   const getConfidenceLabel = () => {
@@ -171,16 +174,16 @@ export const LabelResultScreen: React.FC = () => {
       <View style={styles.headerCard}>
         <Text style={styles.dishName}>{dishName}</Text>
         <View style={[styles.confidenceBadge, { backgroundColor: getConfidenceColor() }]}>
-          <MaterialCommunityIcons name="shield-check" size={16} color={AppColors.white} />
+          <MaterialCommunityIcons name="shield-check" size={16} color={colors.white} />
           <Text style={styles.confidenceBadgeText}>
-            {confidence}% · {getConfidenceLabel()}
+            {confidence}% Â· {getConfidenceLabel()}
           </Text>
         </View>
       </View>
 
       {/* HERO SECTION - Calories */}
       <View style={styles.heroSection}>
-        <MaterialCommunityIcons name="fire" size={48} color={AppColors.primary} />
+        <MaterialCommunityIcons name="fire" size={48} color={colors.primary} />
         <Text style={styles.heroValue}>{nutritionData.calories}</Text>
         <Text style={styles.heroLabel}>CALORIES</Text>
       </View>
@@ -190,17 +193,17 @@ export const LabelResultScreen: React.FC = () => {
         <Text style={styles.sectionTitle}>Macronutrients</Text>
         <View style={styles.macroGrid}>
           <View style={styles.macroCard}>
-            <MaterialCommunityIcons name="food-steak" size={32} color={AppColors.accent} />
+            <MaterialCommunityIcons name="food-steak" size={32} color={colors.accent} />
             <Text style={styles.macroValue}>{nutritionData.protein}g</Text>
             <Text style={styles.macroLabel}>Protein</Text>
           </View>
           <View style={styles.macroCard}>
-            <MaterialCommunityIcons name="barley" size={32} color={AppColors.warning} />
+            <MaterialCommunityIcons name="barley" size={32} color={colors.warning} />
             <Text style={styles.macroValue}>{nutritionData.totalCarbohydrate}g</Text>
             <Text style={styles.macroLabel}>Carbs</Text>
           </View>
           <View style={styles.macroCard}>
-            <MaterialCommunityIcons name="water" size={32} color={AppColors.info} />
+            <MaterialCommunityIcons name="water" size={32} color={colors.info} />
             <Text style={styles.macroValue}>{nutritionData.totalFat}g</Text>
             <Text style={styles.macroLabel}>Fat</Text>
           </View>
@@ -213,21 +216,21 @@ export const LabelResultScreen: React.FC = () => {
         <View style={styles.microList}>
           <View style={styles.microRow}>
             <View style={styles.microIcon}>
-              <MaterialCommunityIcons name="grain" size={20} color={AppColors.textSecondary} />
+              <MaterialCommunityIcons name="grain" size={20} color={colors.textSecondary} />
             </View>
             <Text style={styles.microName}>Dietary Fiber</Text>
             <Text style={styles.microValue}>{nutritionData.dietaryFiber}g</Text>
           </View>
           <View style={styles.microRow}>
             <View style={styles.microIcon}>
-              <MaterialCommunityIcons name="cube-outline" size={20} color={AppColors.textSecondary} />
+              <MaterialCommunityIcons name="cube-outline" size={20} color={colors.textSecondary} />
             </View>
             <Text style={styles.microName}>Total Sugars</Text>
             <Text style={styles.microValue}>{nutritionData.totalSugars}g</Text>
           </View>
           <View style={styles.microRow}>
             <View style={styles.microIcon}>
-              <MaterialCommunityIcons name="shaker-outline" size={20} color={AppColors.textSecondary} />
+              <MaterialCommunityIcons name="shaker-outline" size={20} color={colors.textSecondary} />
             </View>
             <Text style={styles.microName}>Sodium</Text>
             <Text style={styles.microValue}>{nutritionData.sodium}mg</Text>
@@ -250,7 +253,7 @@ export const LabelResultScreen: React.FC = () => {
           <MaterialCommunityIcons
             name={isSaved ? 'heart' : 'heart-outline'}
             size={20}
-            color={AppColors.white}
+            color={colors.white}
           />
           <Text style={styles.actionButtonText}>
             {isSaved ? 'Saved' : 'Save to History'}
@@ -261,7 +264,7 @@ export const LabelResultScreen: React.FC = () => {
           style={[styles.actionButton, styles.newSearchButton]}
           onPress={handleNewSearch}
         >
-          <MaterialCommunityIcons name="magnify" size={20} color={AppColors.accent} />
+          <MaterialCommunityIcons name="magnify" size={20} color={colors.accent} />
           <Text style={[styles.actionButtonText, styles.newSearchButtonText]}>
             New Search
           </Text>
@@ -280,10 +283,12 @@ export const LabelResultScreen: React.FC = () => {
 };
 // ... (styles remain the same)
 
-const styles = StyleSheet.create({
+type CR = ReturnType<typeof useAppTheme>['colors'];
+function createStyles(colors: CR) {
+  return StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: AppColors.background,
+    backgroundColor: colors.background,
   },
   scrollView: {
     flex: 1,
@@ -293,7 +298,7 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.xxl,
   },
   headerCard: {
-    backgroundColor: AppColors.cardBackground,
+    backgroundColor: colors.cardBackground,
     borderRadius: BorderRadius.lg,
     padding: Spacing.lg,
     marginBottom: Spacing.md,
@@ -303,7 +308,7 @@ const styles = StyleSheet.create({
   dishName: {
     fontSize: Typography.fontSize.xxl,
     fontWeight: Typography.fontWeight.bold,
-    color: AppColors.text,
+    color: colors.text,
     textAlign: 'center',
     marginBottom: Spacing.sm,
   },
@@ -318,11 +323,11 @@ const styles = StyleSheet.create({
   confidenceBadgeText: {
     fontSize: Typography.fontSize.sm,
     fontWeight: Typography.fontWeight.semibold,
-    color: AppColors.white,
+    color: colors.white,
   },
   // HERO SECTION - Calories
   heroSection: {
-    backgroundColor: AppColors.cardBackground,
+    backgroundColor: colors.cardBackground,
     borderRadius: BorderRadius.lg,
     padding: Spacing.xl,
     marginBottom: Spacing.md,
@@ -332,20 +337,20 @@ const styles = StyleSheet.create({
   heroValue: {
     fontSize: 72,
     fontWeight: Typography.fontWeight.bold,
-    color: AppColors.primary,
+    color: colors.primary,
     marginTop: Spacing.sm,
     lineHeight: 80,
   },
   heroLabel: {
     fontSize: Typography.fontSize.md,
     fontWeight: Typography.fontWeight.semibold,
-    color: AppColors.textSecondary,
+    color: colors.textSecondary,
     letterSpacing: 2,
     marginTop: Spacing.xs,
   },
   // MACRO SECTION
   macroSection: {
-    backgroundColor: AppColors.cardBackground,
+    backgroundColor: colors.cardBackground,
     borderRadius: BorderRadius.lg,
     padding: Spacing.lg,
     marginBottom: Spacing.md,
@@ -354,7 +359,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: Typography.fontSize.lg,
     fontWeight: Typography.fontWeight.bold,
-    color: AppColors.text,
+    color: colors.text,
     marginBottom: Spacing.md,
   },
   macroGrid: {
@@ -363,29 +368,29 @@ const styles = StyleSheet.create({
   },
   macroCard: {
     flex: 1,
-    backgroundColor: AppColors.background,
+    backgroundColor: colors.background,
     borderRadius: BorderRadius.md,
     padding: Spacing.md,
     alignItems: 'center',
     gap: Spacing.xs,
     borderWidth: 1,
-    borderColor: AppColors.border,
+    borderColor: colors.border,
   },
   macroValue: {
     fontSize: Typography.fontSize.xl,
     fontWeight: Typography.fontWeight.bold,
-    color: AppColors.text,
+    color: colors.text,
   },
   macroLabel: {
     fontSize: Typography.fontSize.xs,
     fontWeight: Typography.fontWeight.medium,
-    color: AppColors.textSecondary,
+    color: colors.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   // MICRO SECTION
   microSection: {
-    backgroundColor: AppColors.cardBackground,
+    backgroundColor: colors.cardBackground,
     borderRadius: BorderRadius.lg,
     padding: Spacing.lg,
     marginBottom: Spacing.md,
@@ -399,10 +404,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: Spacing.sm,
     paddingHorizontal: Spacing.md,
-    backgroundColor: AppColors.background,
+    backgroundColor: colors.background,
     borderRadius: BorderRadius.sm,
     borderWidth: 1,
-    borderColor: AppColors.border,
+    borderColor: colors.border,
   },
   microIcon: {
     width: 32,
@@ -413,12 +418,12 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: Typography.fontSize.md,
     fontWeight: Typography.fontWeight.medium,
-    color: AppColors.text,
+    color: colors.text,
   },
   microValue: {
     fontSize: Typography.fontSize.md,
     fontWeight: Typography.fontWeight.bold,
-    color: AppColors.textSecondary,
+    color: colors.textSecondary,
   },
   // ACTION BUTTONS
   actionButtons: {
@@ -437,22 +442,24 @@ const styles = StyleSheet.create({
     ...Shadows.sm,
   },
   saveButton: {
-    backgroundColor: AppColors.accent,
+    backgroundColor: colors.accent,
   },
   savedButton: {
-    backgroundColor: AppColors.success,
+    backgroundColor: colors.success,
   },
   actionButtonText: {
     fontSize: Typography.fontSize.md,
     fontWeight: Typography.fontWeight.semibold,
-    color: AppColors.white,
+    color: colors.white,
   },
   newSearchButton: {
-    backgroundColor: AppColors.cardBackground,
+    backgroundColor: colors.cardBackground,
     borderWidth: 2,
-    borderColor: AppColors.accent,
+    borderColor: colors.accent,
   },
   newSearchButtonText: {
-    color: AppColors.accent,
+    color: colors.accent,
   },
-});
+  });
+}
+

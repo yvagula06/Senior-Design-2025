@@ -1,7 +1,8 @@
-import React from 'react';
+﻿import React, { useMemo, useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { AppColors, Spacing, Typography, BorderRadius } from '../../theme';
+import { Spacing, Typography, BorderRadius } from '../../theme';
+import { useAppTheme } from '../../context/ThemeContext';
 
 interface CategoryHeaderProps {
   title: string;
@@ -11,6 +12,8 @@ interface CategoryHeaderProps {
 }
 
 export const CategoryHeader: React.FC<CategoryHeaderProps> = ({
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   title,
   subtitle,
   icon,
@@ -24,7 +27,7 @@ export const CategoryHeader: React.FC<CategoryHeaderProps> = ({
             <MaterialCommunityIcons
               name={icon as any}
               size={24}
-              color={AppColors.accent}
+              color={colors.accent}
             />
           </View>
         )}
@@ -44,7 +47,7 @@ export const CategoryHeader: React.FC<CategoryHeaderProps> = ({
           <MaterialCommunityIcons
             name="chevron-right"
             size={18}
-            color={AppColors.accent}
+            color={colors.accent}
           />
         </TouchableOpacity>
       )}
@@ -52,7 +55,9 @@ export const CategoryHeader: React.FC<CategoryHeaderProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+type CV = ReturnType<typeof useAppTheme>['colors'];
+function createStyles(colors: CV) {
+  return StyleSheet.create({
   container: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -69,12 +74,12 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: BorderRadius.lg,
-    backgroundColor: AppColors.background,
+    backgroundColor: colors.background,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: Spacing.md,
     borderWidth: 1,
-    borderColor: AppColors.accent,
+    borderColor: colors.accent,
   },
   textContainer: {
     flex: 1,
@@ -83,11 +88,11 @@ const styles = StyleSheet.create({
     fontFamily: 'CrimsonPro_700Bold',
     fontSize: Typography.fontSize.lg,
     fontWeight: Typography.fontWeight.bold,
-    color: AppColors.text,
+    color: colors.text,
   },
   subtitle: {
     fontSize: Typography.fontSize.sm,
-    color: AppColors.textSecondary,
+    color: colors.textSecondary,
     marginTop: Spacing.xs / 2,
   },
   seeAllButton: {
@@ -99,7 +104,9 @@ const styles = StyleSheet.create({
   seeAllText: {
     fontSize: Typography.fontSize.sm,
     fontWeight: Typography.fontWeight.semibold,
-    color: AppColors.accent,
+    color: colors.accent,
     marginRight: Spacing.xs / 2,
   },
-});
+  });
+}
+

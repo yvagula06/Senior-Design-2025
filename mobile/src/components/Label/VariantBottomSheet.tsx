@@ -1,7 +1,8 @@
-import React, { forwardRef, useImperativeHandle, useState } from 'react';
+﻿import React, { forwardRef, useImperativeHandle, useState, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, Modal, TouchableOpacity, Pressable } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { AppColors, Spacing, Typography, BorderRadius, Shadows } from '../../theme';
+import { Spacing, Typography, BorderRadius, Shadows } from '../../theme';
+import { useAppTheme } from '../../context/ThemeContext';
 
 export interface CanonicalRecipe {
   id: string;
@@ -23,6 +24,8 @@ export interface VariantBottomSheetRef {
 
 export const VariantBottomSheet = forwardRef<VariantBottomSheetRef, VariantBottomSheetProps>(
   ({ assumedStyle, topRecipes, uncertaintyExplanation }, ref) => {
+    const { colors } = useAppTheme();
+    const styles = useMemo(() => createStyles(colors), [colors]);
     const [visible, setVisible] = useState(false);
 
     useImperativeHandle(ref, () => ({
@@ -52,7 +55,7 @@ export const VariantBottomSheet = forwardRef<VariantBottomSheetRef, VariantBotto
               <MaterialCommunityIcons
                 name="information-outline"
                 size={28}
-                color={AppColors.primary}
+                color={colors.primary}
               />
               <Text style={styles.title}>Assumptions & Variants</Text>
             </View>
@@ -63,7 +66,7 @@ export const VariantBottomSheet = forwardRef<VariantBottomSheetRef, VariantBotto
                 <MaterialCommunityIcons
                   name="chef-hat"
                   size={20}
-                  color={AppColors.primary}
+                  color={colors.primary}
                 />
                 <Text style={styles.sectionTitle}>Assumed Preparation Style</Text>
               </View>
@@ -78,7 +81,7 @@ export const VariantBottomSheet = forwardRef<VariantBottomSheetRef, VariantBotto
                 <MaterialCommunityIcons
                   name="food-variant"
                   size={20}
-                  color={AppColors.primary}
+                  color={colors.primary}
                 />
                 <Text style={styles.sectionTitle}>Top 3 Closest Recipes</Text>
               </View>
@@ -98,7 +101,7 @@ export const VariantBottomSheet = forwardRef<VariantBottomSheetRef, VariantBotto
                       <MaterialCommunityIcons
                         name="chart-line"
                         size={16}
-                        color={AppColors.success}
+                        color={colors.success}
                       />
                       <Text style={styles.similarityText}>
                         {Math.round(recipe.similarity * 100)}%
@@ -127,7 +130,7 @@ export const VariantBottomSheet = forwardRef<VariantBottomSheetRef, VariantBotto
                 <MaterialCommunityIcons
                   name="alert-circle-outline"
                   size={20}
-                  color={AppColors.warning}
+                  color={colors.warning}
                 />
                 <Text style={styles.sectionTitle}>Understanding Uncertainty</Text>
               </View>
@@ -148,14 +151,16 @@ export const VariantBottomSheet = forwardRef<VariantBottomSheetRef, VariantBotto
 
 VariantBottomSheet.displayName = 'VariantBottomSheet';
 
-const styles = StyleSheet.create({
+type CV = ReturnType<typeof useAppTheme>['colors'];
+function createStyles(colors: CV) {
+  return StyleSheet.create({
   backdrop: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'flex-end',
   },
   bottomSheet: {
-    backgroundColor: AppColors.white,
+    backgroundColor: colors.white,
     borderTopLeftRadius: BorderRadius.xl,
     borderTopRightRadius: BorderRadius.xl,
     maxHeight: '75%',
@@ -164,19 +169,19 @@ const styles = StyleSheet.create({
   handleBar: {
     width: 40,
     height: 4,
-    backgroundColor: AppColors.mediumGray,
+    backgroundColor: colors.mediumGray,
     borderRadius: BorderRadius.full,
     alignSelf: 'center',
     marginTop: Spacing.sm,
     marginBottom: Spacing.sm,
   },
   bottomSheetBackground: {
-    backgroundColor: AppColors.white,
+    backgroundColor: colors.white,
     borderTopLeftRadius: BorderRadius.xl,
     borderTopRightRadius: BorderRadius.xl,
   },
   handleIndicator: {
-    backgroundColor: AppColors.mediumGray,
+    backgroundColor: colors.mediumGray,
     width: 40,
     height: 4,
   },
@@ -194,7 +199,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: Typography.fontSize.xxl,
     fontWeight: Typography.fontWeight.bold,
-    color: AppColors.darkGray,
+    color: colors.darkGray,
     flex: 1,
   },
   section: {
@@ -209,34 +214,34 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: Typography.fontSize.lg,
     fontWeight: Typography.fontWeight.semibold,
-    color: AppColors.darkGray,
+    color: colors.darkGray,
   },
   sectionDescription: {
     fontSize: Typography.fontSize.sm,
-    color: AppColors.mediumGray,
+    color: colors.mediumGray,
     marginBottom: Spacing.md,
     lineHeight: Typography.lineHeight.normal * Typography.fontSize.sm,
   },
   card: {
-    backgroundColor: AppColors.lightGray,
+    backgroundColor: colors.lightGray,
     borderRadius: BorderRadius.lg,
     padding: Spacing.lg,
     borderWidth: 1,
-    borderColor: AppColors.mediumGray,
+    borderColor: colors.mediumGray,
   },
   assumedStyleText: {
     fontSize: Typography.fontSize.md,
-    color: AppColors.darkGray,
+    color: colors.darkGray,
     lineHeight: Typography.lineHeight.normal * Typography.fontSize.md,
     fontWeight: Typography.fontWeight.medium,
   },
   recipeCard: {
-    backgroundColor: AppColors.white,
+    backgroundColor: colors.white,
     borderRadius: BorderRadius.lg,
     padding: Spacing.md,
     marginBottom: Spacing.md,
     borderWidth: 1,
-    borderColor: AppColors.lightGray,
+    borderColor: colors.lightGray,
     ...Shadows.sm,
   },
   recipeHeader: {
@@ -255,26 +260,26 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: BorderRadius.full,
-    backgroundColor: AppColors.primary,
+    backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },
   rankText: {
     fontSize: Typography.fontSize.xs,
     fontWeight: Typography.fontWeight.bold,
-    color: AppColors.white,
+    color: colors.white,
   },
   recipeName: {
     fontSize: Typography.fontSize.md,
     fontWeight: Typography.fontWeight.semibold,
-    color: AppColors.darkGray,
+    color: colors.darkGray,
     flex: 1,
   },
   similarityContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.xs,
-    backgroundColor: AppColors.accentLight,
+    backgroundColor: colors.accentLight,
     paddingHorizontal: Spacing.sm,
     paddingVertical: Spacing.xs,
     borderRadius: BorderRadius.md,
@@ -282,23 +287,23 @@ const styles = StyleSheet.create({
   similarityText: {
     fontSize: Typography.fontSize.sm,
     fontWeight: Typography.fontWeight.bold,
-    color: AppColors.success,
+    color: colors.success,
   },
   recipeDescription: {
     fontSize: Typography.fontSize.sm,
-    color: AppColors.mediumGray,
+    color: colors.mediumGray,
     lineHeight: Typography.lineHeight.normal * Typography.fontSize.sm,
     marginBottom: Spacing.sm,
   },
   progressBar: {
     height: 4,
-    backgroundColor: AppColors.lightGray,
+    backgroundColor: colors.lightGray,
     borderRadius: BorderRadius.full,
     overflow: 'hidden',
   },
   progressFill: {
     height: '100%',
-    backgroundColor: AppColors.success,
+    backgroundColor: colors.success,
     borderRadius: BorderRadius.full,
   },
   uncertaintyCard: {
@@ -310,10 +315,12 @@ const styles = StyleSheet.create({
   },
   uncertaintyText: {
     fontSize: Typography.fontSize.md,
-    color: AppColors.darkGray,
+    color: colors.darkGray,
     lineHeight: Typography.lineHeight.relaxed * Typography.fontSize.md,
   },
   bottomPadding: {
     height: Spacing.xl,
   },
-});
+  });
+}
+

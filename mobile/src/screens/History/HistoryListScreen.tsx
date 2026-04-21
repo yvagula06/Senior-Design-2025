@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -16,7 +16,8 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SwipeListView } from 'react-native-swipe-list-view';
 import type { HistoryStackNavigationProp } from '../../navigation/types';
 import { HistoryItemCard, type HistoryEntry } from '../../components/History';
-import { AppColors, Spacing, Typography, BorderRadius, Shadows } from '../../theme';
+import { Spacing, Typography, BorderRadius } from '../../theme';
+import { useAppTheme } from '../../context/ThemeContext';
 import { MacroPieChart } from '../../components/MacroPieChart';
 import { 
   fetchHistoryEntries, 
@@ -34,6 +35,8 @@ type FilterType = 'all' | 'today' | 'home' | 'restaurant';
 export const HistoryListScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<HistoryStackNavigationProp>();
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const { foodEntries, getTotals, deleteFoodEntry } = useFoodContext();
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState<FilterType>('all');
@@ -131,7 +134,7 @@ export const HistoryListScreen: React.FC = () => {
       setHistoryData(filteredEntries);
 
     } catch (error) {
-      console.error('❌ [History] Failed to load history:', error);
+      console.error('âŒ [History] Failed to load history:', error);
       Alert.alert('Error', 'Failed to load history. Please try again.');
     } finally {
       setIsLoading(false);
@@ -196,9 +199,9 @@ export const HistoryListScreen: React.FC = () => {
       (acc, entry) => {
         // Use actual macro values if available, otherwise estimate from calories
         // Typical ratio: 40% carbs, 30% protein, 30% fats
-        const protein = entry.protein || ((entry.calories * 0.3) / 4); // 30% of cals ÷ 4 cal/g
-        const carbs = entry.carbs || ((entry.calories * 0.4) / 4); // 40% of cals ÷ 4 cal/g
-        const fats = entry.fats || ((entry.calories * 0.3) / 9); // 30% of cals ÷ 9 cal/g
+        const protein = entry.protein || ((entry.calories * 0.3) / 4); // 30% of cals Ã· 4 cal/g
+        const carbs = entry.carbs || ((entry.calories * 0.4) / 4); // 40% of cals Ã· 4 cal/g
+        const fats = entry.fats || ((entry.calories * 0.3) / 9); // 30% of cals Ã· 9 cal/g
         
         return {
           protein: acc.protein + protein,
@@ -280,7 +283,7 @@ export const HistoryListScreen: React.FC = () => {
         <MaterialCommunityIcons
           name={item.isFavorite ? 'star' : 'star-outline'}
           size={28}
-          color={AppColors.white}
+          color={colors.white}
         />
         <Text style={styles.hiddenButtonText}>
           {item.isFavorite ? 'Unfav' : 'Favorite'}
@@ -296,7 +299,7 @@ export const HistoryListScreen: React.FC = () => {
           rowMap[item.id]?.closeRow();
         }}
       >
-        <MaterialCommunityIcons name="delete" size={28} color={AppColors.white} />
+        <MaterialCommunityIcons name="delete" size={28} color={colors.white} />
         <Text style={styles.hiddenButtonText}>Delete</Text>
       </TouchableOpacity>
     </Animated.View>
@@ -314,22 +317,22 @@ export const HistoryListScreen: React.FC = () => {
         <MaterialCommunityIcons
           name="magnify"
           size={20}
-          color={AppColors.mediumGray}
+          color={colors.textTertiary}
           style={styles.searchIcon}
         />
         <TextInput
           style={styles.searchInput}
-          placeholder="Search past dishes…"
+          placeholder="Search past dishesâ€¦"
           value={searchQuery}
           onChangeText={setSearchQuery}
-          placeholderTextColor={AppColors.mediumGray}
+          placeholderTextColor={colors.textTertiary}
         />
         {searchQuery.length > 0 && (
           <TouchableOpacity onPress={() => setSearchQuery('')}>
             <MaterialCommunityIcons
               name="close-circle"
               size={20}
-              color={AppColors.mediumGray}
+              color={colors.textTertiary}
             />
           </TouchableOpacity>
         )}
@@ -363,7 +366,7 @@ export const HistoryListScreen: React.FC = () => {
           <MaterialCommunityIcons
             name="calendar-today"
             size={16}
-            color={filterType === 'today' ? AppColors.white : AppColors.textSecondary}
+            color={filterType === 'today' ? colors.white : colors.textSecondary}
             style={styles.filterChipIcon}
           />
           <Text
@@ -385,7 +388,7 @@ export const HistoryListScreen: React.FC = () => {
           <MaterialCommunityIcons
             name="home"
             size={16}
-            color={filterType === 'home' ? AppColors.white : AppColors.mediumGray}
+            color={filterType === 'home' ? colors.white : colors.textSecondary}
             style={styles.filterChipIcon}
           />
           <Text
@@ -407,7 +410,7 @@ export const HistoryListScreen: React.FC = () => {
           <MaterialCommunityIcons
             name="silverware-fork-knife"
             size={16}
-            color={filterType === 'restaurant' ? AppColors.white : AppColors.mediumGray}
+            color={filterType === 'restaurant' ? colors.white : colors.textSecondary}
             style={styles.filterChipIcon}
           />
           <Text
@@ -437,8 +440,8 @@ export const HistoryListScreen: React.FC = () => {
           <RefreshControl
             refreshing={isRefreshing}
             onRefresh={handleRefresh}
-            tintColor={AppColors.accent}
-            colors={[AppColors.accent]}
+            tintColor={colors.accent}
+            colors={[colors.accent]}
           />
         }
         ListHeaderComponent={
@@ -461,10 +464,10 @@ export const HistoryListScreen: React.FC = () => {
                             <View style={[
                               styles.weeklyBarFill,
                               { height: `${Math.max((day.calories / maxCal) * 100, day.calories > 0 ? 4 : 0)}%` as any },
-                              day.date === today && { backgroundColor: AppColors.accent },
+                              day.date === today && { backgroundColor: colors.accent },
                             ]} />
                           </View>
-                          <Text style={[styles.weeklyDayLabel, day.date === today && { color: AppColors.accent, fontWeight: '700' }]}>
+                          <Text style={[styles.weeklyDayLabel, day.date === today && { color: colors.accent, fontWeight: '700' }]}>
                             {day.label}
                           </Text>
                         </View>
@@ -492,7 +495,7 @@ export const HistoryListScreen: React.FC = () => {
               <MaterialCommunityIcons
                 name="history"
                 size={80}
-                color={AppColors.primary}
+                color={colors.primary}
               />
             </View>
             <Text style={styles.emptyStateTitle}>
@@ -508,15 +511,15 @@ export const HistoryListScreen: React.FC = () => {
             {!searchQuery && filterType === 'all' && (
               <View style={styles.emptyStateFeatures}>
                 <View style={styles.emptyFeatureRow}>
-                  <MaterialCommunityIcons name="food-apple" size={20} color={AppColors.success} />
+                  <MaterialCommunityIcons name="food-apple" size={20} color={colors.success} />
                   <Text style={styles.emptyFeatureText}>Analyze dishes instantly</Text>
                 </View>
                 <View style={styles.emptyFeatureRow}>
-                  <MaterialCommunityIcons name="chart-line" size={20} color={AppColors.success} />
+                  <MaterialCommunityIcons name="chart-line" size={20} color={colors.success} />
                   <Text style={styles.emptyFeatureText}>Track your nutrition trends</Text>
                 </View>
                 <View style={styles.emptyFeatureRow}>
-                  <MaterialCommunityIcons name="star" size={20} color={AppColors.success} />
+                  <MaterialCommunityIcons name="star" size={20} color={colors.success} />
                   <Text style={styles.emptyFeatureText}>Save favorite meals</Text>
                 </View>
               </View>
@@ -528,231 +531,234 @@ export const HistoryListScreen: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: AppColors.background,
-  },
-  header: {
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.xl,
-    paddingBottom: Spacing.lg,
-    backgroundColor: AppColors.cardBackground,
-    borderBottomWidth: 1,
-    borderBottomColor: AppColors.border,
-  },
-  headerTitle: {
-    fontFamily: 'CrimsonPro_700Bold',
-    fontSize: Typography.fontSize.xxxl,
-    fontWeight: Typography.fontWeight.bold,
-    color: AppColors.text,
-  },
-  searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: AppColors.surface,
-    marginHorizontal: Spacing.lg,
-    marginTop: Spacing.md,
-    marginBottom: Spacing.sm,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    borderRadius: BorderRadius.lg,
-    borderWidth: 1,
-    borderColor: AppColors.border,
-    ...Shadows.sm,
-  },
-  searchIcon: {
-    marginRight: Spacing.sm,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: Typography.fontSize.md,
-    color: AppColors.text,
-    paddingVertical: Spacing.xs,
-  },
-  filterContainer: {
-    flexDirection: 'row',
-    paddingHorizontal: Spacing.md,
-    paddingBottom: Spacing.md,
-    gap: Spacing.xs,
-  },
-  chartCard: {
-    backgroundColor: AppColors.background,
-    marginHorizontal: Spacing.md,
-    marginBottom: Spacing.md,
-    paddingVertical: Spacing.lg,
-    paddingHorizontal: Spacing.md,
-    borderRadius: BorderRadius.lg,
-    ...Shadows.md,
-    alignItems: 'center',
-  },
-  chartTitle: {
-    fontSize: Typography.fontSize.lg,
-    fontWeight: Typography.fontWeight.bold,
-    color: AppColors.white,
-    marginBottom: Spacing.md,
-  },
-  filterChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    borderRadius: BorderRadius.full,
-    backgroundColor: AppColors.surface,
-    borderWidth: 1,
-    borderColor: AppColors.border,
-  },
-  filterChipActive: {
-    backgroundColor: AppColors.primary,
-    borderColor: AppColors.primary,
-  },
-  filterChipIcon: {
-    marginRight: Spacing.xs,
-  },
-  filterChipText: {
-    fontSize: Typography.fontSize.sm,
-    fontWeight: Typography.fontWeight.semibold,
-    color: AppColors.textSecondary,
-  },
-  filterChipTextActive: {
-    color: AppColors.white,
-  },
-  listContent: {
-    paddingTop: Spacing.sm,
-    paddingBottom: Spacing.xxl,
-  },
-  hiddenContainer: {
-    flexDirection: 'row',
-    alignItems: 'stretch',
-    justifyContent: 'flex-end',
-    marginHorizontal: Spacing.lg,
-    marginBottom: Spacing.md,
-    borderRadius: BorderRadius.lg,
-    overflow: 'hidden',
-  },
-  hiddenButton: {
-    width: 85,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  favoriteButton: {
-    backgroundColor: AppColors.accent,
-  },
-  deleteButton: {
-    backgroundColor: AppColors.danger,
-  },
-  hiddenButtonText: {
-    fontSize: Typography.fontSize.xs,
-    fontWeight: Typography.fontWeight.bold,
-    color: AppColors.white,
-    marginTop: Spacing.xs,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  emptyStateCard: {
-    marginHorizontal: Spacing.xl,
-    marginTop: Spacing.xxl,
-    padding: Spacing.xxl,
-    backgroundColor: AppColors.cardBackground,
-    borderRadius: BorderRadius.xl,
-    alignItems: 'center',
-    ...Shadows.md,
-    borderWidth: 1,
-    borderColor: AppColors.border,
-  },
-  emptyStateIconContainer: {
-    width: 120,
-    height: 120,
-    borderRadius: BorderRadius.full,
-    backgroundColor: AppColors.background,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: Spacing.lg,
-    borderWidth: 2,
-    borderColor: AppColors.primary,
-  },
-  emptyStateTitle: {
-    fontFamily: 'CrimsonPro_700Bold',
-    fontSize: Typography.fontSize.xxl,
-    fontWeight: Typography.fontWeight.bold,
-    color: AppColors.text,
-    marginBottom: Spacing.sm,
-    textAlign: 'center',
-  },
-  emptyStateText: {
-    fontSize: Typography.fontSize.base,
-    color: AppColors.textSecondary,
-    textAlign: 'center',
-    lineHeight: Typography.lineHeight.relaxed * Typography.fontSize.base,
-    marginBottom: Spacing.lg,
-  },
-  emptyStateFeatures: {
-    width: '100%',
-    gap: Spacing.md,
-    marginTop: Spacing.sm,
-  },
-  emptyFeatureRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-    paddingVertical: Spacing.xs,
-  },
-  emptyFeatureText: {
-    fontSize: Typography.fontSize.sm,
-    color: AppColors.text,
-    fontWeight: Typography.fontWeight.medium,
-  },
-  // Weekly bar chart
-  weeklyCard: {
-    backgroundColor: AppColors.cardBackground,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.lg,
-    marginBottom: Spacing.md,
-    borderWidth: 1,
-    borderColor: AppColors.border,
-  },
-  weeklyTitle: {
-    fontSize: Typography.fontSize.sm,
-    fontWeight: '700',
-    color: AppColors.textSecondary,
-    marginBottom: Spacing.md,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-  },
-  weeklyChart: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    gap: 6,
-    height: 100,
-  },
-  weeklyBar: {
-    flex: 1,
-    alignItems: 'center',
-    height: '100%',
-    justifyContent: 'flex-end',
-  },
-  weeklyBarCal: {
-    fontSize: 9,
-    color: AppColors.textTertiary,
-    marginBottom: 2,
-    textAlign: 'center',
-  },
-  weeklyBarTrack: {
-    width: '100%',
-    height: 72,
-    backgroundColor: AppColors.surface,
-    borderRadius: 4,
-    justifyContent: 'flex-end',
-    overflow: 'hidden',
-  },
-  weeklyBarFill: {
-    width: '100%',
-    backgroundColor: AppColors.success,
-    borderRadius: 4,
-  },
-  weeklyDayLabel: {
-    fontSize: 10,
-    color: AppColors.textSecondary,
-    marginTop: 4,
-  },
-});
+type CS = ReturnType<typeof useAppTheme>['colors'];
+function createStyles(colors: CS) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    header: {
+      paddingHorizontal: Spacing.lg,
+      paddingTop: Spacing.xl,
+      paddingBottom: Spacing.lg,
+      backgroundColor: colors.cardBackground,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    headerTitle: {
+      fontFamily: 'CrimsonPro_700Bold',
+      fontSize: Typography.fontSize.xxxl,
+      fontWeight: Typography.fontWeight.bold,
+      color: colors.text,
+    },
+    searchContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: colors.surface,
+      marginHorizontal: Spacing.lg,
+      marginTop: Spacing.md,
+      marginBottom: Spacing.sm,
+      paddingHorizontal: Spacing.md,
+      paddingVertical: Spacing.sm,
+      borderRadius: BorderRadius.lg,
+      borderWidth: 1,
+      borderColor: colors.border,
+      ...Shadows.sm,
+    },
+    searchIcon: {
+      marginRight: Spacing.sm,
+    },
+    searchInput: {
+      flex: 1,
+      fontSize: Typography.fontSize.md,
+      color: colors.text,
+      paddingVertical: Spacing.xs,
+    },
+    filterContainer: {
+      flexDirection: 'row',
+      paddingHorizontal: Spacing.md,
+      paddingBottom: Spacing.md,
+      gap: Spacing.xs,
+    },
+    chartCard: {
+      backgroundColor: colors.background,
+      marginHorizontal: Spacing.md,
+      marginBottom: Spacing.md,
+      paddingVertical: Spacing.lg,
+      paddingHorizontal: Spacing.md,
+      borderRadius: BorderRadius.lg,
+      ...Shadows.md,
+      alignItems: 'center',
+    },
+    chartTitle: {
+      fontSize: Typography.fontSize.lg,
+      fontWeight: Typography.fontWeight.bold,
+      color: colors.text,
+      marginBottom: Spacing.md,
+    },
+    filterChip: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: Spacing.md,
+      paddingVertical: Spacing.sm,
+      borderRadius: BorderRadius.full,
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    filterChipActive: {
+      backgroundColor: colors.primary,
+      borderColor: colors.primary,
+    },
+    filterChipIcon: {
+      marginRight: Spacing.xs,
+    },
+    filterChipText: {
+      fontSize: Typography.fontSize.sm,
+      fontWeight: Typography.fontWeight.semibold,
+      color: colors.textSecondary,
+    },
+    filterChipTextActive: {
+      color: colors.white,
+    },
+    listContent: {
+      paddingTop: Spacing.sm,
+      paddingBottom: Spacing.xxl,
+    },
+    hiddenContainer: {
+      flexDirection: 'row',
+      alignItems: 'stretch',
+      justifyContent: 'flex-end',
+      marginHorizontal: Spacing.lg,
+      marginBottom: Spacing.md,
+      borderRadius: BorderRadius.lg,
+      overflow: 'hidden',
+    },
+    hiddenButton: {
+      width: 85,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    favoriteButton: {
+      backgroundColor: colors.accent,
+    },
+    deleteButton: {
+      backgroundColor: colors.danger,
+    },
+    hiddenButtonText: {
+      fontSize: Typography.fontSize.xs,
+      fontWeight: Typography.fontWeight.bold,
+      color: colors.white,
+      marginTop: Spacing.xs,
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+    },
+    emptyStateCard: {
+      marginHorizontal: Spacing.xl,
+      marginTop: Spacing.xxl,
+      padding: Spacing.xxl,
+      backgroundColor: colors.cardBackground,
+      borderRadius: BorderRadius.xl,
+      alignItems: 'center',
+      ...Shadows.md,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    emptyStateIconContainer: {
+      width: 120,
+      height: 120,
+      borderRadius: BorderRadius.full,
+      backgroundColor: colors.background,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginBottom: Spacing.lg,
+      borderWidth: 2,
+      borderColor: colors.primary,
+    },
+    emptyStateTitle: {
+      fontFamily: 'CrimsonPro_700Bold',
+      fontSize: Typography.fontSize.xxl,
+      fontWeight: Typography.fontWeight.bold,
+      color: colors.text,
+      marginBottom: Spacing.sm,
+      textAlign: 'center',
+    },
+    emptyStateText: {
+      fontSize: Typography.fontSize.base,
+      color: colors.textSecondary,
+      textAlign: 'center',
+      lineHeight: Typography.lineHeight.relaxed * Typography.fontSize.base,
+      marginBottom: Spacing.lg,
+    },
+    emptyStateFeatures: {
+      width: '100%',
+      gap: Spacing.md,
+      marginTop: Spacing.sm,
+    },
+    emptyFeatureRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.sm,
+      paddingVertical: Spacing.xs,
+    },
+    emptyFeatureText: {
+      fontSize: Typography.fontSize.sm,
+      color: colors.text,
+      fontWeight: Typography.fontWeight.medium,
+    },
+    weeklyCard: {
+      backgroundColor: colors.cardBackground,
+      borderRadius: BorderRadius.lg,
+      padding: Spacing.lg,
+      marginBottom: Spacing.md,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    weeklyTitle: {
+      fontSize: Typography.fontSize.sm,
+      fontWeight: '700',
+      color: colors.textSecondary,
+      marginBottom: Spacing.md,
+      textTransform: 'uppercase',
+      letterSpacing: 0.8,
+    },
+    weeklyChart: {
+      flexDirection: 'row',
+      alignItems: 'flex-end',
+      gap: 6,
+      height: 100,
+    },
+    weeklyBar: {
+      flex: 1,
+      alignItems: 'center',
+      height: '100%',
+      justifyContent: 'flex-end',
+    },
+    weeklyBarCal: {
+      fontSize: 9,
+      color: colors.textTertiary,
+      marginBottom: 2,
+      textAlign: 'center',
+    },
+    weeklyBarTrack: {
+      width: '100%',
+      height: 72,
+      backgroundColor: colors.surface,
+      borderRadius: 4,
+      justifyContent: 'flex-end',
+      overflow: 'hidden',
+    },
+    weeklyBarFill: {
+      width: '100%',
+      backgroundColor: colors.success,
+      borderRadius: 4,
+    },
+    weeklyDayLabel: {
+      fontSize: 10,
+      color: colors.textSecondary,
+      marginTop: 4,
+    },
+  });
+}
+

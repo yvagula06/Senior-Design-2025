@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React, { useMemo } from 'react';
 import {
   View,
   Text,
@@ -7,7 +7,8 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { AppColors, Spacing, Typography, BorderRadius, Shadows } from '../../theme';
+import { Spacing, Typography, BorderRadius, Shadows } from '../../theme';
+import { useAppTheme } from '../../context/ThemeContext';
 
 export type StyleOption = 'home' | 'restaurant' | 'unknown';
 
@@ -34,6 +35,8 @@ export const DishSearchInput: React.FC<DishSearchInputProps> = ({
   onGenerate,
   isGenerating = false,
 }) => {
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const handleQuickCalorie = (calories: number) => {
     onTargetCaloriesChange(calories.toString());
   };
@@ -49,13 +52,13 @@ export const DishSearchInput: React.FC<DishSearchInputProps> = ({
           <MaterialCommunityIcons
             name="silverware-fork-knife"
             size={20}
-            color={AppColors.textSecondary}
+            color={colors.textSecondary}
             style={styles.inputIcon}
           />
           <TextInput
             style={styles.input}
             placeholder="e.g., Chicken tikka masala with rice"
-            placeholderTextColor={AppColors.textTertiary}
+            placeholderTextColor={colors.textTertiary}
             value={dishName}
             onChangeText={onDishNameChange}
             autoCapitalize="words"
@@ -65,7 +68,7 @@ export const DishSearchInput: React.FC<DishSearchInputProps> = ({
               <MaterialCommunityIcons
                 name="close-circle"
                 size={20}
-                color={AppColors.textSecondary}
+                color={colors.textSecondary}
               />
             </TouchableOpacity>
           )}
@@ -79,13 +82,13 @@ export const DishSearchInput: React.FC<DishSearchInputProps> = ({
           <MaterialCommunityIcons
             name="fire"
             size={20}
-            color={AppColors.accent}
+            color={colors.accent}
             style={styles.inputIcon}
           />
           <TextInput
             style={styles.input}
             placeholder="e.g., 500"
-            placeholderTextColor={AppColors.textTertiary}
+            placeholderTextColor={colors.textTertiary}
             value={targetCalories}
             onChangeText={onTargetCaloriesChange}
             keyboardType="numeric"
@@ -132,7 +135,7 @@ export const DishSearchInput: React.FC<DishSearchInputProps> = ({
             <MaterialCommunityIcons
               name="home"
               size={18}
-              color={selectedStyle === 'home' ? AppColors.background : AppColors.textSecondary}
+              color={selectedStyle === 'home' ? colors.background : colors.textSecondary}
             />
             <Text
               style={[
@@ -155,7 +158,7 @@ export const DishSearchInput: React.FC<DishSearchInputProps> = ({
             <MaterialCommunityIcons
               name="silverware"
               size={18}
-              color={selectedStyle === 'restaurant' ? AppColors.background : AppColors.textSecondary}
+              color={selectedStyle === 'restaurant' ? colors.background : colors.textSecondary}
             />
             <Text
               style={[
@@ -178,7 +181,7 @@ export const DishSearchInput: React.FC<DishSearchInputProps> = ({
             <MaterialCommunityIcons
               name="help-circle"
               size={18}
-              color={selectedStyle === 'unknown' ? AppColors.background : AppColors.textSecondary}
+              color={selectedStyle === 'unknown' ? colors.background : colors.textSecondary}
             />
             <Text
               style={[
@@ -201,7 +204,7 @@ export const DishSearchInput: React.FC<DishSearchInputProps> = ({
         <MaterialCommunityIcons
           name={isGenerating ? 'loading' : 'lightning-bolt'}
           size={20}
-          color={AppColors.white}
+          color={colors.white}
           style={styles.buttonIcon}
         />
         <Text style={styles.generateButtonText}>
@@ -212,15 +215,17 @@ export const DishSearchInput: React.FC<DishSearchInputProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+type CV = ReturnType<typeof useAppTheme>['colors'];
+function createStyles(colors: CV) {
+  return StyleSheet.create({
   container: {
-    backgroundColor: AppColors.cardBackground,
+    backgroundColor: colors.cardBackground,
     borderRadius: BorderRadius.lg,
     padding: Spacing.lg,
     gap: Spacing.xs,
     ...Shadows.md,
     borderWidth: 1,
-    borderColor: AppColors.border,
+    borderColor: colors.border,
   },
   inputGroup: {
     marginBottom: Spacing.md,
@@ -228,15 +233,15 @@ const styles = StyleSheet.create({
   label: {
     fontSize: Typography.fontSize.sm,
     fontWeight: Typography.fontWeight.semibold,
-    color: AppColors.text,
+    color: colors.text,
     marginBottom: Spacing.sm,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: AppColors.background,
+    backgroundColor: colors.background,
     borderWidth: 1,
-    borderColor: AppColors.border,
+    borderColor: colors.border,
     borderRadius: BorderRadius.md,
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
@@ -247,7 +252,7 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     fontSize: Typography.fontSize.md,
-    color: AppColors.text,
+    color: colors.text,
     paddingVertical: Spacing.sm,
   },
   quickChipsContainer: {
@@ -258,7 +263,7 @@ const styles = StyleSheet.create({
   },
   quickChipsLabel: {
     fontSize: Typography.fontSize.xs,
-    color: AppColors.textSecondary,
+    color: colors.textSecondary,
     marginRight: Spacing.xs,
   },
   quickChip: {
@@ -266,28 +271,28 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.xs,
     borderRadius: BorderRadius.full,
     borderWidth: 1,
-    borderColor: AppColors.border,
-    backgroundColor: AppColors.background,
+    borderColor: colors.border,
+    backgroundColor: colors.background,
   },
   quickChipActive: {
-    backgroundColor: AppColors.accent,
-    borderColor: AppColors.accent,
+    backgroundColor: colors.accent,
+    borderColor: colors.accent,
   },
   quickChipText: {
     fontSize: Typography.fontSize.sm,
     fontWeight: Typography.fontWeight.medium,
-    color: AppColors.text,
+    color: colors.text,
   },
   quickChipTextActive: {
-    color: AppColors.white,
+    color: colors.white,
   },
   segmentedControl: {
     flexDirection: 'row',
-    backgroundColor: AppColors.background,
+    backgroundColor: colors.background,
     borderRadius: BorderRadius.md,
     padding: 2,
     borderWidth: 1,
-    borderColor: AppColors.border,
+    borderColor: colors.border,
   },
   segment: {
     flex: 1,
@@ -308,29 +313,29 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: BorderRadius.md - 2,
   },
   segmentActive: {
-    backgroundColor: AppColors.accent,
+    backgroundColor: colors.accent,
   },
   segmentText: {
     fontSize: Typography.fontSize.sm,
     fontWeight: Typography.fontWeight.medium,
-    color: AppColors.textSecondary,
+    color: colors.textSecondary,
   },
   segmentTextActive: {
-    color: AppColors.background,
+    color: colors.background,
     fontWeight: Typography.fontWeight.semibold,
   },
   generateButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: AppColors.accent,
+    backgroundColor: colors.accent,
     borderRadius: BorderRadius.md,
     paddingVertical: 16,
     marginTop: Spacing.sm,
     ...Shadows.sm,
   },
   generateButtonDisabled: {
-    backgroundColor: AppColors.border,
+    backgroundColor: colors.border,
   },
   buttonIcon: {
     marginRight: Spacing.sm,
@@ -338,6 +343,10 @@ const styles = StyleSheet.create({
   generateButtonText: {
     fontSize: Typography.fontSize.md,
     fontWeight: Typography.fontWeight.bold,
-    color: AppColors.white,
+    color: colors.white,
   },
-});
+  });
+}
+
+
+

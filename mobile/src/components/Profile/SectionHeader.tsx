@@ -1,12 +1,15 @@
-import React from 'react';
+﻿import React, { useMemo, useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { AppColors, Spacing, Typography } from '../../theme';
+import { Spacing, Typography } from '../../theme';
+import { useAppTheme } from '../../context/ThemeContext';
 
 interface SectionHeaderProps {
   title: string;
 }
 
-export const SectionHeader: React.FC<SectionHeaderProps> = ({ title }) => {
+export const SectionHeader: React.FC<SectionHeaderProps> = ({
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]); title }) => {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>{title}</Text>
@@ -14,18 +17,22 @@ export const SectionHeader: React.FC<SectionHeaderProps> = ({ title }) => {
   );
 };
 
-const styles = StyleSheet.create({
+type CV = ReturnType<typeof useAppTheme>['colors'];
+function createStyles(colors: CV) {
+  return StyleSheet.create({
   container: {
     paddingHorizontal: Spacing.lg,
     paddingTop: Spacing.xl,
     paddingBottom: Spacing.sm,
-    backgroundColor: AppColors.background,
+    backgroundColor: colors.background,
   },
   title: {
     fontSize: Typography.fontSize.sm,
     fontWeight: Typography.fontWeight.semibold,
-    color: AppColors.textSecondary,
+    color: colors.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
-});
+  });
+}
+

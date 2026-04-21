@@ -1,4 +1,4 @@
-/**
+﻿/**
  * EstimationResultScreen
  * 
  * Displays the results of meal estimation from the vision API.
@@ -12,7 +12,7 @@
  * - Option to save or retry
  */
 
-import React, { useState } from 'react';
+import React, { useState , useMemo } from 'react';
 import {
   View,
   Text,
@@ -25,7 +25,8 @@ import {
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Picker } from '@react-native-picker/picker';
-import { AppColors, Typography, Spacing, BorderRadius, Shadows } from '../../theme';
+import { Typography, Spacing, BorderRadius, Shadows } from '../../theme';
+import { useAppTheme } from '../../context/ThemeContext';
 import {
   CalorieRangeDisplay,
   DishPredictionList,
@@ -38,6 +39,8 @@ import { logMealEntry } from '../../services/visionApi';
 type EstimationResultRouteProp = RouteProp<ExploreStackParamList, 'EstimationResult'>;
 
 export const EstimationResultScreen: React.FC = () => {
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const navigation = useNavigation<ExploreStackNavigationProp>();
   const route = useRoute<EstimationResultRouteProp>();
   const { response } = route.params;
@@ -148,12 +151,12 @@ export const EstimationResultScreen: React.FC = () => {
 
       setIsLogged(true);
       Alert.alert(
-        'Meal Logged! ✓',
+        'Meal Logged! âœ“',
         `${selectedDish.dish_name} (${adjustedCalories} kcal, ${portionSize} portion) has been added to your history.`,
         [{ text: 'OK' }]
       );
     } catch (error: any) {
-      console.error('❌ [EstimationResult] Failed to log meal:', error);
+      console.error('âŒ [EstimationResult] Failed to log meal:', error);
       Alert.alert(
         'Logging Failed',
         error.message || 'Failed to log meal. Please try again.',
@@ -202,12 +205,12 @@ export const EstimationResultScreen: React.FC = () => {
       setFeedbackSubmitted(true);
       
       Alert.alert(
-        'Thank You! 🎉',
+        'Thank You! ðŸŽ‰',
         'Your feedback helps improve our estimates.',
         [{ text: 'OK' }]
       );
     } catch (error) {
-      console.error('❌ [EstimationResult] Failed to submit feedback:', error);
+      console.error('âŒ [EstimationResult] Failed to submit feedback:', error);
       // Don't show error to user - feedback is optional
     }
   };
@@ -226,7 +229,7 @@ export const EstimationResultScreen: React.FC = () => {
           <MaterialCommunityIcons
             name="check-circle"
             size={48}
-            color={AppColors.success}
+            color={colors.success}
           />
           <Text style={styles.headerTitle}>Meal Estimated!</Text>
           <Text style={styles.headerSubtitle}>
@@ -268,7 +271,7 @@ export const EstimationResultScreen: React.FC = () => {
               <MaterialCommunityIcons
                 name="numeric-1-circle"
                 size={24}
-                color={portionSize === 'small' ? AppColors.textInverse : AppColors.text}
+                color={portionSize === 'small' ? colors.textInverse : colors.text}
               />
               <Text
                 style={[
@@ -278,7 +281,7 @@ export const EstimationResultScreen: React.FC = () => {
               >
                 Small
               </Text>
-              <Text style={styles.portionMultiplier}>×0.75</Text>
+              <Text style={styles.portionMultiplier}>Ã—0.75</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -291,7 +294,7 @@ export const EstimationResultScreen: React.FC = () => {
               <MaterialCommunityIcons
                 name="numeric-2-circle"
                 size={24}
-                color={portionSize === 'normal' ? AppColors.textInverse : AppColors.text}
+                color={portionSize === 'normal' ? colors.textInverse : colors.text}
               />
               <Text
                 style={[
@@ -301,7 +304,7 @@ export const EstimationResultScreen: React.FC = () => {
               >
                 Normal
               </Text>
-              <Text style={styles.portionMultiplier}>×1.0</Text>
+              <Text style={styles.portionMultiplier}>Ã—1.0</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -314,7 +317,7 @@ export const EstimationResultScreen: React.FC = () => {
               <MaterialCommunityIcons
                 name="numeric-3-circle"
                 size={24}
-                color={portionSize === 'large' ? AppColors.textInverse : AppColors.text}
+                color={portionSize === 'large' ? colors.textInverse : colors.text}
               />
               <Text
                 style={[
@@ -324,7 +327,7 @@ export const EstimationResultScreen: React.FC = () => {
               >
                 Large
               </Text>
-              <Text style={styles.portionMultiplier}>×1.25</Text>
+              <Text style={styles.portionMultiplier}>Ã—1.25</Text>
             </TouchableOpacity>
           </View>
           <Text style={styles.portionHint}>
@@ -347,7 +350,7 @@ export const EstimationResultScreen: React.FC = () => {
                 <MaterialCommunityIcons 
                   name="circle-outline" 
                   size={20} 
-                  color={plateSize === 'small_plate' ? AppColors.textInverse : AppColors.text}
+                  color={plateSize === 'small_plate' ? colors.textInverse : colors.text}
                 />
                 <Text style={[
                   styles.plateSizeText,
@@ -367,7 +370,7 @@ export const EstimationResultScreen: React.FC = () => {
                 <MaterialCommunityIcons 
                   name="circle-medium" 
                   size={24} 
-                  color={plateSize === 'standard_plate' ? AppColors.textInverse : AppColors.text}
+                  color={plateSize === 'standard_plate' ? colors.textInverse : colors.text}
                 />
                 <Text style={[
                   styles.plateSizeText,
@@ -387,7 +390,7 @@ export const EstimationResultScreen: React.FC = () => {
                 <MaterialCommunityIcons 
                   name="circle" 
                   size={28} 
-                  color={plateSize === 'large_plate' ? AppColors.textInverse : AppColors.text}
+                  color={plateSize === 'large_plate' ? colors.textInverse : colors.text}
                 />
                 <Text style={[
                   styles.plateSizeText,
@@ -407,7 +410,7 @@ export const EstimationResultScreen: React.FC = () => {
                 <MaterialCommunityIcons 
                   name="bowl" 
                   size={24} 
-                  color={plateSize === 'bowl' ? AppColors.textInverse : AppColors.text}
+                  color={plateSize === 'bowl' ? colors.textInverse : colors.text}
                 />
                 <Text style={[
                   styles.plateSizeText,
@@ -427,7 +430,7 @@ export const EstimationResultScreen: React.FC = () => {
                 <MaterialCommunityIcons 
                   name="hand-back-right" 
                   size={24} 
-                  color={plateSize === 'hand' ? AppColors.textInverse : AppColors.text}
+                  color={plateSize === 'hand' ? colors.textInverse : colors.text}
                 />
                 <Text style={[
                   styles.plateSizeText,
@@ -456,11 +459,11 @@ export const EstimationResultScreen: React.FC = () => {
               <MaterialCommunityIcons 
                 name="thumb-up" 
                 size={24} 
-                color={quickFeedback === 'accurate' ? AppColors.success : AppColors.text}
+                color={quickFeedback === 'accurate' ? colors.success : colors.text}
               />
               <Text style={[
                 styles.feedbackButtonText,
-                quickFeedback === 'accurate' && { color: AppColors.success },
+                quickFeedback === 'accurate' && { color: colors.success },
               ]}>
                 Accurate
               </Text>
@@ -478,11 +481,11 @@ export const EstimationResultScreen: React.FC = () => {
               <MaterialCommunityIcons 
                 name="arrow-up-bold" 
                 size={24} 
-                color={quickFeedback === 'too_high' ? AppColors.error : AppColors.text}
+                color={quickFeedback === 'too_high' ? colors.error : colors.text}
               />
               <Text style={[
                 styles.feedbackButtonText,
-                quickFeedback === 'too_high' && { color: AppColors.error },
+                quickFeedback === 'too_high' && { color: colors.error },
               ]}>
                 Too High
               </Text>
@@ -500,11 +503,11 @@ export const EstimationResultScreen: React.FC = () => {
               <MaterialCommunityIcons 
                 name="arrow-down-bold" 
                 size={24} 
-                color={quickFeedback === 'too_low' ? AppColors.warning : AppColors.text}
+                color={quickFeedback === 'too_low' ? colors.warning : colors.text}
               />
               <Text style={[
                 styles.feedbackButtonText,
-                quickFeedback === 'too_low' && { color: AppColors.warning },
+                quickFeedback === 'too_low' && { color: colors.warning },
               ]}>
                 Too Low
               </Text>
@@ -522,18 +525,18 @@ export const EstimationResultScreen: React.FC = () => {
               <MaterialCommunityIcons 
                 name="close-circle" 
                 size={24} 
-                color={quickFeedback === 'wrong_dish' ? AppColors.error : AppColors.text}
+                color={quickFeedback === 'wrong_dish' ? colors.error : colors.text}
               />
               <Text style={[
                 styles.feedbackButtonText,
-                quickFeedback === 'wrong_dish' && { color: AppColors.error },
+                quickFeedback === 'wrong_dish' && { color: colors.error },
               ]}>
                 Wrong Dish
               </Text>
             </TouchableOpacity>
           </View>
           {feedbackSubmitted && (
-            <Text style={styles.feedbackThankYou}>✓ Thank you for your feedback!</Text>
+            <Text style={styles.feedbackThankYou}>âœ“ Thank you for your feedback!</Text>
           )}
         </View>
 
@@ -552,7 +555,7 @@ export const EstimationResultScreen: React.FC = () => {
             <MaterialCommunityIcons
               name={modeInfo.icon}
               size={24}
-              color={AppColors.primary}
+              color={colors.primary}
             />
             <Text style={styles.modeLabel}>{modeInfo.label}</Text>
           </View>
@@ -610,7 +613,7 @@ export const EstimationResultScreen: React.FC = () => {
               <MaterialCommunityIcons
                 name="alert"
                 size={16}
-                color={AppColors.warning}
+                color={colors.warning}
               />
               <Text style={styles.warningText}>
                 {response.metadata.warnings.join(', ')}
@@ -627,7 +630,7 @@ export const EstimationResultScreen: React.FC = () => {
           onPress={handleRetry}
           disabled={isLogging}
         >
-          <MaterialCommunityIcons name="camera-retake" size={24} color={AppColors.text} />
+          <MaterialCommunityIcons name="camera-retake" size={24} color={colors.text} />
           <Text style={styles.buttonTextSecondary}>Try Again</Text>
         </TouchableOpacity>
 
@@ -642,16 +645,16 @@ export const EstimationResultScreen: React.FC = () => {
           disabled={isLogging || isLogged}
         >
           {isLogging ? (
-            <ActivityIndicator color={AppColors.textInverse} size="small" />
+            <ActivityIndicator color={colors.textInverse} size="small" />
           ) : (
             <>
               <MaterialCommunityIcons
                 name={isLogged ? 'check-circle' : 'content-save'}
                 size={24}
-                color={AppColors.textInverse}
+                color={colors.textInverse}
               />
               <Text style={styles.buttonTextPrimary}>
-                {isLogged ? 'Logged ✓' : 'Confirm Log'}
+                {isLogged ? 'Logged âœ“' : 'Confirm Log'}
               </Text>
             </>
           )}
@@ -671,7 +674,7 @@ interface FactorItemProps {
 
 const FactorItem: React.FC<FactorItemProps> = ({ label, value }) => {
   const percentage = Math.round(value * 100);
-  const color = value >= 0.7 ? AppColors.success : value >= 0.5 ? AppColors.warning : AppColors.error;
+  const color = value >= 0.7 ? colors.success : value >= 0.5 ? colors.warning : colors.error;
 
   return (
     <View style={styles.factorItem}>
@@ -689,10 +692,12 @@ const FactorItem: React.FC<FactorItemProps> = ({ label, value }) => {
   );
 };
 
-const styles = StyleSheet.create({
+type CV = ReturnType<typeof useAppTheme>['colors'];
+function createStyles(colors: CV) {
+  return StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: AppColors.background,
+    backgroundColor: colors.background,
   },
   scrollView: {
     flex: 1,
@@ -707,44 +712,44 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     ...Typography.h1,
-    color: AppColors.text,
+    color: colors.text,
     marginTop: Spacing.md,
   },
   headerSubtitle: {
     ...Typography.h3,
-    color: AppColors.textSecondary,
+    color: colors.textSecondary,
     marginTop: Spacing.xs,
   },
   pickerContainer: {
-    backgroundColor: AppColors.surface,
+    backgroundColor: colors.surface,
     borderRadius: BorderRadius.lg,
     padding: Spacing.lg,
     marginTop: Spacing.lg,
   },
   pickerLabel: {
     ...Typography.h3,
-    color: AppColors.text,
+    color: colors.text,
     marginBottom: Spacing.sm,
   },
   pickerWrapper: {
-    backgroundColor: AppColors.backgroundSecondary,
+    backgroundColor: colors.backgroundSecondary,
     borderRadius: BorderRadius.md,
     borderWidth: 1,
-    borderColor: AppColors.border,
+    borderColor: colors.border,
     overflow: 'hidden',
   },
   picker: {
     width: '100%',
   },
   portionContainer: {
-    backgroundColor: AppColors.surface,
+    backgroundColor: colors.surface,
     borderRadius: BorderRadius.lg,
     padding: Spacing.lg,
     marginTop: Spacing.lg,
   },
   portionLabel: {
     ...Typography.h3,
-    color: AppColors.text,
+    color: colors.text,
     marginBottom: Spacing.md,
     textAlign: 'center',
   },
@@ -754,50 +759,50 @@ const styles = StyleSheet.create({
   },
   portionButton: {
     flex: 1,
-    backgroundColor: AppColors.backgroundSecondary,
+    backgroundColor: colors.backgroundSecondary,
     borderRadius: BorderRadius.md,
     paddingVertical: Spacing.md,
     paddingHorizontal: Spacing.sm,
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: AppColors.border,
+    borderColor: colors.border,
   },
   portionButtonActive: {
-    backgroundColor: AppColors.primary,
-    borderColor: AppColors.primary,
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   portionButtonText: {
     ...Typography.caption,
-    color: AppColors.text,
+    color: colors.text,
     fontWeight: '600',
     marginTop: Spacing.xs,
   },
   portionButtonTextActive: {
-    color: AppColors.textInverse,
+    color: colors.textInverse,
   },
   portionMultiplier: {
     ...Typography.caption,
-    color: AppColors.textSecondary,
+    color: colors.textSecondary,
     fontSize: 10,
     marginTop: 2,
   },
   portionHint: {
     ...Typography.caption,
-    color: AppColors.primary,
+    color: colors.primary,
     textAlign: 'center',
     marginTop: Spacing.md,
     fontWeight: '600',
   },
   // Phase 3: Plate Size Styles
   plateSizeContainer: {
-    backgroundColor: AppColors.surface,
+    backgroundColor: colors.surface,
     borderRadius: BorderRadius.lg,
     padding: Spacing.lg,
     marginTop: Spacing.lg,
   },
   plateSizeLabel: {
     ...Typography.h3,
-    color: AppColors.text,
+    color: colors.text,
     marginBottom: Spacing.md,
   },
   plateScroll: {
@@ -808,42 +813,42 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   plateSizeButton: {
-    backgroundColor: AppColors.backgroundSecondary,
+    backgroundColor: colors.backgroundSecondary,
     borderRadius: BorderRadius.md,
     paddingVertical: Spacing.sm,
     paddingHorizontal: Spacing.md,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: AppColors.border,
+    borderColor: colors.border,
     minWidth: 90,
   },
   plateSizeButtonActive: {
-    backgroundColor: AppColors.primary,
-    borderColor: AppColors.primary,
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   plateSizeText: {
     ...Typography.caption,
-    color: AppColors.text,
+    color: colors.text,
     marginTop: Spacing.xs,
     fontSize: 11,
   },
   plateSizeTextActive: {
-    color: AppColors.textInverse,
+    color: colors.textInverse,
     fontWeight: '600',
   },
   // Phase 3: Feedback Styles
   feedbackContainer: {
-    backgroundColor: AppColors.surface,
+    backgroundColor: colors.surface,
     borderRadius: BorderRadius.lg,
     padding: Spacing.lg,
     marginTop: Spacing.lg,
     borderWidth: 1,
-    borderColor: AppColors.primary + '30',
+    borderColor: colors.primary + '30',
   },
   feedbackLabel: {
     ...Typography.h3,
-    color: AppColors.text,
+    color: colors.text,
     marginBottom: Spacing.md,
     textAlign: 'center',
   },
@@ -854,20 +859,20 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   feedbackButton: {
-    backgroundColor: AppColors.backgroundSecondary,
+    backgroundColor: colors.backgroundSecondary,
     borderRadius: BorderRadius.md,
     paddingVertical: Spacing.sm,
     paddingHorizontal: Spacing.md,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1.5,
-    borderColor: AppColors.border,
+    borderColor: colors.border,
     minWidth: 80,
     flex: 1,
     maxWidth: '48%',
   },
   feedbackButtonActive: {
-    backgroundColor: AppColors.background,
+    backgroundColor: colors.background,
     borderWidth: 2,
   },
   feedbackButtonDisabled: {
@@ -875,20 +880,20 @@ const styles = StyleSheet.create({
   },
   feedbackButtonText: {
     ...Typography.caption,
-    color: AppColors.text,
+    color: colors.text,
     marginTop: Spacing.xs,
     fontSize: 11,
     fontWeight: '600',
   },
   feedbackThankYou: {
     ...Typography.caption,
-    color: AppColors.success,
+    color: colors.success,
     textAlign: 'center',
     marginTop: Spacing.md,
     fontWeight: '600',
   },
   modeContainer: {
-    backgroundColor: AppColors.surface,
+    backgroundColor: colors.surface,
     borderRadius: BorderRadius.lg,
     padding: Spacing.lg,
     marginTop: Spacing.lg,
@@ -900,22 +905,22 @@ const styles = StyleSheet.create({
   },
   modeLabel: {
     ...Typography.h3,
-    color: AppColors.text,
+    color: colors.text,
     marginLeft: Spacing.sm,
   },
   modeDescription: {
     ...Typography.body,
-    color: AppColors.textSecondary,
+    color: colors.textSecondary,
   },
   accuracyDetails: {
-    backgroundColor: AppColors.surface,
+    backgroundColor: colors.surface,
     borderRadius: BorderRadius.lg,
     padding: Spacing.lg,
     marginTop: Spacing.lg,
   },
   sectionTitle: {
     ...Typography.h3,
-    color: AppColors.text,
+    color: colors.text,
     marginBottom: Spacing.md,
   },
   factorsGrid: {
@@ -928,13 +933,13 @@ const styles = StyleSheet.create({
   },
   factorLabel: {
     ...Typography.caption,
-    color: AppColors.textSecondary,
+    color: colors.textSecondary,
     flex: 1,
   },
   factorBar: {
     width: 100,
     height: 8,
-    backgroundColor: AppColors.border,
+    backgroundColor: colors.border,
     borderRadius: 4,
     overflow: 'hidden',
   },
@@ -949,14 +954,14 @@ const styles = StyleSheet.create({
     textAlign: 'right',
   },
   metadataContainer: {
-    backgroundColor: AppColors.surface,
+    backgroundColor: colors.surface,
     borderRadius: BorderRadius.lg,
     padding: Spacing.lg,
     marginTop: Spacing.lg,
   },
   metadataTitle: {
     ...Typography.h3,
-    color: AppColors.text,
+    color: colors.text,
     marginBottom: Spacing.md,
   },
   metadataRow: {
@@ -966,17 +971,17 @@ const styles = StyleSheet.create({
   },
   metadataLabel: {
     ...Typography.caption,
-    color: AppColors.textSecondary,
+    color: colors.textSecondary,
   },
   metadataValue: {
     ...Typography.caption,
-    color: AppColors.text,
+    color: colors.text,
     fontWeight: '600',
   },
   warningsContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: AppColors.warning + '20',
+    backgroundColor: colors.warning + '20',
     padding: Spacing.sm,
     borderRadius: BorderRadius.sm,
     marginTop: Spacing.md,
@@ -984,14 +989,14 @@ const styles = StyleSheet.create({
   },
   warningText: {
     ...Typography.caption,
-    color: AppColors.warning,
+    color: colors.warning,
     flex: 1,
   },
   actionsContainer: {
     flexDirection: 'row',
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.lg,
-    backgroundColor: AppColors.surface,
+    backgroundColor: colors.surface,
     gap: Spacing.md,
     ...Shadows.medium,
   },
@@ -1006,26 +1011,28 @@ const styles = StyleSheet.create({
     minHeight: 56,
   },
   buttonPrimary: {
-    backgroundColor: AppColors.primary,
+    backgroundColor: colors.primary,
     ...Shadows.small,
   },
   buttonSecondary: {
-    backgroundColor: AppColors.backgroundSecondary,
+    backgroundColor: colors.backgroundSecondary,
     borderWidth: 1,
-    borderColor: AppColors.border,
+    borderColor: colors.border,
   },
   buttonSuccess: {
-    backgroundColor: AppColors.success,
+    backgroundColor: colors.success,
   },
   buttonDisabled: {
     opacity: 0.6,
   },
   buttonTextPrimary: {
     ...Typography.button,
-    color: AppColors.textInverse,
+    color: colors.textInverse,
   },
   buttonTextSecondary: {
     ...Typography.button,
-    color: AppColors.text,
+    color: colors.text,
   },
-});
+  });
+}
+

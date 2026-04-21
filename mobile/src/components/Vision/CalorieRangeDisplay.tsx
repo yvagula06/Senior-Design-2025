@@ -1,13 +1,14 @@
-/**
+﻿/**
  * CalorieRangeDisplay Component
  * 
  * Visual display of calorie estimate with range and confidence indicator.
  * Shows the estimated value prominently with min/max range below.
  */
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { AppColors, Typography, Spacing, BorderRadius } from '../../theme';
+import { Typography, Spacing, BorderRadius } from '../../theme';
+import { useAppTheme } from '../../context/ThemeContext';
 import type { CalorieEstimate } from '../../types/vision';
 
 interface CalorieRangeDisplayProps {
@@ -16,14 +17,16 @@ interface CalorieRangeDisplayProps {
 }
 
 export const CalorieRangeDisplay: React.FC<CalorieRangeDisplayProps> = ({
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   calorieEstimate,
   accuracyScore,
 }) => {
   const getAccuracyColor = (score?: number): string => {
-    if (!score) return AppColors.textSecondary;
-    if (score >= 0.8) return AppColors.success;
-    if (score >= 0.6) return AppColors.warning;
-    return AppColors.error;
+    if (!score) return colors.textSecondary;
+    if (score >= 0.8) return colors.success;
+    if (score >= 0.6) return colors.warning;
+    return colors.error;
   };
 
   const getAccuracyLabel = (score?: number): string => {
@@ -85,9 +88,11 @@ export const CalorieRangeDisplay: React.FC<CalorieRangeDisplayProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+type CV = ReturnType<typeof useAppTheme>['colors'];
+function createStyles(colors: CV) {
+  return StyleSheet.create({
   container: {
-    backgroundColor: AppColors.surface,
+    backgroundColor: colors.surface,
     borderRadius: BorderRadius.lg,
     padding: Spacing.lg,
     alignItems: 'center',
@@ -100,12 +105,12 @@ const styles = StyleSheet.create({
   calorieValue: {
     fontSize: 56,
     fontWeight: '700',
-    color: AppColors.primary,
+    color: colors.primary,
     letterSpacing: -2,
   },
   calorieUnit: {
     ...Typography.h3,
-    color: AppColors.textSecondary,
+    color: colors.textSecondary,
     marginLeft: Spacing.xs,
   },
   rangeContainer: {
@@ -120,25 +125,25 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xs,
   },
   rangeMinMax: {
-    backgroundColor: AppColors.backgroundSecondary,
+    backgroundColor: colors.backgroundSecondary,
     paddingHorizontal: Spacing.sm,
     paddingVertical: Spacing.xs,
     borderRadius: BorderRadius.sm,
   },
   rangeText: {
     ...Typography.body,
-    color: AppColors.textSecondary,
+    color: colors.textSecondary,
     fontWeight: '600',
   },
   rangeLine: {
     flex: 1,
     height: 2,
-    backgroundColor: AppColors.border,
+    backgroundColor: colors.border,
     marginHorizontal: Spacing.xs,
   },
   rangeLabel: {
     ...Typography.caption,
-    color: AppColors.textSecondary,
+    color: colors.textSecondary,
   },
   accuracyContainer: {
     width: '100%',
@@ -154,4 +159,6 @@ const styles = StyleSheet.create({
     ...Typography.caption,
     fontWeight: '600',
   },
-});
+  });
+}
+

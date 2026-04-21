@@ -1,14 +1,15 @@
-/**
+﻿/**
  * AngleIndicator Component
  * 
  * Visual indicator showing current capture angle for multi-angle mode.
  * Displays which angles have been captured and which are remaining.
  */
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { AppColors, Typography, Spacing } from '../../theme';
+import { Typography, Spacing } from '../../theme';
+import { useAppTheme } from '../../context/ThemeContext';
 import type { CaptureAngle } from '../../types/vision';
 
 interface AngleIndicatorProps {
@@ -17,6 +18,8 @@ interface AngleIndicatorProps {
 }
 
 export const AngleIndicator: React.FC<AngleIndicatorProps> = ({
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   capturedAngles,
   currentAngle,
 }) => {
@@ -68,7 +71,7 @@ export const AngleIndicator: React.FC<AngleIndicatorProps> = ({
               <MaterialCommunityIcons
                 name={getAngleIcon(angle)}
                 size={24}
-                color={isCaptured ? AppColors.success : AppColors.textSecondary}
+                color={isCaptured ? colors.success : colors.textSecondary}
               />
               <Text
                 style={[
@@ -82,7 +85,7 @@ export const AngleIndicator: React.FC<AngleIndicatorProps> = ({
                 <MaterialCommunityIcons
                   name="check-circle"
                   size={16}
-                  color={AppColors.success}
+                  color={colors.success}
                   style={styles.checkIcon}
                 />
               )}
@@ -94,7 +97,9 @@ export const AngleIndicator: React.FC<AngleIndicatorProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+type CV = ReturnType<typeof useAppTheme>['colors'];
+function createStyles(colors: CV) {
+  return StyleSheet.create({
   container: {
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
@@ -103,7 +108,7 @@ const styles = StyleSheet.create({
   },
   title: {
     ...Typography.caption,
-    color: AppColors.textInverse,
+    color: colors.textInverse,
     textAlign: 'center',
     marginBottom: Spacing.xs,
   },
@@ -123,16 +128,16 @@ const styles = StyleSheet.create({
   },
   angleItemCurrent: {
     borderWidth: 2,
-    borderColor: AppColors.primary,
+    borderColor: colors.primary,
   },
   angleLabel: {
     ...Typography.caption,
-    color: AppColors.textSecondary,
+    color: colors.textSecondary,
     marginTop: Spacing.xs,
     fontSize: 11,
   },
   angleLabelCaptured: {
-    color: AppColors.success,
+    color: colors.success,
     fontWeight: '600',
   },
   checkIcon: {
@@ -140,4 +145,6 @@ const styles = StyleSheet.create({
     top: -4,
     right: -4,
   },
-});
+  });
+}
+

@@ -100,7 +100,7 @@ export const DailyConsumerScreen: React.FC = () => {
           </View>
           {streak > 0 && (
             <View style={styles.streakBadge}>
-              <MaterialCommunityIcons name="fire" size={16} color="#F59E0B" />
+              <MaterialCommunityIcons name="fire" size={16} color={colors.gold}old} />
               <Text style={styles.streakText}>{streak}</Text>
               <Text style={styles.streakLabel}>day streak</Text>
             </View>
@@ -236,15 +236,15 @@ function createStyles(colors: C) {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 4,
-      backgroundColor: '#F59E0B22',
+      backgroundColor: colors.gold + '22',
       borderRadius: BorderRadius.full,
       paddingHorizontal: Spacing.md,
       paddingVertical: Spacing.xs,
       borderWidth: 1,
-      borderColor: '#F59E0B44',
+      borderColor: colors.gold + 'old + '44',
     },
-    streakText: { fontSize: Typography.fontSize.md, fontWeight: '700', color: '#F59E0B' },
-    streakLabel: { fontSize: 11, color: '#F59E0B', opacity: 0.8 },
+    streakText: { fontSize: Typography.fontSize.md, fontWeight: '700', color: colors.gold },
+    streakLabel: { fontSize: 11, color: colors.goldld, opacity: 0.8 },
     progressCard: {
       backgroundColor: colors.cardBackground,
       borderRadius: BorderRadius.lg,

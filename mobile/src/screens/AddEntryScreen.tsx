@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+﻿import React, { useState, useRef, useMemo } from 'react';
 import {
   View,
   StyleSheet,
@@ -14,9 +14,12 @@ import * as ImagePicker from 'expo-image-picker';
 import * as Animatable from 'react-native-animatable';
 import { useFoodContext } from '../context/FoodContext';
 import { apiService } from '../services/api';
-import { AppColors } from '../theme/colors';
+import { useAppTheme } from '../context/ThemeContext';
+
 
 export const AddEntryScreen: React.FC = () => {
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const { addFoodEntry } = useFoodContext();
   const [foodName, setFoodName] = useState('');
   const [calories, setCalories] = useState('');
@@ -152,7 +155,7 @@ export const AddEntryScreen: React.FC = () => {
           <Card style={styles.card} elevation={8}>
             <Card.Content>
               <Animatable.View animation="fadeIn" delay={400}>
-                <Text style={styles.title}>🍽️ Add Food Entry</Text>
+                <Text style={styles.title}>ðŸ½ï¸ Add Food Entry</Text>
                 <Text style={styles.subtitle}>Track your nutrition intake</Text>
               </Animatable.View>
               
@@ -164,7 +167,7 @@ export const AddEntryScreen: React.FC = () => {
                   mode="outlined"
                   style={styles.input}
                   outlineStyle={styles.inputOutline}
-                  activeOutlineColor={AppColors.accent}
+                  activeOutlineColor={colors.accent}
                   left={<TextInput.Icon icon="food" />}
                 />
               </Animatable.View>
@@ -178,7 +181,7 @@ export const AddEntryScreen: React.FC = () => {
                   mode="outlined"
                   style={styles.input}
                   outlineStyle={styles.inputOutline}
-                  activeOutlineColor={AppColors.accent}
+                  activeOutlineColor={colors.accent}
                   left={<TextInput.Icon icon="fire" />}
                 />
               </Animatable.View>
@@ -193,7 +196,7 @@ export const AddEntryScreen: React.FC = () => {
                     mode="outlined"
                     style={styles.input}
                     outlineStyle={styles.inputOutline}
-                    activeOutlineColor={AppColors.accent}
+                    activeOutlineColor={colors.accent}
                     left={<TextInput.Icon icon="dumbbell" />}
                   />
                 </Animatable.View>
@@ -207,7 +210,7 @@ export const AddEntryScreen: React.FC = () => {
                     mode="outlined"
                     style={styles.input}
                     outlineStyle={styles.inputOutline}
-                    activeOutlineColor={AppColors.accent}
+                    activeOutlineColor={colors.accent}
                     left={<TextInput.Icon icon="bread-slice" />}
                   />
                 </Animatable.View>
@@ -222,7 +225,7 @@ export const AddEntryScreen: React.FC = () => {
                   mode="outlined"
                   style={styles.input}
                   outlineStyle={styles.inputOutline}
-                  activeOutlineColor={AppColors.accent}
+                  activeOutlineColor={colors.accent}
                   left={<TextInput.Icon icon="water" />}
                 />
               </Animatable.View>
@@ -259,12 +262,12 @@ export const AddEntryScreen: React.FC = () => {
                     ]}
                   >
                     {loading ? (
-                      <ActivityIndicator size="small" color={AppColors.white} />
+                      <ActivityIndicator size="small" color={colors.white} />
                     ) : (
                       <IconButton
                         icon="camera"
                         size={28}
-                        iconColor={AppColors.white}
+                        iconColor={colors.white}
                         style={styles.cameraIcon}
                       />
                     )}
@@ -279,19 +282,21 @@ export const AddEntryScreen: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
+type CV = ReturnType<typeof useAppTheme>['colors'];
+function createStyles(colors: CV) {
+  return StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: AppColors.background,
+    backgroundColor: colors.background,
   },
   scrollContent: {
     padding: 20,
     paddingTop: 24,
   },
   card: {
-    backgroundColor: AppColors.white,
+    backgroundColor: colors.white,
     borderRadius: 20,
-    shadowColor: AppColors.accent,
+    shadowColor: colors.accent,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.15,
     shadowRadius: 16,
@@ -299,19 +304,19 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: AppColors.text,
+    color: colors.text,
     marginBottom: 4,
     textAlign: 'center',
   },
   subtitle: {
     fontSize: 14,
-    color: AppColors.mediumGray,
+    color: colors.mediumGray,
     textAlign: 'center',
     marginBottom: 24,
   },
   input: {
     marginBottom: 16,
-    backgroundColor: AppColors.white,
+    backgroundColor: colors.white,
   },
   inputOutline: {
     borderRadius: 12,
@@ -334,7 +339,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   saveButton: {
-    backgroundColor: AppColors.accent,
+    backgroundColor: colors.accent,
     borderRadius: 12,
     elevation: 4,
   },
@@ -349,23 +354,25 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   cameraButton: {
-    backgroundColor: AppColors.primary,
+    backgroundColor: colors.primary,
     borderRadius: 12,
     width: 56,
     height: 56,
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 4,
-    shadowColor: AppColors.primary,
+    shadowColor: colors.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
   },
   cameraButtonPressed: {
-    backgroundColor: AppColors.accent,
+    backgroundColor: colors.accent,
     transform: [{ scale: 0.95 }],
   },
   cameraIcon: {
     margin: 0,
   },
-});
+  });
+}
+

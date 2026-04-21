@@ -3,20 +3,21 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { AddEntryScreen } from '../screens/AddEntryScreen';
 import { DailyConsumerScreen } from '../screens/DailyConsumerScreen';
-import { AppColors } from '../theme/colors';
+import { useAppTheme } from '../context/ThemeContext';
 
 const Tab = createBottomTabNavigator();
 
 export const BottomTabNavigator: React.FC = () => {
+  const { colors } = useAppTheme();
   return (
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: AppColors.accent,
-        tabBarInactiveTintColor: AppColors.mediumGray,
+        tabBarActiveTintColor: colors.accent,
+        tabBarInactiveTintColor: colors.mediumGray,
         tabBarStyle: {
-          backgroundColor: AppColors.white,
-          borderTopColor: AppColors.lightGray,
+          backgroundColor: colors.white,
+          borderTopColor: colors.lightGray,
           borderTopWidth: 1,
           paddingBottom: 8,
           paddingTop: 8,

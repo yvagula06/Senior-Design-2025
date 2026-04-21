@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
   View,
   Text,
@@ -13,7 +13,8 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import type { RouteProp } from '@react-navigation/native';
 import type { LabelStackNavigationProp, LabelStackParamList } from '../../navigation/types';
 import { DishSearchInput, StyleOption } from '../../components/Label';
-import { AppColors, Spacing, Typography, BorderRadius, Shadows, fadeIn, slideIn, scaleIn } from '../../theme';
+import { Spacing, Typography, BorderRadius, fadeIn, slideIn, scaleIn } from '../../theme';
+import { useAppTheme } from '../../context/ThemeContext';
 import { requestLabel } from '../../services/label';
 import type { LabelResponse } from '../../types/label';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -35,6 +36,8 @@ const PRO_TIPS = [
 ];
 
 export const LabelHomeScreen: React.FC = () => {
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<LabelStackNavigationProp>();
   const route = useRoute<LabelHomeRouteProp>();
@@ -120,13 +123,13 @@ export const LabelHomeScreen: React.FC = () => {
         prepStyle === 'unknown' ? undefined : (prepStyle as 'home' | 'restaurant' | 'fast_food')
       );
 
-      console.log('✅ [Label] Generated label:', response);
+      console.log('âœ… [Label] Generated label:', response);
       
       // Store result for display
       setLabelResult(response);
 
     } catch (error) {
-      console.error('❌ [Label] Failed to generate label:', error);
+      console.error('âŒ [Label] Failed to generate label:', error);
       
       // Set user-friendly error message
       setApiError(String(error));
@@ -136,7 +139,7 @@ export const LabelHomeScreen: React.FC = () => {
   };
 
   /**
-   * Save label result to daily totals — open meal picker first
+   * Save label result to daily totals â€” open meal picker first
    */
   const handleSave = () => {
     if (!labelResult) return;
@@ -220,7 +223,7 @@ export const LabelHomeScreen: React.FC = () => {
       >
         <View style={styles.titleRow}>
           <View style={styles.iconContainer}>
-            <MaterialCommunityIcons name="food-apple" size={36} color={AppColors.accent} />
+            <MaterialCommunityIcons name="food-apple" size={36} color={colors.accent} />
           </View>
           <View style={styles.titleContent}>
             <Text style={styles.title}>NutriLabelAI</Text>
@@ -233,7 +236,7 @@ export const LabelHomeScreen: React.FC = () => {
             onPress={() => navigation.navigate('BarcodeScanner')}
             activeOpacity={0.8}
           >
-            <MaterialCommunityIcons name="barcode-scan" size={22} color={AppColors.accent} />
+            <MaterialCommunityIcons name="barcode-scan" size={22} color={colors.accent} />
           </TouchableOpacity>
         </View>
       </Animated.View>
@@ -279,12 +282,12 @@ export const LabelHomeScreen: React.FC = () => {
           onPress={() => navigation.navigate('BarcodeScanner')}
           activeOpacity={0.8}
         >
-          <MaterialCommunityIcons name="barcode-scan" size={28} color={AppColors.accent} />
+          <MaterialCommunityIcons name="barcode-scan" size={28} color={colors.accent} />
           <View style={{ flex: 1 }}>
             <Text style={styles.barcodeBannerTitle}>Scan a Barcode</Text>
             <Text style={styles.barcodeBannerSub}>Packaged food? Get instant nutrition info</Text>
           </View>
-          <MaterialCommunityIcons name="chevron-right" size={22} color={AppColors.textSecondary} />
+          <MaterialCommunityIcons name="chevron-right" size={22} color={colors.textSecondary} />
         </TouchableOpacity>
       </Animated.View>
 
@@ -300,7 +303,7 @@ export const LabelHomeScreen: React.FC = () => {
                 onPress={() => handleQuickAdd(r)}
                 activeOpacity={0.8}
               >
-                <MaterialCommunityIcons name="plus-circle-outline" size={14} color={AppColors.accent} />
+                <MaterialCommunityIcons name="plus-circle-outline" size={14} color={colors.accent} />
                 <Text style={styles.recentChipText} numberOfLines={1}>{r.foodName}</Text>
                 <Text style={styles.recentChipCal}>{Math.round(r.calories)} kcal</Text>
               </TouchableOpacity>
@@ -313,7 +316,7 @@ export const LabelHomeScreen: React.FC = () => {
       {isGenerating && (
         <View style={styles.loadingOverlay}>
           <View style={styles.loadingCard}>
-            <ActivityIndicator size="large" color={AppColors.accent} />
+            <ActivityIndicator size="large" color={colors.accent} />
             <Text style={styles.loadingTitle}>Analyzing your food...</Text>
             <Text style={styles.loadingSubtext}>This may take a few seconds</Text>
           </View>
@@ -323,7 +326,7 @@ export const LabelHomeScreen: React.FC = () => {
       {/* ERROR STATE - User-friendly error card with retry */}
       {apiError && !isGenerating && (
         <View style={styles.errorCard}>
-          <MaterialCommunityIcons name="alert-circle-outline" size={64} color={AppColors.error} />
+          <MaterialCommunityIcons name="alert-circle-outline" size={64} color={colors.error} />
           <Text style={styles.errorTitle}>Oops! Something went wrong</Text>
           <Text style={styles.errorMessage}>{apiError}</Text>
           <TouchableOpacity 
@@ -341,7 +344,7 @@ export const LabelHomeScreen: React.FC = () => {
       {!isGenerating && !labelResult && !apiError && !dishName.trim() && (
         <View style={styles.emptyStateCard}>
           <View style={styles.emptyStateIcon}>
-            <MaterialCommunityIcons name="food-apple-outline" size={80} color={AppColors.primary} />
+            <MaterialCommunityIcons name="food-apple-outline" size={80} color={colors.primary} />
           </View>
           <Text style={styles.emptyStateTitle}>Ready to Analyze!</Text>
           <Text style={styles.emptyStateText}>
@@ -349,15 +352,15 @@ export const LabelHomeScreen: React.FC = () => {
           </Text>
           <View style={styles.emptyStateFeatures}>
             <View style={styles.featureRow}>
-              <MaterialCommunityIcons name="check-circle" size={20} color={AppColors.success} />
+              <MaterialCommunityIcons name="check-circle" size={20} color={colors.success} />
               <Text style={styles.featureText}>10,000+ dishes in our database</Text>
             </View>
             <View style={styles.featureRow}>
-              <MaterialCommunityIcons name="check-circle" size={20} color={AppColors.success} />
+              <MaterialCommunityIcons name="check-circle" size={20} color={colors.success} />
               <Text style={styles.featureText}>Accurate macro & micro nutrients</Text>
             </View>
             <View style={styles.featureRow}>
-              <MaterialCommunityIcons name="check-circle" size={20} color={AppColors.success} />
+              <MaterialCommunityIcons name="check-circle" size={20} color={colors.success} />
               <Text style={styles.featureText}>Instant confidence scoring</Text>
             </View>
           </View>
@@ -369,7 +372,7 @@ export const LabelHomeScreen: React.FC = () => {
         <View style={styles.resultContainer}>
           {/* Matched Dish Header */}
           <View style={styles.resultHeader}>
-            <MaterialCommunityIcons name="check-circle" size={28} color={AppColors.success} />
+            <MaterialCommunityIcons name="check-circle" size={28} color={colors.success} />
             <View style={styles.resultHeaderText}>
               <Text style={styles.resultTitle}>Matched Dish</Text>
               <Text style={styles.matchedDish}>{labelResult.matched_dish}</Text>
@@ -379,7 +382,7 @@ export const LabelHomeScreen: React.FC = () => {
           {/* Confidence Score */}
           <View style={styles.confidenceContainer}>
             <View style={styles.confidenceHeader}>
-              <MaterialCommunityIcons name="speedometer" size={20} color={AppColors.accent} />
+              <MaterialCommunityIcons name="speedometer" size={20} color={colors.accent} />
               <Text style={styles.confidenceLabel}>Confidence Score</Text>
             </View>
             <View style={styles.confidenceBar}>
@@ -389,10 +392,10 @@ export const LabelHomeScreen: React.FC = () => {
                   { 
                     width: `${labelResult.confidence * 100}%`,
                     backgroundColor: labelResult.confidence > 0.7 
-                      ? AppColors.success 
+                      ? colors.success 
                       : labelResult.confidence > 0.5 
-                        ? AppColors.warning 
-                        : AppColors.error
+                        ? colors.warning 
+                        : colors.error
                   }
                 ]} 
               />
@@ -415,19 +418,19 @@ export const LabelHomeScreen: React.FC = () => {
 
             <View style={styles.macrosGrid}>
               <View style={styles.macroItem}>
-                <MaterialCommunityIcons name="food-drumstick" size={20} color={AppColors.accent} />
+                <MaterialCommunityIcons name="food-drumstick" size={20} color={colors.accent} />
                 <Text style={styles.macroLabel}>Protein</Text>
                 <Text style={styles.macroValue}>{labelResult.nutrition.protein_g.toFixed(1)}g</Text>
               </View>
 
               <View style={styles.macroItem}>
-                <MaterialCommunityIcons name="bread-slice" size={20} color={AppColors.accent} />
+                <MaterialCommunityIcons name="bread-slice" size={20} color={colors.accent} />
                 <Text style={styles.macroLabel}>Carbs</Text>
                 <Text style={styles.macroValue}>{labelResult.nutrition.carbs_g.toFixed(1)}g</Text>
               </View>
 
               <View style={styles.macroItem}>
-                <MaterialCommunityIcons name="butter" size={20} color={AppColors.accent} />
+                <MaterialCommunityIcons name="butter" size={20} color={colors.accent} />
                 <Text style={styles.macroLabel}>Fat</Text>
                 <Text style={styles.macroValue}>{labelResult.nutrition.fat_g.toFixed(1)}g</Text>
               </View>
@@ -466,7 +469,7 @@ export const LabelHomeScreen: React.FC = () => {
           {/* Explanation Card */}
           <View style={styles.explanationCard}>
             <View style={styles.explanationHeader}>
-              <MaterialCommunityIcons name="information" size={20} color={AppColors.accent} />
+              <MaterialCommunityIcons name="information" size={20} color={colors.accent} />
               <Text style={styles.explanationTitle}>How We Calculated This</Text>
             </View>
             <Text style={styles.explanationText}>{labelResult.explanation}</Text>
@@ -497,7 +500,7 @@ export const LabelHomeScreen: React.FC = () => {
       {/* Animated Info Section */}
       <Animated.View style={[styles.infoSection, { opacity: infoFade }]}>
         <View style={styles.infoHeader}>
-          <MaterialCommunityIcons name="lightbulb-on" size={24} color={AppColors.accent} />
+          <MaterialCommunityIcons name="lightbulb-on" size={24} color={colors.accent} />
           <Text style={styles.infoTitle}>Pro Tip</Text>
           <Text style={styles.tipCounter}>{currentTipIndex + 1}/{PRO_TIPS.length}</Text>
         </View>
@@ -507,7 +510,7 @@ export const LabelHomeScreen: React.FC = () => {
           activeOpacity={0.8}
         >
           <Animated.View style={[styles.tipContent, { transform: [{ scale: tipScale }] }]}>
-            <MaterialCommunityIcons name="gesture-tap" size={20} color={AppColors.accent} />
+            <MaterialCommunityIcons name="gesture-tap" size={20} color={colors.accent} />
             <Text style={styles.infoText}>{PRO_TIPS[currentTipIndex]}</Text>
           </Animated.View>
           <View style={styles.tapHint}>
@@ -538,7 +541,7 @@ export const LabelHomeScreen: React.FC = () => {
                 { key: 'snack',     icon: 'cookie',            label: 'Snack'     },
               ] as { key: 'breakfast'|'lunch'|'dinner'|'snack'; icon: string; label: string }[]).map(({ key, icon, label }) => (
                 <TouchableOpacity key={key} style={styles.mealOptionBtn} onPress={() => confirmSave(key)} activeOpacity={0.8}>
-                  <MaterialCommunityIcons name={icon as any} size={28} color={AppColors.accent} />
+                  <MaterialCommunityIcons name={icon as any} size={28} color={colors.accent} />
                   <Text style={styles.mealOptionText}>{label}</Text>
                 </TouchableOpacity>
               ))}
@@ -553,10 +556,12 @@ export const LabelHomeScreen: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
+type CH = ReturnType<typeof useAppTheme>['colors'];
+function createStyles(colors: CH) {
+  return StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: AppColors.background,
+    backgroundColor: colors.background,
   },
   scrollContent: {
     paddingBottom: Spacing.xxxl,
@@ -565,9 +570,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.xl,
     paddingTop: Spacing.xl,
     paddingBottom: Spacing.lg,
-    backgroundColor: AppColors.cardBackground,
+    backgroundColor: colors.cardBackground,
     borderBottomWidth: 1,
-    borderBottomColor: AppColors.border,
+    borderBottomColor: colors.border,
   },
   statsRowContainer: {
     paddingHorizontal: Spacing.xl,
@@ -586,13 +591,13 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: BorderRadius.xl,
-    backgroundColor: AppColors.cardBackground,
+    backgroundColor: colors.cardBackground,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: Spacing.base,
     ...Shadows.md,
     borderWidth: 1,
-    borderColor: AppColors.accent,
+    borderColor: colors.accent,
   },
   titleContent: {
     flex: 1,
@@ -601,25 +606,25 @@ const styles = StyleSheet.create({
     fontFamily: 'CrimsonPro_700Bold',
     fontSize: Typography.fontSize.xxxl,
     fontWeight: Typography.fontWeight.extrabold,
-    color: AppColors.text,
+    color: colors.text,
     marginBottom: 2,
     letterSpacing: Typography.letterSpacing.tight,
   },
   subtitle: {
     fontSize: Typography.fontSize.base,
-    color: AppColors.textSecondary,
+    color: colors.textSecondary,
     fontWeight: Typography.fontWeight.medium,
   },
   statsRow: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
-    backgroundColor: AppColors.cardBackground,
+    backgroundColor: colors.cardBackground,
     borderRadius: BorderRadius.xl,
     padding: Spacing.lg,
     ...Shadows.sm,
     borderWidth: 1,
-    borderColor: AppColors.border,
+    borderColor: colors.border,
   },
   statItem: {
     alignItems: 'center',
@@ -629,12 +634,12 @@ const styles = StyleSheet.create({
     fontFamily: 'CrimsonPro_700Bold',
     fontSize: Typography.fontSize.xl,
     fontWeight: Typography.fontWeight.extrabold,
-    color: AppColors.accent,
+    color: colors.accent,
     marginBottom: 2,
   },
   statLabel: {
     fontSize: Typography.fontSize.xs,
-    color: AppColors.textSecondary,
+    color: colors.textSecondary,
     fontWeight: Typography.fontWeight.medium,
     textTransform: 'uppercase',
     letterSpacing: Typography.letterSpacing.wide,
@@ -642,17 +647,17 @@ const styles = StyleSheet.create({
   statDivider: {
     width: 1,
     height: 40,
-    backgroundColor: AppColors.border,
+    backgroundColor: colors.border,
   },
   infoSection: {
     marginTop: Spacing.xl,
     marginHorizontal: Spacing.xl,
-    backgroundColor: AppColors.cardBackground,
+    backgroundColor: colors.cardBackground,
     borderRadius: BorderRadius.xl,
     padding: Spacing.lg,
     ...Shadows.sm,
     borderWidth: 1,
-    borderColor: AppColors.border,
+    borderColor: colors.border,
   },
   infoHeader: {
     flexDirection: 'row',
@@ -664,26 +669,26 @@ const styles = StyleSheet.create({
     fontFamily: 'CrimsonPro_600SemiBold',
     fontSize: Typography.fontSize.lg,
     fontWeight: Typography.fontWeight.bold,
-    color: AppColors.text,
+    color: colors.text,
     flex: 1,
   },
   tipCounter: {
     fontSize: Typography.fontSize.xs,
     fontWeight: Typography.fontWeight.semibold,
-    color: AppColors.accent,
-    backgroundColor: AppColors.background,
+    color: colors.accent,
+    backgroundColor: colors.background,
     paddingHorizontal: Spacing.sm,
     paddingVertical: Spacing.xs,
     borderRadius: BorderRadius.full,
     borderWidth: 1,
-    borderColor: AppColors.accent,
+    borderColor: colors.accent,
   },
   tipCard: {
-    backgroundColor: AppColors.background,
+    backgroundColor: colors.background,
     borderRadius: BorderRadius.md,
     padding: Spacing.md,
     borderWidth: 1,
-    borderColor: AppColors.border,
+    borderColor: colors.border,
   },
   tipContent: {
     flexDirection: 'row',
@@ -695,17 +700,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingTop: Spacing.sm,
     borderTopWidth: 1,
-    borderTopColor: AppColors.border,
+    borderTopColor: colors.border,
   },
   tapHintText: {
     fontSize: Typography.fontSize.xs,
-    color: AppColors.textTertiary,
+    color: colors.textTertiary,
     fontWeight: Typography.fontWeight.medium,
   },
   infoText: {
     flex: 1,
     fontSize: Typography.fontSize.sm,
-    color: AppColors.text,
+    color: colors.text,
     lineHeight: Typography.lineHeight.relaxed * Typography.fontSize.sm,
     fontWeight: Typography.fontWeight.regular,
   },
@@ -717,26 +722,26 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   loadingCard: {
-    backgroundColor: AppColors.cardBackground,
+    backgroundColor: colors.cardBackground,
     borderRadius: BorderRadius.xl,
     padding: Spacing.xxl,
     alignItems: 'center',
     width: '100%',
     ...Shadows.lg,
     borderWidth: 1,
-    borderColor: AppColors.border,
+    borderColor: colors.border,
   },
   loadingTitle: {
     marginTop: Spacing.lg,
     fontSize: Typography.fontSize.xl,
     fontWeight: Typography.fontWeight.bold,
-    color: AppColors.text,
+    color: colors.text,
     textAlign: 'center',
   },
   loadingSubtext: {
     marginTop: Spacing.xs,
     fontSize: Typography.fontSize.sm,
-    color: AppColors.textSecondary,
+    color: colors.textSecondary,
     textAlign: 'center',
   },
   // ERROR STATE - User-friendly card
@@ -744,24 +749,24 @@ const styles = StyleSheet.create({
     marginHorizontal: Spacing.xl,
     marginTop: Spacing.xl,
     padding: Spacing.xxl,
-    backgroundColor: AppColors.cardBackground,
+    backgroundColor: colors.cardBackground,
     borderRadius: BorderRadius.xl,
     alignItems: 'center',
     ...Shadows.md,
     borderWidth: 2,
-    borderColor: AppColors.error,
+    borderColor: colors.error,
   },
   errorTitle: {
     marginTop: Spacing.lg,
     fontSize: Typography.fontSize.xl,
     fontWeight: Typography.fontWeight.bold,
-    color: AppColors.text,
+    color: colors.text,
     textAlign: 'center',
   },
   errorMessage: {
     marginTop: Spacing.sm,
     fontSize: Typography.fontSize.base,
-    color: AppColors.textSecondary,
+    color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: Typography.lineHeight.relaxed * Typography.fontSize.base,
   },
@@ -772,7 +777,7 @@ const styles = StyleSheet.create({
     marginTop: Spacing.lg,
     paddingHorizontal: Spacing.xl,
     paddingVertical: Spacing.md,
-    backgroundColor: AppColors.error,
+    backgroundColor: colors.error,
     borderRadius: BorderRadius.md,
     ...Shadows.sm,
   },
@@ -786,34 +791,34 @@ const styles = StyleSheet.create({
     marginHorizontal: Spacing.xl,
     marginTop: Spacing.xl,
     padding: Spacing.xxl,
-    backgroundColor: AppColors.cardBackground,
+    backgroundColor: colors.cardBackground,
     borderRadius: BorderRadius.xl,
     alignItems: 'center',
     ...Shadows.md,
     borderWidth: 1,
-    borderColor: AppColors.border,
+    borderColor: colors.border,
   },
   emptyStateIcon: {
     width: 120,
     height: 120,
     borderRadius: BorderRadius.full,
-    backgroundColor: AppColors.background,
+    backgroundColor: colors.background,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: Spacing.lg,
     borderWidth: 2,
-    borderColor: AppColors.primary,
+    borderColor: colors.primary,
   },
   emptyStateTitle: {
     fontSize: Typography.fontSize.xxl,
     fontWeight: Typography.fontWeight.bold,
-    color: AppColors.text,
+    color: colors.text,
     marginBottom: Spacing.sm,
     textAlign: 'center',
   },
   emptyStateText: {
     fontSize: Typography.fontSize.base,
-    color: AppColors.textSecondary,
+    color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: Typography.lineHeight.relaxed * Typography.fontSize.base,
     marginBottom: Spacing.lg,
@@ -830,7 +835,7 @@ const styles = StyleSheet.create({
   },
   featureText: {
     fontSize: Typography.fontSize.sm,
-    color: AppColors.text,
+    color: colors.text,
     fontWeight: Typography.fontWeight.medium,
   },
   // Result styles
@@ -841,13 +846,13 @@ const styles = StyleSheet.create({
   resultHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: AppColors.cardBackground,
+    backgroundColor: colors.cardBackground,
     padding: Spacing.lg,
     borderRadius: BorderRadius.xl,
     marginBottom: Spacing.md,
     ...Shadows.sm,
     borderWidth: 1,
-    borderColor: AppColors.border,
+    borderColor: colors.border,
   },
   resultHeaderText: {
     marginLeft: Spacing.md,
@@ -855,25 +860,25 @@ const styles = StyleSheet.create({
   },
   resultTitle: {
     fontSize: Typography.fontSize.xs,
-    color: AppColors.textSecondary,
+    color: colors.textSecondary,
     fontWeight: Typography.fontWeight.semibold,
     textTransform: 'uppercase',
     letterSpacing: Typography.letterSpacing.wide,
   },
   matchedDish: {
     fontSize: Typography.fontSize.lg,
-    color: AppColors.text,
+    color: colors.text,
     fontWeight: Typography.fontWeight.bold,
     marginTop: 2,
   },
   confidenceContainer: {
-    backgroundColor: AppColors.cardBackground,
+    backgroundColor: colors.cardBackground,
     padding: Spacing.lg,
     borderRadius: BorderRadius.xl,
     marginBottom: Spacing.md,
     ...Shadows.sm,
     borderWidth: 1,
-    borderColor: AppColors.border,
+    borderColor: colors.border,
   },
   confidenceHeader: {
     flexDirection: 'row',
@@ -883,12 +888,12 @@ const styles = StyleSheet.create({
   },
   confidenceLabel: {
     fontSize: Typography.fontSize.sm,
-    color: AppColors.textSecondary,
+    color: colors.textSecondary,
     fontWeight: Typography.fontWeight.semibold,
   },
   confidenceBar: {
     height: 8,
-    backgroundColor: AppColors.background,
+    backgroundColor: colors.background,
     borderRadius: BorderRadius.full,
     overflow: 'hidden',
     marginVertical: Spacing.sm,
@@ -899,23 +904,23 @@ const styles = StyleSheet.create({
   },
   confidenceValue: {
     fontSize: Typography.fontSize.sm,
-    color: AppColors.text,
+    color: colors.text,
     fontWeight: Typography.fontWeight.semibold,
     textAlign: 'right',
   },
   macrosCard: {
-    backgroundColor: AppColors.cardBackground,
+    backgroundColor: colors.cardBackground,
     padding: Spacing.lg,
     borderRadius: BorderRadius.xl,
     marginBottom: Spacing.md,
     ...Shadows.sm,
     borderWidth: 1,
-    borderColor: AppColors.border,
+    borderColor: colors.border,
   },
   macrosTitle: {
     fontSize: Typography.fontSize.lg,
     fontWeight: Typography.fontWeight.bold,
-    color: AppColors.text,
+    color: colors.text,
     marginBottom: Spacing.md,
   },
   caloriesRow: {
@@ -927,17 +932,17 @@ const styles = StyleSheet.create({
   caloriesLabel: {
     fontSize: Typography.fontSize.base,
     fontWeight: Typography.fontWeight.semibold,
-    color: AppColors.text,
+    color: colors.text,
   },
   caloriesValue: {
     fontSize: Typography.fontSize.xxl,
     fontWeight: Typography.fontWeight.extrabold,
-    color: AppColors.accent,
+    color: colors.accent,
     fontFamily: 'CrimsonPro_700Bold',
   },
   macrosDivider: {
     height: 1,
-    backgroundColor: AppColors.border,
+    backgroundColor: colors.border,
     marginVertical: Spacing.md,
   },
   macrosGrid: {
@@ -951,13 +956,13 @@ const styles = StyleSheet.create({
   },
   macroLabel: {
     fontSize: Typography.fontSize.xs,
-    color: AppColors.textSecondary,
+    color: colors.textSecondary,
     marginTop: Spacing.xs,
     fontWeight: Typography.fontWeight.medium,
   },
   macroValue: {
     fontSize: Typography.fontSize.lg,
-    color: AppColors.text,
+    color: colors.text,
     fontWeight: Typography.fontWeight.bold,
     marginTop: 2,
   },
@@ -973,22 +978,22 @@ const styles = StyleSheet.create({
   },
   microLabel: {
     fontSize: Typography.fontSize.xs,
-    color: AppColors.textSecondary,
+    color: colors.textSecondary,
     fontWeight: Typography.fontWeight.medium,
   },
   microValue: {
     fontSize: Typography.fontSize.sm,
-    color: AppColors.text,
+    color: colors.text,
     fontWeight: Typography.fontWeight.semibold,
     marginTop: 2,
   },
   explanationCard: {
-    backgroundColor: AppColors.cardBackground,
+    backgroundColor: colors.cardBackground,
     padding: Spacing.lg,
     borderRadius: BorderRadius.xl,
     ...Shadows.sm,
     borderWidth: 1,
-    borderColor: AppColors.border,
+    borderColor: colors.border,
   },
   explanationHeader: {
     flexDirection: 'row',
@@ -999,11 +1004,11 @@ const styles = StyleSheet.create({
   explanationTitle: {
     fontSize: Typography.fontSize.base,
     fontWeight: Typography.fontWeight.semibold,
-    color: AppColors.text,
+    color: colors.text,
   },
   explanationText: {
     fontSize: Typography.fontSize.sm,
-    color: AppColors.textSecondary,
+    color: colors.textSecondary,
     lineHeight: Typography.lineHeight.relaxed * Typography.fontSize.sm,
     fontWeight: Typography.fontWeight.regular,
   },
@@ -1012,7 +1017,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: AppColors.accent,
+    backgroundColor: colors.accent,
     paddingVertical: Spacing.lg,
     paddingHorizontal: Spacing.xl,
     borderRadius: BorderRadius.xl,
@@ -1021,7 +1026,7 @@ const styles = StyleSheet.create({
     ...Shadows.md,
   },
   saveButtonSaved: {
-    backgroundColor: AppColors.success,
+    backgroundColor: colors.success,
   },
   saveButtonText: {
     color: '#FFF',
@@ -1032,9 +1037,9 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: AppColors.surface,
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: AppColors.border,
+    borderColor: colors.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1042,20 +1047,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.md,
-    backgroundColor: AppColors.cardBackground,
+    backgroundColor: colors.cardBackground,
     borderRadius: BorderRadius.lg,
     borderWidth: 1,
-    borderColor: AppColors.border,
+    borderColor: colors.border,
     paddingVertical: Spacing.md,
     paddingHorizontal: Spacing.md,
   },
   barcodeBannerTitle: {
-    color: AppColors.text,
+    color: colors.text,
     fontSize: Typography.fontSize.base,
     fontWeight: '700',
   },
   barcodeBannerSub: {
-    color: AppColors.textSecondary,
+    color: colors.textSecondary,
     fontSize: Typography.fontSize.xs,
     marginTop: 1,
   },
@@ -1063,7 +1068,7 @@ const styles = StyleSheet.create({
   recentsTitle: {
     fontSize: Typography.fontSize.sm,
     fontWeight: '700',
-    color: AppColors.textSecondary,
+    color: colors.textSecondary,
     marginBottom: Spacing.sm,
     textTransform: 'uppercase',
     letterSpacing: 0.8,
@@ -1072,23 +1077,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: AppColors.cardBackground,
+    backgroundColor: colors.cardBackground,
     borderRadius: BorderRadius.full,
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
     borderWidth: 1,
-    borderColor: AppColors.border,
+    borderColor: colors.border,
     maxWidth: 200,
   },
   recentChipText: {
     fontSize: Typography.fontSize.sm,
-    color: AppColors.text,
+    color: colors.text,
     fontWeight: '600',
     maxWidth: 120,
   },
   recentChipCal: {
     fontSize: 11,
-    color: AppColors.textSecondary,
+    color: colors.textSecondary,
   },
   // Meal picker
   mealOverlay: {
@@ -1097,7 +1102,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   mealSheet: {
-    backgroundColor: AppColors.cardBackground,
+    backgroundColor: colors.cardBackground,
     borderTopLeftRadius: BorderRadius.xl,
     borderTopRightRadius: BorderRadius.xl,
     padding: Spacing.xl,
@@ -1106,13 +1111,13 @@ const styles = StyleSheet.create({
   mealSheetTitle: {
     fontSize: Typography.fontSize.xl,
     fontWeight: '700',
-    color: AppColors.text,
+    color: colors.text,
     textAlign: 'center',
     marginBottom: 4,
   },
   mealSheetSub: {
     fontSize: Typography.fontSize.sm,
-    color: AppColors.textSecondary,
+    color: colors.textSecondary,
     textAlign: 'center',
     marginBottom: Spacing.xl,
   },
@@ -1127,16 +1132,16 @@ const styles = StyleSheet.create({
     width: '44%',
     alignItems: 'center',
     gap: Spacing.sm,
-    backgroundColor: AppColors.surface,
+    backgroundColor: colors.surface,
     borderRadius: BorderRadius.lg,
     paddingVertical: Spacing.lg,
     borderWidth: 1,
-    borderColor: AppColors.border,
+    borderColor: colors.border,
   },
   mealOptionText: {
     fontSize: Typography.fontSize.md,
     fontWeight: '600',
-    color: AppColors.text,
+    color: colors.text,
   },
   mealCancelBtn: {
     alignSelf: 'center',
@@ -1145,6 +1150,8 @@ const styles = StyleSheet.create({
   },
   mealCancelText: {
     fontSize: Typography.fontSize.md,
-    color: AppColors.textSecondary,
+    color: colors.textSecondary,
   },
-});
+  });
+}
+

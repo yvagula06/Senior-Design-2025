@@ -1,4 +1,4 @@
-/**
+﻿/**
  * BarcodeScannerScreen
  *
  * Scans UPC / EAN barcodes using expo-camera (Expo Go compatible),
@@ -6,7 +6,7 @@
  * Results can be saved directly to the daily food log.
  */
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import {
   ActivityIndicator,
   Image,
@@ -20,7 +20,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { CameraView, useCameraPermissions, BarcodeScanningResult } from 'expo-camera';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { AppColors, BorderRadius, Spacing, Typography } from '../../theme';
+import { BorderRadius, Spacing, Typography } from '../../theme';
+import { useAppTheme } from '../../context/ThemeContext';
 import { lookupBarcode, BarcodeProduct } from '../../services/barcode';
 import { useFoodContext } from '../../context/FoodContext';
 import { Toast } from '../../components';
@@ -29,6 +30,8 @@ import type { LabelStackNavigationProp } from '../../navigation/types';
 type ScanState = 'scanning' | 'loading' | 'result' | 'error';
 
 export const BarcodeScannerScreen: React.FC = () => {
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<LabelStackNavigationProp>();
   const { addLabelEntry } = useFoodContext();
@@ -77,7 +80,7 @@ export const BarcodeScannerScreen: React.FC = () => {
     try {
       addLabelEntry({
         dishName: product.productName,
-        matchedDish: `${product.brand ? product.brand + ' — ' : ''}${product.productName}`,
+        matchedDish: `${product.brand ? product.brand + ' â€” ' : ''}${product.productName}`,
         calories: product.nutrition.calories,
         protein: product.nutrition.protein_g,
         carbs: product.nutrition.carbs_g,
@@ -106,11 +109,11 @@ export const BarcodeScannerScreen: React.FC = () => {
     setScanState('scanning');
   };
 
-  // ── Permission denied ──────────────────────────────────────────────────────
+  // â”€â”€ Permission denied â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   if (permission && !permission.granted) {
     return (
       <View style={[styles.container, styles.center, { paddingTop: insets.top }]}>
-        <MaterialCommunityIcons name="camera-off" size={64} color={AppColors.textSecondary} />
+        <MaterialCommunityIcons name="camera-off" size={64} color={colors.textSecondary} />
         <Text style={styles.permissionTitle}>Camera Access Required</Text>
         <Text style={styles.permissionSubtitle}>
           Enable camera permission in your device settings to scan barcodes.
@@ -125,13 +128,13 @@ export const BarcodeScannerScreen: React.FC = () => {
   if (!permission) {
     return (
       <View style={[styles.container, styles.center, { paddingTop: insets.top }]}>
-        <ActivityIndicator size="large" color={AppColors.accent} />
-        <Text style={styles.loadingText}>Starting camera…</Text>
+        <ActivityIndicator size="large" color={colors.accent} />
+        <Text style={styles.loadingText}>Starting cameraâ€¦</Text>
       </View>
     );
   }
 
-  // ── Macro row helper ───────────────────────────────────────────────────────
+  // â”€â”€ Macro row helper â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const MacroChip = ({ label, value, unit }: { label: string; value: number; unit: string }) => (
     <View style={styles.macroChip}>
       <Text style={styles.macroValue}>
@@ -153,7 +156,7 @@ export const BarcodeScannerScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      {/* ── Camera viewfinder (always rendered in background) ── */}
+      {/* â”€â”€ Camera viewfinder (always rendered in background) â”€â”€ */}
       <CameraView
         style={StyleSheet.absoluteFill}
         facing="back"
@@ -164,7 +167,7 @@ export const BarcodeScannerScreen: React.FC = () => {
         onBarcodeScanned={scanState === 'scanning' ? onBarcodeScanned : undefined}
       />
 
-      {/* ── Scanning overlay ── */}
+      {/* â”€â”€ Scanning overlay â”€â”€ */}
       {scanState === 'scanning' && (
         <View style={styles.overlay}>
           {/* Top bar */}
@@ -177,7 +180,7 @@ export const BarcodeScannerScreen: React.FC = () => {
               <MaterialCommunityIcons
                 name={torchOn ? 'flashlight' : 'flashlight-off'}
                 size={24}
-                color={torchOn ? AppColors.accent : '#FFF'}
+                color={torchOn ? colors.accent : '#FFF'}
               />
             </TouchableOpacity>
           </View>
@@ -199,18 +202,18 @@ export const BarcodeScannerScreen: React.FC = () => {
         </View>
       )}
 
-      {/* ── Loading ── */}
+      {/* â”€â”€ Loading â”€â”€ */}
       {scanState === 'loading' && (
         <View style={[styles.overlay, styles.center]}>
           <View style={styles.loadingCard}>
-            <ActivityIndicator size="large" color={AppColors.accent} />
-            <Text style={styles.loadingTitle}>Looking up product…</Text>
+            <ActivityIndicator size="large" color={colors.accent} />
+            <Text style={styles.loadingTitle}>Looking up productâ€¦</Text>
             <Text style={styles.loadingBarcode}>{lastScanned}</Text>
           </View>
         </View>
       )}
 
-      {/* ── Error ── */}
+      {/* â”€â”€ Error â”€â”€ */}
       {scanState === 'error' && (
         <View style={[styles.overlay, styles.center]}>
           <View style={[styles.bottomSheet, { paddingBottom: insets.bottom + Spacing.xl }]}>
@@ -218,9 +221,9 @@ export const BarcodeScannerScreen: React.FC = () => {
               style={styles.closeBtn}
               onPress={() => navigation.goBack()}
             >
-              <MaterialCommunityIcons name="close" size={22} color={AppColors.textSecondary} />
+              <MaterialCommunityIcons name="close" size={22} color={colors.textSecondary} />
             </TouchableOpacity>
-            <MaterialCommunityIcons name="barcode-off" size={56} color={AppColors.error} />
+            <MaterialCommunityIcons name="barcode-off" size={56} color={colors.error} />
             <Text style={styles.errorTitle}>Not Found</Text>
             <Text style={styles.errorMsg}>{errorMsg}</Text>
             <TouchableOpacity style={styles.primaryBtn} onPress={resetScanner}>
@@ -231,7 +234,7 @@ export const BarcodeScannerScreen: React.FC = () => {
         </View>
       )}
 
-      {/* ── Result sheet ── */}
+      {/* â”€â”€ Result sheet â”€â”€ */}
       {scanState === 'result' && product && (
         <View style={[styles.overlay, styles.sheetBg]}>
           <View style={[styles.bottomSheet, { paddingBottom: insets.bottom + Spacing.lg }]}>
@@ -241,7 +244,7 @@ export const BarcodeScannerScreen: React.FC = () => {
                 style={styles.closeBtn}
                 onPress={() => navigation.goBack()}
               >
-                <MaterialCommunityIcons name="close" size={22} color={AppColors.textSecondary} />
+                <MaterialCommunityIcons name="close" size={22} color={colors.textSecondary} />
               </TouchableOpacity>
 
               {/* Product image */}
@@ -253,7 +256,7 @@ export const BarcodeScannerScreen: React.FC = () => {
                 />
               ) : (
                 <View style={styles.productImagePlaceholder}>
-                  <MaterialCommunityIcons name="barcode-scan" size={48} color={AppColors.textSecondary} />
+                  <MaterialCommunityIcons name="barcode-scan" size={48} color={colors.textSecondary} />
                 </View>
               )}
 
@@ -262,7 +265,7 @@ export const BarcodeScannerScreen: React.FC = () => {
                 <Text style={styles.brandText}>{product.brand.toUpperCase()}</Text>
               ) : null}
               <Text style={styles.productName}>{product.productName}</Text>
-              <Text style={styles.servingLabel}>Per serving · {product.servingSize}</Text>
+              <Text style={styles.servingLabel}>Per serving Â· {product.servingSize}</Text>
 
               {/* Macro chips */}
               <View style={styles.macroRow}>
@@ -283,7 +286,7 @@ export const BarcodeScannerScreen: React.FC = () => {
             {/* Action buttons */}
             <View style={styles.actionRow}>
               <TouchableOpacity style={styles.secondaryBtn} onPress={resetScanner}>
-                <MaterialCommunityIcons name="barcode-scan" size={18} color={AppColors.accent} />
+                <MaterialCommunityIcons name="barcode-scan" size={18} color={colors.accent} />
                 <Text style={styles.secondaryBtnText}>Scan Again</Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -313,11 +316,13 @@ export const BarcodeScannerScreen: React.FC = () => {
   );
 };
 
-// ── Reticle corner helper ──────────────────────────────────────────────────
+// â”€â”€ Reticle corner helper â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const CORNER = 22;
 const BORDER = 3;
 
-const styles = StyleSheet.create({
+type CV = ReturnType<typeof useAppTheme>['colors'];
+function createStyles(colors: CV) {
+  return StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#000',
@@ -335,7 +340,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
 
-  // ── Top bar ────────────────────────────────────────────────────────────────
+  // â”€â”€ Top bar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   topBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -357,7 +362,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
 
-  // ── Reticle ────────────────────────────────────────────────────────────────
+  // â”€â”€ Reticle â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   reticleContainer: {
     flex: 1,
     alignItems: 'center',
@@ -374,7 +379,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: CORNER,
     height: CORNER,
-    borderColor: AppColors.accent,
+    borderColor: colors.accent,
   },
   cornerTL: { top: 0, left: 0, borderTopWidth: BORDER, borderLeftWidth: BORDER },
   cornerTR: { top: 0, right: 0, borderTopWidth: BORDER, borderRightWidth: BORDER },
@@ -384,7 +389,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: '85%',
     height: 2,
-    backgroundColor: AppColors.accent,
+    backgroundColor: colors.accent,
     opacity: 0.7,
   },
   scanHint: {
@@ -394,9 +399,9 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 
-  // ── Loading ────────────────────────────────────────────────────────────────
+  // â”€â”€ Loading â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   loadingCard: {
-    backgroundColor: AppColors.cardBackground,
+    backgroundColor: colors.cardBackground,
     borderRadius: BorderRadius.xl,
     padding: Spacing.xl,
     alignItems: 'center',
@@ -404,24 +409,24 @@ const styles = StyleSheet.create({
     width: 260,
   },
   loadingTitle: {
-    color: AppColors.text,
+    color: colors.text,
     fontSize: Typography.fontSize.base,
     fontWeight: '600',
   },
   loadingBarcode: {
-    color: AppColors.textSecondary,
+    color: colors.textSecondary,
     fontSize: Typography.fontSize.xs,
     fontFamily: 'monospace',
   },
   loadingText: {
-    color: AppColors.textSecondary,
+    color: colors.textSecondary,
     marginTop: Spacing.md,
     fontSize: Typography.fontSize.sm,
   },
 
-  // ── Bottom sheet ────────────────────────────────────────────────────────────
+  // â”€â”€ Bottom sheet â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   bottomSheet: {
-    backgroundColor: AppColors.cardBackground,
+    backgroundColor: colors.cardBackground,
     borderTopLeftRadius: BorderRadius.xl,
     borderTopRightRadius: BorderRadius.xl,
     paddingHorizontal: Spacing.lg,
@@ -438,37 +443,37 @@ const styles = StyleSheet.create({
     height: 140,
     borderRadius: BorderRadius.lg,
     marginBottom: Spacing.md,
-    backgroundColor: AppColors.surface,
+    backgroundColor: colors.surface,
   },
   productImagePlaceholder: {
     width: '100%',
     height: 100,
     borderRadius: BorderRadius.lg,
-    backgroundColor: AppColors.surface,
+    backgroundColor: colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: Spacing.md,
   },
   brandText: {
-    color: AppColors.accent,
+    color: colors.accent,
     fontSize: Typography.fontSize.xs,
     fontWeight: '700',
     letterSpacing: 1.2,
     marginBottom: 2,
   },
   productName: {
-    color: AppColors.text,
+    color: colors.text,
     fontSize: Typography.fontSize.xl,
     fontWeight: '700',
     marginBottom: Spacing.xs,
   },
   servingLabel: {
-    color: AppColors.textSecondary,
+    color: colors.textSecondary,
     fontSize: Typography.fontSize.sm,
     marginBottom: Spacing.lg,
   },
 
-  // ── Macros ─────────────────────────────────────────────────────────────────
+  // â”€â”€ Macros â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   macroRow: {
     flexDirection: 'row',
     gap: Spacing.sm,
@@ -476,13 +481,13 @@ const styles = StyleSheet.create({
   },
   macroChip: {
     flex: 1,
-    backgroundColor: AppColors.surface,
+    backgroundColor: colors.surface,
     borderRadius: BorderRadius.md,
     padding: Spacing.sm,
     alignItems: 'center',
   },
   macroValue: {
-    color: AppColors.text,
+    color: colors.text,
     fontSize: Typography.fontSize.base,
     fontWeight: '700',
   },
@@ -491,14 +496,14 @@ const styles = StyleSheet.create({
     fontWeight: '400',
   },
   macroLabel: {
-    color: AppColors.textSecondary,
+    color: colors.textSecondary,
     fontSize: 10,
     marginTop: 2,
   },
 
-  // ── Nutrients ──────────────────────────────────────────────────────────────
+  // â”€â”€ Nutrients â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   nutrientsCard: {
-    backgroundColor: AppColors.surface,
+    backgroundColor: colors.surface,
     borderRadius: BorderRadius.md,
     padding: Spacing.md,
     gap: Spacing.sm,
@@ -509,31 +514,31 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   nutrientLabel: {
-    color: AppColors.textSecondary,
+    color: colors.textSecondary,
     fontSize: Typography.fontSize.sm,
   },
   nutrientValue: {
-    color: AppColors.text,
+    color: colors.text,
     fontSize: Typography.fontSize.sm,
     fontWeight: '600',
   },
 
-  // ── Error ─────────────────────────────────────────────────────────────────
+  // â”€â”€ Error â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   errorTitle: {
-    color: AppColors.text,
+    color: colors.text,
     fontSize: Typography.fontSize.xl,
     fontWeight: '700',
     marginTop: Spacing.md,
     marginBottom: Spacing.xs,
   },
   errorMsg: {
-    color: AppColors.textSecondary,
+    color: colors.textSecondary,
     fontSize: Typography.fontSize.sm,
     textAlign: 'center',
     marginBottom: Spacing.xl,
   },
 
-  // ── Action buttons ─────────────────────────────────────────────────────────
+  // â”€â”€ Action buttons â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   actionRow: {
     flexDirection: 'row',
     gap: Spacing.sm,
@@ -545,12 +550,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: Spacing.xs,
-    backgroundColor: AppColors.accent,
+    backgroundColor: colors.accent,
     borderRadius: BorderRadius.md,
     paddingVertical: Spacing.md,
   },
   primaryBtnSaved: {
-    backgroundColor: AppColors.success,
+    backgroundColor: colors.success,
   },
   primaryBtnText: {
     color: '#000',
@@ -563,34 +568,34 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: Spacing.xs,
     borderWidth: 1.5,
-    borderColor: AppColors.accent,
+    borderColor: colors.accent,
     borderRadius: BorderRadius.md,
     paddingVertical: Spacing.md,
     paddingHorizontal: Spacing.lg,
   },
   secondaryBtnText: {
-    color: AppColors.accent,
+    color: colors.accent,
     fontSize: Typography.fontSize.sm,
     fontWeight: '600',
   },
 
-  // ── Permission ─────────────────────────────────────────────────────────────
+  // â”€â”€ Permission â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   permissionTitle: {
-    color: AppColors.text,
+    color: colors.text,
     fontSize: Typography.fontSize.xl,
     fontWeight: '700',
     marginTop: Spacing.lg,
     marginBottom: Spacing.sm,
   },
   permissionSubtitle: {
-    color: AppColors.textSecondary,
+    color: colors.textSecondary,
     fontSize: Typography.fontSize.sm,
     textAlign: 'center',
     paddingHorizontal: Spacing.xl,
     marginBottom: Spacing.xl,
   },
   backBtn: {
-    backgroundColor: AppColors.accent,
+    backgroundColor: colors.accent,
     borderRadius: BorderRadius.md,
     paddingVertical: Spacing.md,
     paddingHorizontal: Spacing.xl,
@@ -600,4 +605,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontSize: Typography.fontSize.base,
   },
-});
+  });
+}
+

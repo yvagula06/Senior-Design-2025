@@ -1,7 +1,8 @@
-import React from 'react';
+﻿import React, { useMemo, useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Switch } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { AppColors, Spacing, Typography, BorderRadius } from '../../theme';
+import { Spacing, Typography, BorderRadius } from '../../theme';
+import { useAppTheme } from '../../context/ThemeContext';
 
 interface SettingsItemProps {
   icon: React.ComponentProps<typeof MaterialCommunityIcons>['name'];
@@ -13,6 +14,8 @@ interface SettingsItemProps {
 }
 
 export const SettingsItem: React.FC<SettingsItemProps> = ({
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   icon,
   label,
   type,
@@ -27,8 +30,8 @@ export const SettingsItem: React.FC<SettingsItemProps> = ({
           <Switch
             value={value as boolean}
             onValueChange={onToggle}
-            trackColor={{ false: AppColors.border, true: AppColors.accent }}
-            thumbColor={value ? AppColors.background : AppColors.text}
+            trackColor={{ false: colors.border, true: colors.accent }}
+            thumbColor={value ? colors.background : colors.text}
           />
         );
       case 'select':
@@ -38,7 +41,7 @@ export const SettingsItem: React.FC<SettingsItemProps> = ({
             <MaterialCommunityIcons
               name="chevron-right"
               size={20}
-              color={AppColors.textSecondary}
+              color={colors.textSecondary}
             />
           </View>
         );
@@ -47,7 +50,7 @@ export const SettingsItem: React.FC<SettingsItemProps> = ({
           <MaterialCommunityIcons
             name="chevron-right"
             size={20}
-            color={AppColors.textSecondary}
+            color={colors.textSecondary}
           />
         );
       default:
@@ -65,7 +68,7 @@ export const SettingsItem: React.FC<SettingsItemProps> = ({
     >
       <View style={styles.leftContent}>
         <View style={styles.iconContainer}>
-          <MaterialCommunityIcons name={icon} size={22} color={AppColors.accent} />
+          <MaterialCommunityIcons name={icon} size={22} color={colors.accent} />
         </View>
         <Text style={styles.label}>{label}</Text>
       </View>
@@ -74,16 +77,18 @@ export const SettingsItem: React.FC<SettingsItemProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+type CV = ReturnType<typeof useAppTheme>['colors'];
+function createStyles(colors: CV) {
+  return StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingVertical: Spacing.md,
     paddingHorizontal: Spacing.lg,
-    backgroundColor: AppColors.cardBackground,
+    backgroundColor: colors.cardBackground,
     borderBottomWidth: 1,
-    borderBottomColor: AppColors.border,
+    borderBottomColor: colors.border,
   },
   leftContent: {
     flexDirection: 'row',
@@ -94,17 +99,17 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: BorderRadius.full,
-    backgroundColor: AppColors.background,
+    backgroundColor: colors.background,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: Spacing.md,
     borderWidth: 1,
-    borderColor: AppColors.accent,
+    borderColor: colors.accent,
   },
   label: {
     fontSize: Typography.fontSize.md,
     fontWeight: Typography.fontWeight.regular,
-    color: AppColors.text,
+    color: colors.text,
     flex: 1,
   },
   selectContainer: {
@@ -114,7 +119,9 @@ const styles = StyleSheet.create({
   selectValue: {
     fontSize: Typography.fontSize.sm,
     fontWeight: Typography.fontWeight.regular,
-    color: AppColors.textSecondary,
+    color: colors.textSecondary,
     marginRight: Spacing.xs,
   },
-});
+  });
+}
+

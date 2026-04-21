@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React, { useMemo } from 'react';
 import {
   TouchableOpacity,
   Text,
@@ -7,7 +7,7 @@ import {
   TextStyle,
   ActivityIndicator,
 } from 'react-native';
-import { AppColors } from '../theme/colors';
+import { useAppTheme } from '../context/ThemeContext';
 
 interface ButtonProps {
   title: string;
@@ -28,6 +28,8 @@ export const Button: React.FC<ButtonProps> = ({
   style,
   textStyle,
 }) => {
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const getButtonStyle = () => {
     switch (variant) {
       case 'secondary':
@@ -63,7 +65,7 @@ export const Button: React.FC<ButtonProps> = ({
       activeOpacity={0.7}
     >
       {loading ? (
-        <ActivityIndicator color={variant === 'outline' ? AppColors.accent : AppColors.white} />
+        <ActivityIndicator color={variant === 'outline' ? colors.accent : colors.white} />
       ) : (
         <Text style={[getTextStyle(), textStyle]}>{title}</Text>
       )}
@@ -71,7 +73,9 @@ export const Button: React.FC<ButtonProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+type CV = ReturnType<typeof useAppTheme>['colors'];
+function createStyles(colors: CV) {
+  return StyleSheet.create({
   button: {
     borderRadius: 8,
     padding: 16,
@@ -80,31 +84,33 @@ const styles = StyleSheet.create({
     minHeight: 48,
   },
   primaryButton: {
-    backgroundColor: AppColors.accent,
+    backgroundColor: colors.accent,
   },
   secondaryButton: {
-    backgroundColor: AppColors.primary,
+    backgroundColor: colors.primary,
   },
   outlineButton: {
     backgroundColor: 'transparent',
     borderWidth: 2,
-    borderColor: AppColors.accent,
+    borderColor: colors.accent,
   },
   dangerButton: {
-    backgroundColor: AppColors.error,
+    backgroundColor: colors.error,
   },
   disabledButton: {
-    backgroundColor: AppColors.mediumGray,
-    borderColor: AppColors.mediumGray,
+    backgroundColor: colors.mediumGray,
+    borderColor: colors.mediumGray,
   },
   primaryButtonText: {
-    color: AppColors.white,
+    color: colors.white,
     fontSize: 16,
     fontWeight: 'bold',
   },
   outlineButtonText: {
-    color: AppColors.accent,
+    color: colors.accent,
     fontSize: 16,
     fontWeight: 'bold',
   },
-});
+  });
+}
+

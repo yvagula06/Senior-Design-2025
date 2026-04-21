@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Svg, { Circle, G } from 'react-native-svg';
-import { AppColors, Spacing, Typography } from '../theme';
+import { Spacing, Typography } from '../theme';
+import { useAppTheme } from '../context/ThemeContext';
 
 interface MacroPieChartProps {
   protein: number;
@@ -16,6 +17,8 @@ export const MacroPieChart: React.FC<MacroPieChartProps> = ({
   fats,
   size = 200,
 }) => {
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   // Calculate total and percentages
   const total = protein + carbs + fats;
   
@@ -128,7 +131,9 @@ export const MacroPieChart: React.FC<MacroPieChartProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+type CV = ReturnType<typeof useAppTheme>['colors'];
+function createStyles(colors: CV) {
+  return StyleSheet.create({
   container: {
     alignItems: 'center',
     paddingVertical: Spacing.md,
@@ -146,17 +151,17 @@ const styles = StyleSheet.create({
   centerTitle: {
     fontSize: Typography.fontSize.md,
     fontWeight: Typography.fontWeight.semibold,
-    color: AppColors.white,
+    color: colors.text,
   },
   centerSubtitle: {
     fontSize: Typography.fontSize.lg,
     fontWeight: Typography.fontWeight.bold,
-    color: AppColors.white,
+    color: colors.text,
     marginTop: Spacing.xs / 2,
   },
   emptyText: {
     fontSize: Typography.fontSize.md,
-    color: AppColors.white,
+    color: colors.text,
   },
   legend: {
     marginTop: Spacing.lg,
@@ -174,7 +179,8 @@ const styles = StyleSheet.create({
   },
   legendText: {
     fontSize: Typography.fontSize.sm,
-    color: AppColors.white,
+    color: colors.text,
     fontWeight: Typography.fontWeight.medium,
   },
-});
+  });
+}

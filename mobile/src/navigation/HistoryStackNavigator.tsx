@@ -1,27 +1,28 @@
-import React from 'react';
+﻿import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { HistoryStackParamList } from './types';
 import { HistoryListScreen } from '../screens/History/HistoryListScreen';
 import { HistoryDetailScreen } from '../screens/History/HistoryDetailScreen';
-import { AppColors } from '../theme/colors';
+import { useAppTheme } from '../context/ThemeContext';
 
 const Stack = createNativeStackNavigator<HistoryStackParamList>();
 
 export const HistoryStackNavigator: React.FC = () => {
+  const { colors } = useAppTheme();
   return (
     <Stack.Navigator
       screenOptions={{
         headerStyle: {
-          backgroundColor: AppColors.cardBackground,
+          backgroundColor: colors.cardBackground,
         },
-        headerTintColor: AppColors.text,
+        headerTintColor: colors.text,
         headerTitleStyle: {
           fontWeight: 'bold',
-          color: AppColors.text,
+          color: colors.text,
         },
         headerShadowVisible: false,
         contentStyle: {
-          backgroundColor: AppColors.background,
+          backgroundColor: colors.background,
         },
         animation: 'slide_from_right',
         animationDuration: 300,
@@ -40,3 +41,4 @@ export const HistoryStackNavigator: React.FC = () => {
     </Stack.Navigator>
   );
 };
+

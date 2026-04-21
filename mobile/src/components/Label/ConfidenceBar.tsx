@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { AppColors, Spacing, Typography, BorderRadius } from '../../theme';
+import { Spacing, Typography, BorderRadius } from '../../theme';
+import { useAppTheme } from '../../context/ThemeContext';
 
 interface ConfidenceBarProps {
   confidence: number; // 0-100
@@ -12,8 +13,11 @@ export const ConfidenceBar: React.FC<ConfidenceBarProps> = ({
   confidence,
   showDetails = true,
 }) => {
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   const getConfidenceColor = () => {
-    if (confidence >= 80) return AppColors.success;
+    if (confidence >= 80) return colors.success;
     if (confidence >= 60) return '#FFA726'; // Orange
     return '#EF5350'; // Red
   };
@@ -71,48 +75,51 @@ export const ConfidenceBar: React.FC<ConfidenceBarProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: AppColors.white,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.md,
-    borderWidth: 1,
-    borderColor: AppColors.lightGray,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: Spacing.sm,
-  },
-  labelContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-  },
-  label: {
-    fontSize: Typography.fontSize.md,
-    fontWeight: Typography.fontWeight.semibold,
-  },
-  percentage: {
-    fontSize: Typography.fontSize.lg,
-    fontWeight: Typography.fontWeight.bold,
-    color: AppColors.darkGray,
-  },
-  barBackground: {
-    height: 8,
-    backgroundColor: AppColors.lightGray,
-    borderRadius: BorderRadius.full,
-    overflow: 'hidden',
-    marginBottom: Spacing.sm,
-  },
-  barFill: {
-    height: '100%',
-    borderRadius: BorderRadius.full,
-  },
-  description: {
-    fontSize: Typography.fontSize.xs,
-    color: AppColors.mediumGray,
-    lineHeight: Typography.lineHeight.normal * Typography.fontSize.xs,
-  },
-});
+type C = ReturnType<typeof useAppTheme>['colors'];
+function createStyles(colors: C) {
+  return StyleSheet.create({
+    container: {
+      backgroundColor: colors.cardBackground,
+      borderRadius: BorderRadius.lg,
+      padding: Spacing.md,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: Spacing.sm,
+    },
+    labelContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.xs,
+    },
+    label: {
+      fontSize: Typography.fontSize.md,
+      fontWeight: Typography.fontWeight.semibold,
+    },
+    percentage: {
+      fontSize: Typography.fontSize.lg,
+      fontWeight: Typography.fontWeight.bold,
+      color: colors.text,
+    },
+    barBackground: {
+      height: 8,
+      backgroundColor: colors.surface,
+      borderRadius: BorderRadius.full,
+      overflow: 'hidden',
+      marginBottom: Spacing.sm,
+    },
+    barFill: {
+      height: '100%',
+      borderRadius: BorderRadius.full,
+    },
+    description: {
+      fontSize: Typography.fontSize.xs,
+      color: colors.textSecondary,
+      lineHeight: Typography.lineHeight.normal * Typography.fontSize.xs,
+    },
+  });
+}

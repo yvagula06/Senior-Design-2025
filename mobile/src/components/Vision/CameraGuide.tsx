@@ -1,19 +1,22 @@
-/**
+﻿/**
  * CameraGuide Component
  * 
  * Visual guide overlay for camera capture showing optimal framing.
  * Displays a target frame with instructions for best results.
  */
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { AppColors, Typography, Spacing } from '../../theme';
+import { Typography, Spacing } from '../../theme';
+import { useAppTheme } from '../../context/ThemeContext';
 
 interface CameraGuideProps {
   captureMode: 'single' | 'multi_angle' | 'reference_object';
 }
 
-export const CameraGuide: React.FC<CameraGuideProps> = ({ captureMode }) => {
+export const CameraGuide: React.FC<CameraGuideProps> = ({
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]); captureMode }) => {
   const getInstructions = () => {
     switch (captureMode) {
       case 'single':
@@ -45,7 +48,9 @@ export const CameraGuide: React.FC<CameraGuideProps> = ({ captureMode }) => {
   );
 };
 
-const styles = StyleSheet.create({
+type CV = ReturnType<typeof useAppTheme>['colors'];
+function createStyles(colors: CV) {
+  return StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
@@ -60,7 +65,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: 30,
     height: 30,
-    borderColor: AppColors.primary,
+    borderColor: colors.primary,
     borderWidth: 3,
   },
   topLeft: {
@@ -97,7 +102,9 @@ const styles = StyleSheet.create({
   },
   instructionsText: {
     ...Typography.body,
-    color: AppColors.textInverse,
+    color: colors.textInverse,
     textAlign: 'center',
   },
-});
+  });
+}
+

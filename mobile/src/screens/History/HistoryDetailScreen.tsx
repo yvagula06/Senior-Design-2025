@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -17,11 +17,14 @@ import {
   NutritionLabelCard,
   type NutritionData,
 } from '../../components/Label';
-import { AppColors, Spacing, Typography, BorderRadius, Shadows } from '../../theme';
+import { Spacing, Typography, BorderRadius } from '../../theme';
+import { useAppTheme } from '../../context/ThemeContext';
 
 type HistoryDetailRouteProp = RouteProp<HistoryStackParamList, 'HistoryDetail'>;
 
 export const HistoryDetailScreen: React.FC = () => {
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const route = useRoute<HistoryDetailRouteProp>();
   const navigation = useNavigation();
   const { dishId, dishName } = route.params;
@@ -138,13 +141,13 @@ export const HistoryDetailScreen: React.FC = () => {
                 <MaterialCommunityIcons
                   name={getPrepStyleIcon()}
                   size={16}
-                  color={AppColors.mediumGray}
+                  color={colors.mediumGray}
                 />
                 <Text style={styles.metadataText}>{getPrepStyleLabel()}</Text>
                 <MaterialCommunityIcons
                   name="circle-small"
                   size={16}
-                  color={AppColors.mediumGray}
+                  color={colors.mediumGray}
                 />
                 <Text style={styles.metadataText}>{formatDate(dishData.date)}</Text>
               </View>
@@ -153,7 +156,7 @@ export const HistoryDetailScreen: React.FC = () => {
               <MaterialCommunityIcons
                 name={isFavorite ? 'star' : 'star-outline'}
                 size={28}
-                color={isFavorite ? AppColors.warning : AppColors.mediumGray}
+                color={isFavorite ? colors.warning : colors.mediumGray}
               />
             </TouchableOpacity>
           </View>
@@ -167,12 +170,12 @@ export const HistoryDetailScreen: React.FC = () => {
           <Text style={styles.summaryTitle}>Quick Summary</Text>
           <View style={styles.summaryGrid}>
             <View style={styles.summaryItem}>
-              <MaterialCommunityIcons name="fire" size={32} color={AppColors.error} />
+              <MaterialCommunityIcons name="fire" size={32} color={colors.error} />
               <Text style={styles.summaryValue}>{dishData.nutrition.calories}</Text>
               <Text style={styles.summaryLabel}>Calories</Text>
             </View>
             <View style={styles.summaryItem}>
-              <MaterialCommunityIcons name="food-steak" size={32} color={AppColors.primary} />
+              <MaterialCommunityIcons name="food-steak" size={32} color={colors.primary} />
               <Text style={styles.summaryValue}>{dishData.nutrition.protein}g</Text>
               <Text style={styles.summaryLabel}>Protein</Text>
             </View>
@@ -199,7 +202,7 @@ export const HistoryDetailScreen: React.FC = () => {
         {/* Action Buttons */}
         <View style={styles.actionButtons}>
           <TouchableOpacity style={styles.actionButton} onPress={handleShare}>
-            <MaterialCommunityIcons name="share-variant" size={20} color={AppColors.primary} />
+            <MaterialCommunityIcons name="share-variant" size={20} color={colors.primary} />
             <Text style={styles.actionButtonText}>Share</Text>
           </TouchableOpacity>
 
@@ -207,7 +210,7 @@ export const HistoryDetailScreen: React.FC = () => {
             style={[styles.actionButton, styles.deleteButton]}
             onPress={handleDelete}
           >
-            <MaterialCommunityIcons name="delete" size={20} color={AppColors.error} />
+            <MaterialCommunityIcons name="delete" size={20} color={colors.error} />
             <Text style={[styles.actionButtonText, styles.deleteButtonText]}>Delete</Text>
           </TouchableOpacity>
         </View>
@@ -216,10 +219,12 @@ export const HistoryDetailScreen: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
+type CD = ReturnType<typeof useAppTheme>['colors'];
+function createStyles(colors: CD) {
+  return StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: AppColors.background,
+    backgroundColor: colors.background,
   },
   scrollView: {
     flex: 1,
@@ -230,7 +235,7 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
   },
   headerCard: {
-    backgroundColor: AppColors.white,
+    backgroundColor: colors.white,
     borderRadius: BorderRadius.lg,
     padding: Spacing.lg,
     ...Shadows.sm,
@@ -247,7 +252,7 @@ const styles = StyleSheet.create({
   dishName: {
     fontSize: Typography.fontSize.xxl,
     fontWeight: Typography.fontWeight.bold,
-    color: AppColors.darkGray,
+    color: colors.darkGray,
     marginBottom: Spacing.sm,
   },
   metadataRow: {
@@ -257,13 +262,13 @@ const styles = StyleSheet.create({
   },
   metadataText: {
     fontSize: Typography.fontSize.sm,
-    color: AppColors.mediumGray,
+    color: colors.mediumGray,
   },
   favoriteButton: {
     padding: Spacing.xs,
   },
   summaryCard: {
-    backgroundColor: AppColors.white,
+    backgroundColor: colors.white,
     borderRadius: BorderRadius.lg,
     padding: Spacing.lg,
     ...Shadows.md,
@@ -271,7 +276,7 @@ const styles = StyleSheet.create({
   summaryTitle: {
     fontSize: Typography.fontSize.lg,
     fontWeight: Typography.fontWeight.semibold,
-    color: AppColors.darkGray,
+    color: colors.darkGray,
     marginBottom: Spacing.md,
   },
   summaryGrid: {
@@ -285,11 +290,11 @@ const styles = StyleSheet.create({
   summaryValue: {
     fontSize: Typography.fontSize.xl,
     fontWeight: Typography.fontWeight.bold,
-    color: AppColors.darkGray,
+    color: colors.darkGray,
   },
   summaryLabel: {
     fontSize: Typography.fontSize.xs,
-    color: AppColors.mediumGray,
+    color: colors.mediumGray,
     fontWeight: Typography.fontWeight.medium,
   },
   actionButtons: {
@@ -303,22 +308,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: Spacing.sm,
-    backgroundColor: AppColors.white,
+    backgroundColor: colors.white,
     paddingVertical: Spacing.md,
     borderRadius: BorderRadius.lg,
     borderWidth: 2,
-    borderColor: AppColors.primary,
+    borderColor: colors.primary,
     ...Shadows.sm,
   },
   actionButtonText: {
     fontSize: Typography.fontSize.md,
     fontWeight: Typography.fontWeight.semibold,
-    color: AppColors.primary,
+    color: colors.primary,
   },
   deleteButton: {
-    borderColor: AppColors.error,
+    borderColor: colors.error,
   },
   deleteButtonText: {
-    color: AppColors.error,
+    color: colors.error,
   },
-});
+  });
+}
+
+

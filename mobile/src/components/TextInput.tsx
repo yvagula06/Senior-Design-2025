@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React, { useMemo } from 'react';
 import {
   View,
   Text,
@@ -8,7 +8,7 @@ import {
   ViewStyle,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { AppColors } from '../theme/colors';
+import { useAppTheme } from '../context/ThemeContext';
 
 interface TextInputProps extends RNTextInputProps {
   label?: string;
@@ -25,6 +25,8 @@ export const TextInput: React.FC<TextInputProps> = ({
   style,
   ...props
 }) => {
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   return (
     <View style={[styles.container, containerStyle]}>
       {label && <Text style={styles.label}>{label}</Text>}
@@ -34,13 +36,13 @@ export const TextInput: React.FC<TextInputProps> = ({
           <MaterialCommunityIcons
             name={icon as any}
             size={20}
-            color={AppColors.mediumGray}
+            color={colors.mediumGray}
             style={styles.icon}
           />
         )}
         <RNTextInput
           style={[styles.input, style]}
-          placeholderTextColor={AppColors.mediumGray}
+          placeholderTextColor={colors.mediumGray}
           {...props}
         />
       </View>
@@ -50,7 +52,7 @@ export const TextInput: React.FC<TextInputProps> = ({
           <MaterialCommunityIcons
             name="alert-circle"
             size={16}
-            color={AppColors.error}
+            color={colors.error}
           />
           <Text style={styles.errorText}>{error}</Text>
         </View>
@@ -59,27 +61,29 @@ export const TextInput: React.FC<TextInputProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+type CV = ReturnType<typeof useAppTheme>['colors'];
+function createStyles(colors: CV) {
+  return StyleSheet.create({
   container: {
     marginBottom: 16,
   },
   label: {
     fontSize: 16,
     fontWeight: '600',
-    color: AppColors.darkGray,
+    color: colors.darkGray,
     marginBottom: 8,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: AppColors.white,
+    backgroundColor: colors.white,
     borderWidth: 1,
-    borderColor: AppColors.lightGray,
+    borderColor: colors.lightGray,
     borderRadius: 8,
     paddingHorizontal: 12,
   },
   inputError: {
-    borderColor: AppColors.error,
+    borderColor: colors.error,
   },
   icon: {
     marginRight: 8,
@@ -88,7 +92,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 12,
     fontSize: 16,
-    color: AppColors.darkGray,
+    color: colors.darkGray,
   },
   errorContainer: {
     flexDirection: 'row',
@@ -98,6 +102,9 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 12,
-    color: AppColors.error,
+    color: colors.error,
   },
-});
+  });
+}
+
+

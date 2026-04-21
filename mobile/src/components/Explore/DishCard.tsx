@@ -1,7 +1,8 @@
-import React from 'react';
+﻿import React, { useMemo, useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { AppColors, Spacing, Typography, BorderRadius, Shadows } from '../../theme';
+import { Spacing, Typography, BorderRadius, Shadows } from '../../theme';
+import { useAppTheme } from '../../context/ThemeContext';
 
 export interface DishCardData {
   id: string;
@@ -20,7 +21,9 @@ interface DishCardProps {
   onPress: () => void;
 }
 
-export const DishCard: React.FC<DishCardProps> = ({ dish, onPress }) => {
+export const DishCard: React.FC<DishCardProps> = ({
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]); dish, onPress }) => {
   return (
     <TouchableOpacity
       style={styles.card}
@@ -36,7 +39,7 @@ export const DishCard: React.FC<DishCardProps> = ({ dish, onPress }) => {
             <MaterialCommunityIcons
               name={dish.prepStyle === 'home' ? 'home' : 'silverware-fork-knife'}
               size={40}
-              color={AppColors.accent}
+              color={colors.accent}
             />
           </View>
         )}
@@ -60,7 +63,7 @@ export const DishCard: React.FC<DishCardProps> = ({ dish, onPress }) => {
         <View style={styles.metadataRow}>
           {/* Calories */}
           <View style={styles.metadataItem}>
-            <MaterialCommunityIcons name="fire" size={14} color={AppColors.accent} />
+            <MaterialCommunityIcons name="fire" size={14} color={colors.accent} />
             <Text style={styles.metadataText}>{dish.calories} cal</Text>
           </View>
 
@@ -69,7 +72,7 @@ export const DishCard: React.FC<DishCardProps> = ({ dish, onPress }) => {
             <MaterialCommunityIcons
               name={dish.prepStyle === 'home' ? 'home' : 'silverware-fork-knife'}
               size={14}
-              color={AppColors.textSecondary}
+              color={colors.textSecondary}
             />
             <Text style={styles.metadataText}>
               {dish.prepStyle === 'home' ? 'Home' : 'Restaurant'}
@@ -97,21 +100,23 @@ export const DishCard: React.FC<DishCardProps> = ({ dish, onPress }) => {
   );
 };
 
-const styles = StyleSheet.create({
+type CV = ReturnType<typeof useAppTheme>['colors'];
+function createStyles(colors: CV) {
+  return StyleSheet.create({
   card: {
     width: 200,
-    backgroundColor: AppColors.cardBackground,
+    backgroundColor: colors.cardBackground,
     borderRadius: BorderRadius.lg,
     marginRight: Spacing.md,
     overflow: 'hidden',
     ...Shadows.md,
     borderWidth: 1,
-    borderColor: AppColors.border,
+    borderColor: colors.border,
   },
   imageContainer: {
     width: '100%',
     height: 120,
-    backgroundColor: AppColors.background,
+    backgroundColor: colors.background,
   },
   image: {
     width: '100%',
@@ -123,9 +128,9 @@ const styles = StyleSheet.create({
     height: '100%',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: AppColors.background,
+    backgroundColor: colors.background,
     borderBottomWidth: 1,
-    borderBottomColor: AppColors.border,
+    borderBottomColor: colors.border,
   },
   content: {
     padding: Spacing.md,
@@ -134,13 +139,13 @@ const styles = StyleSheet.create({
     fontFamily: 'CrimsonPro_600SemiBold',
     fontSize: Typography.fontSize.md,
     fontWeight: Typography.fontWeight.bold,
-    color: AppColors.text,
+    color: colors.text,
     marginBottom: Spacing.xs,
     lineHeight: Typography.lineHeight.tight * Typography.fontSize.md,
   },
   description: {
     fontSize: Typography.fontSize.xs,
-    color: AppColors.textSecondary,
+    color: colors.textSecondary,
     marginBottom: Spacing.sm,
     lineHeight: Typography.lineHeight.normal * Typography.fontSize.xs,
   },
@@ -157,7 +162,7 @@ const styles = StyleSheet.create({
   },
   metadataText: {
     fontSize: Typography.fontSize.xs,
-    color: AppColors.textSecondary,
+    color: colors.textSecondary,
     fontWeight: Typography.fontWeight.medium,
   },
   macrosRow: {
@@ -167,7 +172,9 @@ const styles = StyleSheet.create({
   },
   macroText: {
     fontSize: Typography.fontSize.xs,
-    color: AppColors.accent,
+    color: colors.accent,
     fontWeight: Typography.fontWeight.semibold,
   },
-});
+  });
+}
+

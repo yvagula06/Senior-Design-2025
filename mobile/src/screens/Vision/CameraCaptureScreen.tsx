@@ -1,4 +1,4 @@
-/**
+﻿/**
  * CameraCaptureScreen
  * 
  * Screen for capturing meal photos using expo-image-picker.
@@ -14,7 +14,7 @@
  * - Navigation to result screen
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect , useMemo } from 'react';
 import {
   View,
   Text,
@@ -30,7 +30,8 @@ import { useNavigation } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import * as Device from 'expo-device';
-import { AppColors, Typography, Spacing, BorderRadius, Shadows } from '../../theme';
+import { Typography, Spacing, BorderRadius, Shadows } from '../../theme';
+import { useAppTheme } from '../../context/ThemeContext';
 import { CameraGuide, ARScanningOverlay } from '../../components/Vision';
 import { estimateMeal } from '../../services/visionApi';
 import type { VisionRequest, VisionResponse, DeviceType, CaptureMode, CaptureAngle } from '../../types/vision';
@@ -40,6 +41,8 @@ type CaptureStep = 'select-mode' | 'capture-top' | 'capture-side' | 'ar-scanning
 type ScanningStatus = 'initializing' | 'scanning' | 'processing' | 'complete' | 'error';
 
 export const CameraCaptureScreen: React.FC = () => {
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const navigation = useNavigation<ExploreStackNavigationProp>();
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   
@@ -91,7 +94,7 @@ export const CameraCaptureScreen: React.FC = () => {
       setArCapable(hasLidar);
       
       if (hasLidar) {
-        console.log('✅ LiDAR/AR depth capable device detected');
+        console.log('âœ… LiDAR/AR depth capable device detected');
       }
     } else if (Platform.OS === 'android') {
       // For Android, ARCore support detection would require native module
@@ -101,7 +104,7 @@ export const CameraCaptureScreen: React.FC = () => {
       setArCapable(hasArCore);
       
       if (hasArCore) {
-        console.log('✅ ARCore capable device detected');
+        console.log('âœ… ARCore capable device detected');
       }
     }
   };
@@ -154,7 +157,7 @@ export const CameraCaptureScreen: React.FC = () => {
         }
       }
     } catch (error) {
-      console.error('❌ [Camera] Failed to capture image:', error);
+      console.error('âŒ [Camera] Failed to capture image:', error);
       Alert.alert('Error', 'Failed to capture image. Please try again.');
     }
   };
@@ -189,7 +192,7 @@ export const CameraCaptureScreen: React.FC = () => {
         }
       }
     } catch (error) {
-      console.error('❌ [Camera] Failed to pick image:', error);
+      console.error('âŒ [Camera] Failed to pick image:', error);
       Alert.alert('Error', 'Failed to select image. Please try again.');
     }
   };
@@ -268,19 +271,19 @@ export const CameraCaptureScreen: React.FC = () => {
         camera_intrinsics: captureMode === 'depth' ? cameraIntrinsics : undefined,
       };
 
-      console.log('📸 [CameraCapture] Calling vision API...');
-      console.log('📸 [CameraCapture] Mode:', captureMode, 'Images:', images.length);
+      console.log('ðŸ“¸ [CameraCapture] Calling vision API...');
+      console.log('ðŸ“¸ [CameraCapture] Mode:', captureMode, 'Images:', images.length);
       if (captureMode === 'depth') {
-        console.log('🔬 [CameraCapture] Including depth data and intrinsics');
+        console.log('ðŸ”¬ [CameraCapture] Including depth data and intrinsics');
       }
       
       const response = await estimateMeal(request);
-      console.log('✅ [CameraCapture] Received estimation:', response);
+      console.log('âœ… [CameraCapture] Received estimation:', response);
 
       // Navigate to result screen
       navigation.navigate('EstimationResult', { response });
     } catch (error: any) {
-      console.error('❌ [CameraCapture] Estimation failed:', error);
+      console.error('âŒ [CameraCapture] Estimation failed:', error);
       Alert.alert(
         'Estimation Failed',
         error.message || 'Failed to estimate meal. Please try again.'
@@ -325,7 +328,7 @@ export const CameraCaptureScreen: React.FC = () => {
     // - Android: ARCore depth API
     
     try {
-      console.log('🔬 Starting AR depth scanning...');
+      console.log('ðŸ”¬ Starting AR depth scanning...');
       
       // Simulate initialization delay
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -393,7 +396,7 @@ export const CameraCaptureScreen: React.FC = () => {
       }
       
     } catch (error) {
-      console.error('❌ AR scanning failed:', error);
+      console.error('âŒ AR scanning failed:', error);
       setScanningStatus('error');
       Alert.alert(
         'Scanning Failed',
@@ -406,7 +409,7 @@ export const CameraCaptureScreen: React.FC = () => {
   if (hasPermission === null) {
     return (
       <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color={AppColors.primary} />
+        <ActivityIndicator size="large" color={colors.primary} />
         <Text style={styles.loadingText}>Requesting permissions...</Text>
       </View>
     );
@@ -418,7 +421,7 @@ export const CameraCaptureScreen: React.FC = () => {
         <MaterialCommunityIcons
           name="camera-off"
           size={64}
-          color={AppColors.textSecondary}
+          color={colors.textSecondary}
         />
         <Text style={styles.permissionText}>
           Camera and library permissions are required
@@ -449,7 +452,7 @@ export const CameraCaptureScreen: React.FC = () => {
                 style={[styles.modeCard, styles.modeCardFeatured]}
                 onPress={() => handleSelectMode('depth')}
               >
-                <MaterialCommunityIcons name="cube-scan" size={48} color={AppColors.success} />
+                <MaterialCommunityIcons name="cube-scan" size={48} color={colors.success} />
                 <View style={styles.badgeContainer}>
                   <Text style={styles.badge}>BEST</Text>
                 </View>
@@ -457,7 +460,7 @@ export const CameraCaptureScreen: React.FC = () => {
                 <Text style={styles.modeDescription}>
                   3D depth scanning (2-3 sec)
                 </Text>
-                <Text style={[styles.modeAccuracy, { color: AppColors.success }]}>
+                <Text style={[styles.modeAccuracy, { color: colors.success }]}>
                   ~85-95% accuracy
                 </Text>
               </TouchableOpacity>
@@ -468,7 +471,7 @@ export const CameraCaptureScreen: React.FC = () => {
               style={styles.modeCard}
               onPress={() => handleSelectMode('single')}
             >
-              <MaterialCommunityIcons name="camera" size={48} color={AppColors.primary} />
+              <MaterialCommunityIcons name="camera" size={48} color={colors.primary} />
               <Text style={styles.modeTitle}>Quick Mode</Text>
               <Text style={styles.modeDescription}>
                 Take 1 photo from above
@@ -481,7 +484,7 @@ export const CameraCaptureScreen: React.FC = () => {
               style={styles.modeCard}
               onPress={() => handleSelectMode('multi_angle')}
             >
-              <MaterialCommunityIcons name="camera-burst" size={48} color={AppColors.warning} />
+              <MaterialCommunityIcons name="camera-burst" size={48} color={colors.warning} />
               <Text style={styles.modeTitle}>Multi-Angle</Text>
               <Text style={styles.modeDescription}>
                 Take 2 photos (top + side)
@@ -501,7 +504,7 @@ export const CameraCaptureScreen: React.FC = () => {
             depthQuality={depthQuality}
             distanceToSubject={0.4}
             onScanComplete={() => {
-              console.log('✅ AR Scan complete');
+              console.log('âœ… AR Scan complete');
             }}
           />
         </View>
@@ -521,7 +524,7 @@ export const CameraCaptureScreen: React.FC = () => {
           <View style={styles.controlsContainer}>
             <Text style={styles.stepText}>
               {captureMode === 'multi_angle' ? 'Step 1 of 2: ' : ''}
-              📸 Take a photo from directly above
+              ðŸ“¸ Take a photo from directly above
             </Text>
 
             <View style={styles.actionButtons}>
@@ -529,7 +532,7 @@ export const CameraCaptureScreen: React.FC = () => {
                 style={[styles.button, styles.buttonSecondary]}
                 onPress={pickImageFromLibrary}
               >
-                <MaterialCommunityIcons name="image" size={24} color={AppColors.text} />
+                <MaterialCommunityIcons name="image" size={24} color={colors.text} />
                 <Text style={styles.buttonTextSecondary}>Gallery</Text>
               </TouchableOpacity>
 
@@ -537,7 +540,7 @@ export const CameraCaptureScreen: React.FC = () => {
                 style={[styles.button, styles.buttonPrimary]}
                 onPress={pickImageFromCamera}
               >
-                <MaterialCommunityIcons name="camera" size={24} color={AppColors.textInverse} />
+                <MaterialCommunityIcons name="camera" size={24} color={colors.textInverse} />
                 <Text style={styles.buttonTextPrimary}>Take Photo</Text>
               </TouchableOpacity>
             </View>
@@ -546,7 +549,7 @@ export const CameraCaptureScreen: React.FC = () => {
               style={styles.backButton}
               onPress={() => setCurrentStep('select-mode')}
             >
-              <Text style={styles.backText}>← Back to Mode Selection</Text>
+              <Text style={styles.backText}>â† Back to Mode Selection</Text>
             </TouchableOpacity>
           </View>
         </>
@@ -560,7 +563,7 @@ export const CameraCaptureScreen: React.FC = () => {
               {topImageUri && (
                 <View style={styles.thumbnailContainer}>
                   <Image source={{ uri: topImageUri }} style={styles.thumbnailImage} />
-                  <Text style={styles.thumbnailLabel}>✓ Top View</Text>
+                  <Text style={styles.thumbnailLabel}>âœ“ Top View</Text>
                 </View>
               )}
               {sideImageUri ? (
@@ -577,7 +580,7 @@ export const CameraCaptureScreen: React.FC = () => {
 
           <View style={styles.controlsContainer}>
             <Text style={styles.stepText}>
-              Step 2 of 2: 📸 Take a photo from the side
+              Step 2 of 2: ðŸ“¸ Take a photo from the side
             </Text>
 
             <View style={styles.actionButtons}>
@@ -585,7 +588,7 @@ export const CameraCaptureScreen: React.FC = () => {
                 style={[styles.button, styles.buttonSecondary]}
                 onPress={pickImageFromLibrary}
               >
-                <MaterialCommunityIcons name="image" size={24} color={AppColors.text} />
+                <MaterialCommunityIcons name="image" size={24} color={colors.text} />
                 <Text style={styles.buttonTextSecondary}>Gallery</Text>
               </TouchableOpacity>
 
@@ -593,7 +596,7 @@ export const CameraCaptureScreen: React.FC = () => {
                 style={[styles.button, styles.buttonPrimary]}
                 onPress={pickImageFromCamera}
               >
-                <MaterialCommunityIcons name="camera" size={24} color={AppColors.textInverse} />
+                <MaterialCommunityIcons name="camera" size={24} color={colors.textInverse} />
                 <Text style={styles.buttonTextPrimary}>Take Photo</Text>
               </TouchableOpacity>
             </View>
@@ -606,7 +609,7 @@ export const CameraCaptureScreen: React.FC = () => {
                 setCurrentStep('capture-top');
               }}
             >
-              <Text style={styles.backText}>← Back</Text>
+              <Text style={styles.backText}>â† Back</Text>
             </TouchableOpacity>
           </View>
         </>
@@ -635,7 +638,7 @@ export const CameraCaptureScreen: React.FC = () => {
               <MaterialCommunityIcons 
                 name={captureMode === 'multi_angle' ? "camera-burst" : "camera"} 
                 size={24} 
-                color={AppColors.primary} 
+                color={colors.primary} 
               />
               <Text style={styles.modeInfoText}>
                 {captureMode === 'multi_angle' 
@@ -652,7 +655,7 @@ export const CameraCaptureScreen: React.FC = () => {
                 onPress={handleRetake}
                 disabled={isLoading}
               >
-                <MaterialCommunityIcons name="camera-retake" size={24} color={AppColors.text} />
+                <MaterialCommunityIcons name="camera-retake" size={24} color={colors.text} />
                 <Text style={styles.buttonTextSecondary}>Retake</Text>
               </TouchableOpacity>
 
@@ -662,10 +665,10 @@ export const CameraCaptureScreen: React.FC = () => {
                 disabled={isLoading}
               >
                 {isLoading ? (
-                  <ActivityIndicator color={AppColors.textInverse} />
+                  <ActivityIndicator color={colors.textInverse} />
                 ) : (
                   <>
-                    <MaterialCommunityIcons name="food" size={24} color={AppColors.textInverse} />
+                    <MaterialCommunityIcons name="food" size={24} color={colors.textInverse} />
                     <Text style={styles.buttonTextPrimary}>Estimate Meal</Text>
                   </>
                 )}
@@ -678,31 +681,33 @@ export const CameraCaptureScreen: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
+type CV = ReturnType<typeof useAppTheme>['colors'];
+function createStyles(colors: CV) {
+  return StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: AppColors.background,
+    backgroundColor: colors.background,
   },
   centerContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: AppColors.background,
+    backgroundColor: colors.background,
     paddingHorizontal: Spacing.xl,
   },
   scanningContainer: {
     flex: 1,
-    backgroundColor: AppColors.backgroundDark || '#000',
+    backgroundColor: colors.backgroundDark || '#000',
   },
   headerText: {
     ...Typography.h2,
-    color: AppColors.text,
+    color: colors.text,
     marginBottom: Spacing.xs,
     textAlign: 'center',
   },
   subtitleText: {
     ...Typography.body,
-    color: AppColors.textSecondary,
+    color: colors.textSecondary,
     textAlign: 'center',
     marginBottom: Spacing.xl,
   },
@@ -717,19 +722,19 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: 140,
     maxWidth: 180,
-    backgroundColor: AppColors.surface,
+    backgroundColor: colors.surface,
     paddingVertical: Spacing.xl,
     paddingHorizontal: Spacing.lg,
     borderRadius: BorderRadius.lg,
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: AppColors.border,
+    borderColor: colors.border,
     ...Shadows.medium,
   },
   modeCardFeatured: {
-    borderColor: AppColors.success,
+    borderColor: colors.success,
     borderWidth: 3,
-    backgroundColor: AppColors.success + '10',
+    backgroundColor: colors.success + '10',
   },
   badgeContainer: {
     position: 'absolute',
@@ -740,32 +745,32 @@ const styles = StyleSheet.create({
     ...Typography.caption,
     fontSize: 10,
     fontWeight: '800',
-    color: AppColors.success,
-    backgroundColor: AppColors.success + '20',
+    color: colors.success,
+    backgroundColor: colors.success + '20',
     paddingHorizontal: Spacing.xs,
     paddingVertical: 2,
     borderRadius: 4,
   },
   modeTitle: {
     ...Typography.h3,
-    color: AppColors.text,
+    color: colors.text,
     marginTop: Spacing.md,
     marginBottom: Spacing.xs,
   },
   modeDescription: {
     ...Typography.caption,
-    color: AppColors.textSecondary,
+    color: colors.textSecondary,
     textAlign: 'center',
     marginBottom: Spacing.xs,
   },
   modeAccuracy: {
     ...Typography.caption,
-    color: AppColors.success,
+    color: colors.success,
     fontWeight: '600',
   },
   previewContainer: {
     flex: 1,
-    backgroundColor: AppColors.backgroundSecondary,
+    backgroundColor: colors.backgroundSecondary,
   },
   previewImage: {
     width: '100%',
@@ -785,7 +790,7 @@ const styles = StyleSheet.create({
   },
   thumbnailLabel: {
     ...Typography.caption,
-    color: AppColors.success,
+    color: colors.success,
     marginTop: Spacing.xs,
   },
   fullImageContainer: {
@@ -794,7 +799,7 @@ const styles = StyleSheet.create({
   },
   previewScrollContainer: {
     flex: 1,
-    backgroundColor: AppColors.background,
+    backgroundColor: colors.background,
   },
   previewGrid: {
     flexDirection: 'row',
@@ -805,7 +810,7 @@ const styles = StyleSheet.create({
   previewCard: {
     flex: 1,
     minWidth: 150,
-    backgroundColor: AppColors.surface,
+    backgroundColor: colors.surface,
     borderRadius: BorderRadius.md,
     padding: Spacing.sm,
     alignItems: 'center',
@@ -819,7 +824,7 @@ const styles = StyleSheet.create({
   },
   previewLabel: {
     ...Typography.caption,
-    color: AppColors.textSecondary,
+    color: colors.textSecondary,
     marginTop: Spacing.xs,
   },
   modeInfoContainer: {
@@ -830,24 +835,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
     marginHorizontal: Spacing.lg,
-    backgroundColor: AppColors.primaryLight + '20',
+    backgroundColor: colors.primaryLight + '20',
     borderRadius: BorderRadius.md,
     marginBottom: Spacing.lg,
   },
   modeInfoText: {
     ...Typography.caption,
-    color: AppColors.primary,
+    color: colors.primary,
     fontWeight: '600',
   },
   controlsContainer: {
-    backgroundColor: AppColors.surface,
+    backgroundColor: colors.surface,
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.xl,
     ...Shadows.medium,
   },
   stepText: {
     ...Typography.body,
-    color: AppColors.text,
+    color: colors.text,
     textAlign: 'center',
     marginBottom: Spacing.md,
   },
@@ -868,28 +873,28 @@ const styles = StyleSheet.create({
     minHeight: 56,
   },
   buttonPrimary: {
-    backgroundColor: AppColors.primary,
+    backgroundColor: colors.primary,
     ...Shadows.small,
   },
   buttonSecondary: {
-    backgroundColor: AppColors.backgroundSecondary,
+    backgroundColor: colors.backgroundSecondary,
     borderWidth: 1,
-    borderColor: AppColors.border,
+    borderColor: colors.border,
   },
   buttonDisabled: {
     opacity: 0.6,
   },
   buttonTextPrimary: {
     ...Typography.button,
-    color: AppColors.textInverse,
+    color: colors.textInverse,
   },
   buttonTextSecondary: {
     ...Typography.button,
-    color: AppColors.text,
+    color: colors.text,
   },
   buttonText: {
     ...Typography.button,
-    color: AppColors.textInverse,
+    color: colors.textInverse,
   },
   backButton: {
     marginTop: Spacing.md,
@@ -898,30 +903,32 @@ const styles = StyleSheet.create({
   },
   backText: {
     ...Typography.caption,
-    color: AppColors.textSecondary,
+    color: colors.textSecondary,
   },
   loadingText: {
     ...Typography.body,
-    color: AppColors.textSecondary,
+    color: colors.textSecondary,
     marginTop: Spacing.md,
   },
   permissionText: {
     ...Typography.body,
-    color: AppColors.textSecondary,
+    color: colors.textSecondary,
     textAlign: 'center',
     marginTop: Spacing.md,
     marginBottom: Spacing.xl,
   },
   instructionsContainer: {
-    backgroundColor: AppColors.primaryLight + '20',
+    backgroundColor: colors.primaryLight + '20',
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
     borderTopWidth: 1,
-    borderTopColor: AppColors.border,
+    borderTopColor: colors.border,
   },
   instructionsText: {
     ...Typography.caption,
-    color: AppColors.textSecondary,
+    color: colors.textSecondary,
     textAlign: 'center',
   },
-});
+  });
+}
+

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * AR Scanning Component (Phase 2)
  * 
  * Guides users through depth/AR scanning for accurate volume estimation.
@@ -11,7 +11,7 @@
  * - Automatic completion on sufficient data
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState , useMemo } from 'react';
 import {
   View,
   Text,
@@ -19,7 +19,8 @@ import {
   Animated,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { AppColors, Typography, Spacing, BorderRadius } from '../../theme';
+import { Typography, Spacing, BorderRadius } from '../../theme';
+import { useAppTheme } from '../../context/ThemeContext';
 
 type ScanningStatus = 'initializing' | 'scanning' | 'processing' | 'complete' | 'error';
 
@@ -32,6 +33,8 @@ interface ARScanningOverlayProps {
 }
 
 export const ARScanningOverlay: React.FC<ARScanningOverlayProps> = ({
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   status,
   progress,
   depthQuality = 0,
@@ -91,48 +94,48 @@ export const ARScanningOverlay: React.FC<ARScanningOverlayProps> = ({
           icon: 'cube-scan' as const,
           text: 'Initializing AR Session...',
           subtext: 'Please wait',
-          color: AppColors.textSecondary,
+          color: colors.textSecondary,
         };
       case 'scanning':
         return {
           icon: 'cube-scan' as const,
           text: 'Scanning...',
           subtext: 'Move your phone around the plate',
-          color: AppColors.primary,
+          color: colors.primary,
         };
       case 'processing':
         return {
           icon: 'progress-clock' as const,
           text: 'Processing...',
           subtext: 'Building 3D model',
-          color: AppColors.warning,
+          color: colors.warning,
         };
       case 'complete':
         return {
           icon: 'check-circle' as const,
           text: 'Scan Complete!',
           subtext: 'Great data captured',
-          color: AppColors.success,
+          color: colors.success,
         };
       case 'error':
         return {
           icon: 'alert-circle' as const,
           text: 'Scan Failed',
           subtext: 'Try again or use 2-photo mode',
-          color: AppColors.error,
+          color: colors.error,
         };
       default:
         return {
           icon: 'cube-scan' as const,
           text: 'Ready',
           subtext: '',
-          color: AppColors.text,
+          color: colors.text,
         };
     }
   };
 
   const statusInfo = getStatusInfo();
-  const qualityColor = depthQuality > 0.7 ? AppColors.success : depthQuality > 0.4 ? AppColors.warning : AppColors.error;
+  const qualityColor = depthQuality > 0.7 ? colors.success : depthQuality > 0.4 ? colors.warning : colors.error;
 
   return (
     <View style={styles.overlay}>
@@ -190,7 +193,7 @@ export const ARScanningOverlay: React.FC<ARScanningOverlayProps> = ({
           <MaterialCommunityIcons
             name="grid"
             size={200}
-            color={AppColors.primary + '40'}
+            color={colors.primary + '40'}
             style={styles.gridIcon}
           />
         </View>
@@ -227,7 +230,7 @@ export const ARScanningOverlay: React.FC<ARScanningOverlayProps> = ({
             <MaterialCommunityIcons
               name="tape-measure"
               size={20}
-              color={AppColors.textSecondary}
+              color={colors.textSecondary}
             />
             <Text style={styles.distanceText}>
               Distance: {distanceToSubject.toFixed(2)}m
@@ -245,7 +248,7 @@ export const ARScanningOverlay: React.FC<ARScanningOverlayProps> = ({
         {status === 'scanning' && (
           <View style={styles.instructionsContainer}>
             <Text style={styles.instructionsText}>
-              Keep the plate in view • Move slowly in a circle
+              Keep the plate in view â€¢ Move slowly in a circle
             </Text>
           </View>
         )}
@@ -254,13 +257,15 @@ export const ARScanningOverlay: React.FC<ARScanningOverlayProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+type CV = ReturnType<typeof useAppTheme>['colors'];
+function createStyles(colors: CV) {
+  return StyleSheet.create({
   overlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'transparent',
   },
   topPanel: {
-    backgroundColor: AppColors.surface + 'E6',
+    backgroundColor: colors.surface + 'E6',
     paddingTop: 60,
     paddingBottom: Spacing.lg,
     paddingHorizontal: Spacing.lg,
@@ -279,7 +284,7 @@ const styles = StyleSheet.create({
   },
   statusSubtext: {
     ...Typography.body,
-    color: AppColors.textSecondary,
+    color: colors.textSecondary,
   },
   progressContainer: {
     marginTop: Spacing.md,
@@ -290,7 +295,7 @@ const styles = StyleSheet.create({
   progressBar: {
     flex: 1,
     height: 8,
-    backgroundColor: AppColors.backgroundSecondary,
+    backgroundColor: colors.backgroundSecondary,
     borderRadius: 4,
     overflow: 'hidden',
   },
@@ -300,7 +305,7 @@ const styles = StyleSheet.create({
   },
   progressText: {
     ...Typography.caption,
-    color: AppColors.text,
+    color: colors.text,
     fontWeight: '600',
     minWidth: 40,
   },
@@ -318,7 +323,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: 40,
     height: 40,
-    borderColor: AppColors.primary,
+    borderColor: colors.primary,
     borderWidth: 3,
   },
   cornerTopLeft: {
@@ -349,7 +354,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
   },
   bottomPanel: {
-    backgroundColor: AppColors.surface + 'E6',
+    backgroundColor: colors.surface + 'E6',
     paddingVertical: Spacing.lg,
     paddingHorizontal: Spacing.lg,
     borderTopLeftRadius: BorderRadius.xl,
@@ -363,13 +368,13 @@ const styles = StyleSheet.create({
   },
   qualityLabel: {
     ...Typography.caption,
-    color: AppColors.text,
+    color: colors.text,
     fontWeight: '600',
   },
   qualityBar: {
     flex: 1,
     height: 6,
-    backgroundColor: AppColors.backgroundSecondary,
+    backgroundColor: colors.backgroundSecondary,
     borderRadius: 3,
     overflow: 'hidden',
   },
@@ -384,21 +389,23 @@ const styles = StyleSheet.create({
   },
   distanceText: {
     ...Typography.caption,
-    color: AppColors.text,
+    color: colors.text,
   },
   distanceHint: {
     ...Typography.caption,
-    color: AppColors.warning,
+    color: colors.warning,
     fontStyle: 'italic',
   },
   instructionsContainer: {
     paddingTop: Spacing.sm,
     borderTopWidth: 1,
-    borderTopColor: AppColors.border,
+    borderTopColor: colors.border,
   },
   instructionsText: {
     ...Typography.caption,
-    color: AppColors.textSecondary,
+    color: colors.textSecondary,
     textAlign: 'center',
   },
-});
+  });
+}
+

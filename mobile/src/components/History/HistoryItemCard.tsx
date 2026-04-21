@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { AppColors, Spacing, Typography, BorderRadius, Shadows } from '../../theme';
+import { Spacing, Typography, BorderRadius, Shadows } from '../../theme';
+import { useAppTheme } from '../../context/ThemeContext';
 
 export interface HistoryEntry {
   id: string;
@@ -24,6 +25,8 @@ interface HistoryItemCardProps {
 }
 
 export const HistoryItemCard: React.FC<HistoryItemCardProps> = ({ item, onPress }) => {
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const formatDate = (dateString: string) => {
     // Parse date in local timezone to avoid UTC conversion issues
     const [year, month, day] = dateString.split('-').map(Number);
@@ -46,7 +49,7 @@ export const HistoryItemCard: React.FC<HistoryItemCardProps> = ({ item, onPress 
   };
 
   const getConfidenceColor = () => {
-    if (item.confidence >= 80) return AppColors.success;
+    if (item.confidence >= 80) return colors.success;
     if (item.confidence >= 60) return '#FFA726';
     return '#EF5350';
   };
@@ -76,7 +79,7 @@ export const HistoryItemCard: React.FC<HistoryItemCardProps> = ({ item, onPress 
               <MaterialCommunityIcons
                 name="star"
                 size={20}
-                color={AppColors.warning}
+                color={colors.warning}
                 style={styles.favoriteIcon}
               />
             )}
@@ -94,7 +97,7 @@ export const HistoryItemCard: React.FC<HistoryItemCardProps> = ({ item, onPress 
         <View style={styles.bottomRow}>
           {/* Calories - Most Prominent */}
           <View style={styles.caloriesSection}>
-            <MaterialCommunityIcons name="fire" size={24} color={AppColors.accent} />
+            <MaterialCommunityIcons name="fire" size={24} color={colors.accent} />
             <View style={styles.caloriesTextContainer}>
               <Text style={styles.caloriesValue}>{item.calories}</Text>
               <Text style={styles.caloriesLabel}>calories</Text>
@@ -107,7 +110,7 @@ export const HistoryItemCard: React.FC<HistoryItemCardProps> = ({ item, onPress 
               <MaterialCommunityIcons
                 name="calendar-outline"
                 size={16}
-                color={AppColors.textTertiary}
+                color={colors.textTertiary}
               />
               <Text style={styles.dateText}>{formatDate(item.date)}</Text>
             </View>
@@ -115,7 +118,7 @@ export const HistoryItemCard: React.FC<HistoryItemCardProps> = ({ item, onPress 
               <MaterialCommunityIcons
                 name={getPrepStyleIcon()}
                 size={16}
-                color={AppColors.textTertiary}
+                color={colors.textTertiary}
               />
               <Text style={styles.prepText}>
                 {item.prepStyle === 'home' ? 'Home' : item.prepStyle === 'restaurant' ? 'Restaurant' : 'Unknown'}
@@ -127,7 +130,7 @@ export const HistoryItemCard: React.FC<HistoryItemCardProps> = ({ item, onPress 
           <MaterialCommunityIcons
             name="chevron-right"
             size={28}
-            color={AppColors.textTertiary}
+            color={colors.textTertiary}
             style={styles.chevron}
           />
         </View>
@@ -136,100 +139,103 @@ export const HistoryItemCard: React.FC<HistoryItemCardProps> = ({ item, onPress 
   );
 };
 
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: AppColors.cardBackground,
-    borderRadius: BorderRadius.xl,
-    marginHorizontal: Spacing.lg,
-    marginBottom: Spacing.md,
-    ...Shadows.lg,
-    borderWidth: 1,
-    borderColor: AppColors.border,
-  },
-  cardContent: {
-    padding: Spacing.lg,
-  },
-  topRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-    marginBottom: Spacing.md,
-  },
-  dishNameContainer: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginRight: Spacing.sm,
-  },
-  favoriteIcon: {
-    marginRight: Spacing.xs,
-    marginTop: 2,
-  },
-  dishName: {
-    flex: 1,
-    fontSize: Typography.fontSize.xl,
-    fontWeight: Typography.fontWeight.bold,
-    color: AppColors.text,
-    lineHeight: Typography.lineHeight.tight * Typography.fontSize.xl,
-  },
-  confidenceBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs / 2,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: Spacing.xs,
-    borderRadius: BorderRadius.full,
-  },
-  confidenceText: {
-    fontSize: Typography.fontSize.xs,
-    fontWeight: Typography.fontWeight.bold,
-    color: '#FFF',
-  },
-  bottomRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  caloriesSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-  },
-  caloriesTextContainer: {
-    flexDirection: 'column',
-  },
-  caloriesValue: {
-    fontSize: Typography.fontSize.xxl,
-    fontWeight: Typography.fontWeight.extrabold,
-    color: AppColors.accent,
-    lineHeight: Typography.fontSize.xxl * 1.1,
-  },
-  caloriesLabel: {
-    fontSize: Typography.fontSize.xs,
-    color: AppColors.textSecondary,
-    fontWeight: Typography.fontWeight.medium,
-  },
-  metadataSection: {
-    flex: 1,
-    marginLeft: Spacing.md,
-    gap: Spacing.xs / 2,
-  },
-  metadataRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-  },
-  dateText: {
-    fontSize: Typography.fontSize.sm,
-    color: AppColors.textTertiary,
-    fontWeight: Typography.fontWeight.medium,
-  },
-  prepText: {
-    fontSize: Typography.fontSize.sm,
-    color: AppColors.textTertiary,
-    fontWeight: Typography.fontWeight.medium,
-  },
-  chevron: {
-    marginLeft: Spacing.xs,
-  },
-});
+type C = ReturnType<typeof useAppTheme>['colors'];
+function createStyles(colors: C) {
+  return StyleSheet.create({
+    card: {
+      backgroundColor: colors.cardBackground,
+      borderRadius: BorderRadius.xl,
+      marginHorizontal: Spacing.lg,
+      marginBottom: Spacing.md,
+      ...Shadows.lg,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    cardContent: {
+      padding: Spacing.lg,
+    },
+    topRow: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      justifyContent: 'space-between',
+      marginBottom: Spacing.md,
+    },
+    dishNameContainer: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      marginRight: Spacing.sm,
+    },
+    favoriteIcon: {
+      marginRight: Spacing.xs,
+      marginTop: 2,
+    },
+    dishName: {
+      flex: 1,
+      fontSize: Typography.fontSize.xl,
+      fontWeight: Typography.fontWeight.bold,
+      color: colors.text,
+      lineHeight: Typography.lineHeight.tight * Typography.fontSize.xl,
+    },
+    confidenceBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.xs / 2,
+      paddingHorizontal: Spacing.sm,
+      paddingVertical: Spacing.xs,
+      borderRadius: BorderRadius.full,
+    },
+    confidenceText: {
+      fontSize: Typography.fontSize.xs,
+      fontWeight: Typography.fontWeight.bold,
+      color: '#FFF',
+    },
+    bottomRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    caloriesSection: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.sm,
+    },
+    caloriesTextContainer: {
+      flexDirection: 'column',
+    },
+    caloriesValue: {
+      fontSize: Typography.fontSize.xxl,
+      fontWeight: Typography.fontWeight.extrabold,
+      color: colors.accent,
+      lineHeight: Typography.fontSize.xxl * 1.1,
+    },
+    caloriesLabel: {
+      fontSize: Typography.fontSize.xs,
+      color: colors.textSecondary,
+      fontWeight: Typography.fontWeight.medium,
+    },
+    metadataSection: {
+      flex: 1,
+      marginLeft: Spacing.md,
+      gap: Spacing.xs / 2,
+    },
+    metadataRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.xs,
+    },
+    dateText: {
+      fontSize: Typography.fontSize.sm,
+      color: colors.textTertiary,
+      fontWeight: Typography.fontWeight.medium,
+    },
+    prepText: {
+      fontSize: Typography.fontSize.sm,
+      color: colors.textTertiary,
+      fontWeight: Typography.fontWeight.medium,
+    },
+    chevron: {
+      marginLeft: Spacing.xs,
+    },
+  });
+}

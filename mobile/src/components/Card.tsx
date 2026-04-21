@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React, { useMemo } from 'react';
 import {
   View,
   Text,
@@ -7,7 +7,7 @@ import {
   ViewStyle,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { AppColors } from '../theme/colors';
+import { useAppTheme } from '../context/ThemeContext';
 
 interface CardProps {
   children: React.ReactNode;
@@ -16,6 +16,8 @@ interface CardProps {
 }
 
 export const Card: React.FC<CardProps> = ({ children, style, onPress }) => {
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const CardWrapper = onPress ? TouchableOpacity : View;
 
   return (
@@ -48,6 +50,8 @@ export const NutritionCard: React.FC<NutritionCardProps> = ({
   onPress,
   style,
 }) => {
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   return (
     <Card style={style} onPress={onPress}>
       <View style={styles.cardHeader}>
@@ -56,7 +60,7 @@ export const NutritionCard: React.FC<NutritionCardProps> = ({
           <MaterialCommunityIcons
             name="chevron-right"
             size={24}
-            color={AppColors.mediumGray}
+            color={colors.mediumGray}
           />
         )}
       </View>
@@ -86,9 +90,11 @@ export const NutritionCard: React.FC<NutritionCardProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+type CV = ReturnType<typeof useAppTheme>['colors'];
+function createStyles(colors: CV) {
+  return StyleSheet.create({
   card: {
-    backgroundColor: AppColors.white,
+    backgroundColor: colors.white,
     borderRadius: 12,
     padding: 16,
     shadowColor: '#000',
@@ -106,24 +112,24 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: AppColors.darkGray,
+    color: colors.darkGray,
     flex: 1,
   },
   caloriesContainer: {
     alignItems: 'center',
     paddingVertical: 16,
-    backgroundColor: AppColors.accentLight,
+    backgroundColor: colors.accentLight,
     borderRadius: 8,
     marginBottom: 16,
   },
   caloriesValue: {
     fontSize: 36,
     fontWeight: 'bold',
-    color: AppColors.accent,
+    color: colors.accent,
   },
   caloriesLabel: {
     fontSize: 14,
-    color: AppColors.mediumGray,
+    color: colors.mediumGray,
     marginTop: 4,
   },
   macrosContainer: {
@@ -138,16 +144,18 @@ const styles = StyleSheet.create({
   macroValue: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: AppColors.darkGray,
+    color: colors.darkGray,
   },
   macroLabel: {
     fontSize: 12,
-    color: AppColors.mediumGray,
+    color: colors.mediumGray,
     marginTop: 4,
   },
   macroDivider: {
     width: 1,
     height: 40,
-    backgroundColor: AppColors.lightGray,
+    backgroundColor: colors.lightGray,
   },
-});
+  });
+}
+
