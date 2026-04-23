@@ -21,14 +21,13 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    env_file:
+      - .env
     environment:
       DATABASE_URL: postgresql+psycopg://postgres:postgres@db:5432/nutrition
       EMBEDDING_MODEL: sentence-transformers/all-MiniLM-L6-v2
       TOP_K: 5
       SIM_THRESHOLD: 0.45
-      CLARIFAI_API_KEY: ${CLARIFAI_API_KEY}
-      OPENAI_API_KEY: ${OPENAI_API_KEY}
-      OPENAI_MODEL: ${OPENAI_MODEL}
     ports: ["0.0.0.0:8000:8000"]
     volumes:
       - .:/app:cached
