@@ -19,39 +19,29 @@ import axios from 'axios';
 import { Platform } from 'react-native';
 import * as Device from 'expo-device';
 
+// Ngrok tunnel URL — update this when you restart ngrok
+const NGROK_URL = 'https://captive-chosen-approach.ngrok-free.dev';
+
 /**
  * Base URL Configuration
  */
 const API_BASE_URL = (() => {
   const isDevice = Device.isDevice;
   console.log(`📱 [API] Platform.OS: ${Platform.OS}, isDevice: ${isDevice}, __DEV__: ${__DEV__}`);
-  
+
   if (__DEV__) {
-    // Development mode
-    if (Platform.OS === 'android') {
-      if (isDevice) {
-        // Physical Android device - use LAN IP
-        const PHYSICAL_DEVICE_IP = '172.20.114.0';
-        return `http://${PHYSICAL_DEVICE_IP}:8000`;
-      } else {
-        // Android emulator - use special alias to host
-        return 'http://10.0.2.2:8000';
-      }
-    } else if (Platform.OS === 'ios') {
-      if (isDevice) {
-        // Physical iOS device - use LAN IP
-        const PHYSICAL_DEVICE_IP = '172.20.114.0';
-        return `http://${PHYSICAL_DEVICE_IP}:8000`;
-      } else {
-        // iOS simulator - use localhost
-        return 'http://localhost:8000';
-      }
+    if (isDevice) {
+      // Physical device (iOS or Android) — use ngrok tunnel
+      return NGROK_URL;
+    } else if (Platform.OS === 'android') {
+      // Android emulator
+      return 'http://10.0.2.2:8000';
     } else {
-      // Other platforms (web, etc.) - use localhost
+      // iOS simulator
       return 'http://localhost:8000';
     }
   } else {
-    // Production - update with deployed backend URL
+    // Production
     return 'https://api.nutrilabelai.com';
   }
 })();

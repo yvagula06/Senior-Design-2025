@@ -8,6 +8,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { SettingsItem, SectionHeader, InfoCard } from '../components/Profile';
 import { Spacing, Typography, BorderRadius } from '../theme';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { loadSettings, saveSettings } from '../services/storage';
 import { useFoodContext } from '../context/FoodContext';
 import { useAppTheme, ACCENT_OPTIONS, AccentName } from '../context/ThemeContext';
@@ -171,6 +172,24 @@ export const ProfileScreen: React.FC = () => {
     await saveSettings({ useMetric: value });
   };
 
+  const handleClearData = () => {
+    Alert.alert(
+      'Clear All Data',
+      'This will delete all saved food entries, history, and settings. This cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Clear Everything',
+          style: 'destructive',
+          onPress: async () => {
+            await AsyncStorage.clear();
+            Alert.alert('Done', 'All local data has been cleared. Restart the app to reset fully.');
+          },
+        },
+      ]
+    );
+  };
+
   const handleAboutPress = () => {
     Alert.alert(
       'About NutriLabelAI',
@@ -280,6 +299,20 @@ export const ProfileScreen: React.FC = () => {
         <View style={styles.settingsGroup}>
           <SettingsItem icon="information" label="About NutriLabelAI" type="info" onPress={handleAboutPress} />
         </View>
+
+        {__DEV__ && (
+          <>
+            <SectionHeader title="Testing" />
+            <View style={styles.settingsGroup}>
+              <SettingsItem
+                icon="trash-can-outline"
+                label="Clear All Local Data"
+                type="info"
+                onPress={handleClearData}
+              />
+            </View>
+          </>
+        )}
 
         <View style={{ height: Spacing.xl }} />
         <InfoCard icon="database" title="Smart Recipe Database"
