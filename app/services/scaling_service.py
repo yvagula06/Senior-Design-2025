@@ -142,9 +142,11 @@ def compute_scaling_factor(
     
     if clamp:
         if factor < MIN_SCALING_FACTOR:
-            return MIN_SCALING_FACTOR
+            factor = MIN_SCALING_FACTOR
         elif factor > MAX_SCALING_FACTOR:
-            return MAX_SCALING_FACTOR
+            factor = MAX_SCALING_FACTOR
+
+    return factor
 
 
 def get_scaling_factor(
@@ -154,12 +156,10 @@ def get_scaling_factor(
 ) -> float:
     """
     Alias for compute_scaling_factor for backward compatibility.
-    
+
     Deprecated: Use compute_scaling_factor instead.
     """
     return compute_scaling_factor(canonical_calories, target_calories, clamp)
-    
-    return factor
 
 
 def estimate_portion_size(scaling_factor: float) -> str:
