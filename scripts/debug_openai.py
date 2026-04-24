@@ -2,8 +2,6 @@
 Debug OpenAI response to see exact format.
 """
 import base64
-import sys
-from pathlib import Path
 from PIL import Image
 import io
 import os

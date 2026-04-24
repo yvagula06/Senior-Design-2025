@@ -22,7 +22,6 @@ import {
 } from '../../components/Label';
 import { Spacing, Typography, BorderRadius, Shadows } from '../../theme';
 import { useAppTheme } from '../../context/ThemeContext';
-
 import { useFoodContext } from '../../context/FoodContext';
 
 type LabelResultRouteProp = RouteProp<LabelStackParamList, 'LabelResult'>;
