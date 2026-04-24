@@ -111,7 +111,7 @@ class VisionFeedbackService:
                     "created_at": datetime.utcnow(),
                 },
             )
-            estimate_id: int = result.fetchone()[0]
+            estimate_id: int = result.fetchone()[0]  # type: ignore[index]
             conn.commit()
 
         logger.info(f"Stored vision estimate id={estimate_id} dish='{predicted_dish_name}'")
@@ -162,7 +162,7 @@ class VisionFeedbackService:
                     "created_at": feedback_request.timestamp or datetime.utcnow(),
                 },
             )
-            feedback_id = str(result.fetchone()[0])
+            feedback_id = str(result.fetchone()[0])  # type: ignore[index]
             conn.commit()
 
         logger.info(

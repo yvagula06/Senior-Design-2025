@@ -166,7 +166,7 @@ def create_label(req: LabelRequest) -> LabelResponse:
                             "serving_multiplier": round(scaling_factor, 4),
                             "confidence": round(confidence_result.score, 4),
                         },
-                    ).fetchone()[0]
+                    ).fetchone()[0]  # type: ignore[index]
                     conn.commit()
             except Exception:
                 # Persistence failure must not break the label response.
@@ -236,7 +236,7 @@ def _llm_fallback(dish_name: str, target_calories: Optional[float]) -> Optional[
             response_format={"type": "json_object"},
         )
 
-        data = json.loads(resp.choices[0].message.content)
+        data = json.loads(resp.choices[0].message.content or "{}")  # type: ignore[arg-type]
 
         nutrition_dict = {
             "calories":     round(float(data.get("calories") or 0), 1),
