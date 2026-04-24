@@ -23,10 +23,6 @@ import {
 import { Spacing, Typography, BorderRadius, Shadows } from '../../theme';
 import { useAppTheme } from '../../context/ThemeContext';
 
-// Import API and type definitions
-// NOTE: saveHistoryEntry and deleteHistoryEntry must be implemented in '../../services/api.ts'
-import { saveHistoryEntry, deleteHistoryEntry } from '../../services/api';
-import { type HistoryEntry } from '../../components/History';
 import { useFoodContext } from '../../context/FoodContext';
 
 type LabelResultRouteProp = RouteProp<LabelStackParamList, 'LabelResult'>;
@@ -39,7 +35,7 @@ export const LabelResultScreen: React.FC = () => {
   const { dishName, calories } = route.params;
   const [isSaved, setIsSaved] = useState(false);
   const bottomSheetRef = useRef<VariantBottomSheetRef>(null);
-  const { addFoodEntry } = useFoodContext();
+  const { addLabelEntry } = useFoodContext();
 
   // --- MOCK DATA (Should be replaced by data received from LabelHomeScreen API call) ---
   // The full response structure needed to save to history
@@ -111,12 +107,14 @@ export const LabelResultScreen: React.FC = () => {
       // Logic for SAVING (Creating a new entry)
       try {
         // Add to FoodContext so it appears in History
-        addFoodEntry({
-          foodName: dishName,
+        addLabelEntry({
+          dishName,
+          matchedDish: dishName,
           calories: nutritionData.calories,
           protein: nutritionData.protein,
           carbs: nutritionData.totalCarbohydrate,
           fats: nutritionData.totalFat,
+          confidence: 1,
         });
 
         // TODO: Also save to backend when ready

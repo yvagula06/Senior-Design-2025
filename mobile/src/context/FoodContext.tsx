@@ -24,6 +24,7 @@ interface FoodContextType {
   setCalorieGoal: (goal: number) => void;
   setMacroGoals: (goals: MacroGoals) => void;
   // Entries
+  clearAllData: () => Promise<void>;
   addLabelEntry: (entry: {
     dishName: string;
     matchedDish: string;
@@ -185,6 +186,15 @@ export const FoodProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     });
   }, []);
 
+  const clearAllData = async () => {
+    setFoodEntries([]);
+    setRecentEntries([]);
+    setStreak(0);
+    setCalorieGoalState(2000);
+    setMacroGoalsState({ protein: 150, carbs: 200, fat: 65 });
+    try { await saveFoodEntries([]); } catch {}
+  };
+
   const deleteFoodEntry = (id: string) => {
     setFoodEntries((prev) => {
       const next = prev.filter((e) => e.id !== id);
@@ -210,7 +220,7 @@ export const FoodProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, [foodEntries]);
 
   return (
-    <FoodContext.Provider value={{ foodEntries, calorieGoal, macroGoals, setCalorieGoal, setMacroGoals, addLabelEntry, deleteFoodEntry, getTotals, getTodayEntries, streak, recentEntries, isLoading }}>
+    <FoodContext.Provider value={{ foodEntries, calorieGoal, macroGoals, setCalorieGoal, setMacroGoals, clearAllData, addLabelEntry, deleteFoodEntry, getTotals, getTodayEntries, streak, recentEntries, isLoading }}>
       {children}
     </FoodContext.Provider>
   );

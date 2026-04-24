@@ -10,8 +10,15 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import type { RouteProp } from '@react-navigation/native';
-import type { LabelStackNavigationProp, LabelStackParamList } from '../../navigation/types';
+import type { CompositeNavigationProp, RouteProp } from '@react-navigation/native';
+import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { LabelStackParamList, RootTabParamList } from '../../navigation/types';
+
+type LabelHomeNavProp = CompositeNavigationProp<
+  NativeStackNavigationProp<LabelStackParamList>,
+  BottomTabNavigationProp<RootTabParamList>
+>;
 import { DishSearchInput, StyleOption } from '../../components/Label';
 import { Spacing, Typography, BorderRadius, Shadows, fadeIn, slideIn, scaleIn } from '../../theme';
 import { useAppTheme } from '../../context/ThemeContext';
@@ -39,7 +46,7 @@ export const LabelHomeScreen: React.FC = () => {
   const { colors } = useAppTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
-  const navigation = useNavigation<LabelStackNavigationProp>();
+  const navigation = useNavigation<LabelHomeNavProp>();
   const route = useRoute<LabelHomeRouteProp>();
   const [dishName, setDishName] = useState('');
   const [targetCalories, setTargetCalories] = useState('');
@@ -107,7 +114,7 @@ export const LabelHomeScreen: React.FC = () => {
    * Generate nutrition label using backend API
    */
   const handleOpenCamera = () => {
-    navigation.getParent()?.navigate('ExploreStack' as never, { screen: 'CameraCapture' } as never);
+    navigation.navigate('ExploreStack', { screen: 'CameraCapture' });
   };
 
   const handleGenerate = async () => {
@@ -280,7 +287,7 @@ export const LabelHomeScreen: React.FC = () => {
       </Animated.View>
 
       {/* Barcode scan shortcut */}
-      <Animated.View style={{ opacity: headerFade, paddingHorizontal: Spacing.md, marginBottom: Spacing.sm }}>
+      <Animated.View style={{ opacity: headerFade, paddingHorizontal: Spacing.md, marginBottom: Spacing.sm, marginTop: Spacing.md }}>
         <TouchableOpacity
           style={styles.barcodeBanner}
           onPress={() => navigation.navigate('BarcodeScanner')}
@@ -454,7 +461,7 @@ export const LabelHomeScreen: React.FC = () => {
               </View>
 
               <View style={styles.macroItem}>
-                <MaterialCommunityIcons name="butter" size={20} color={colors.accent} />
+                <MaterialCommunityIcons name="egg" size={20} color={colors.accent} />
                 <Text style={styles.macroLabel}>Fat</Text>
                 <Text style={styles.macroValue}>{labelResult.nutrition.fat_g.toFixed(1)}g</Text>
               </View>

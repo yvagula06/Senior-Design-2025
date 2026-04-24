@@ -194,7 +194,7 @@ The dish classifier ([app/services/dish_classifier.py](app/services/dish_classif
 2. Fallback: OpenAI Vision API (gpt-4o-mini) with structured prompting
 3. Last resort: Mocked predictions for offline development
 
-The classifier returns top-3 predictions with confidence scores. Clarifai integration is documented in [Implementation_Plans/Camera_Functionality_Plan.md](Implementation_Plans/Camera_Functionality_Plan.md).
+The classifier returns top-3 predictions with confidence scores. Clarifai integration is documented in [Camera_Functionality_Plan.md](../setup/Camera_Functionality_Plan.md).
 
 **Stage 3: Food Segmentation**  
 The segmentation service ([app/services/segmentation_service.py](app/services/segmentation_service.py)) estimates the food region boundary. Phase 1 implementation uses heuristic segmentation quality scores; future integration with Segment Anything Model (SAM) from [segment-anything/](segment-anything/) is planned.
@@ -225,7 +225,7 @@ The nutrition mapper ([app/services/nutrition_mapper.py](app/services/nutrition_
 - **target_scaler.pkl**: StandardScaler for feature normalization
 - **model_metadata.pkl**: Training metadata and hyperparameters
 
-These models were trained in [DSA330_Nutrition_TextRegression.ipynb](DSA330_Nutrition_TextRegression.ipynb) using USDA FoodData Central and fast food nutrition data. The hybrid pipeline combines retrieval-based and regression-based approaches to balance accuracy and explainability.
+These models were trained in [DSA330_Nutrition_TextRegression.ipynb](../../notebooks/DSA330_Nutrition_TextRegression.ipynb) using USDA FoodData Central and fast food nutrition data. The hybrid pipeline combines retrieval-based and regression-based approaches to balance accuracy and explainability.
 
 ---
 
@@ -273,8 +273,8 @@ These models were trained in [DSA330_Nutrition_TextRegression.ipynb](DSA330_Nutr
 - ⚠️ [mobile/src/screens/Vision/CameraCaptureScreen.tsx](mobile/src/screens/Vision/CameraCaptureScreen.tsx): React Native camera interface functional (928 lines), lacks real depth capture
 
 **Depth Sensor Integration (Phase 2):**
-- ⚠️ Android ARCore configuration complete ([ANDROID_DEPTH_INTEGRATION.md](ANDROID_DEPTH_INTEGRATION.md))
-- ⚠️ iOS LiDAR setup documented ([IOS_SETUP_PHASE2.md](IOS_SETUP_PHASE2.md))
+- ⚠️ Android ARCore configuration complete ([ANDROID_DEPTH_INTEGRATION.md](../setup/ANDROID_DEPTH_INTEGRATION.md))
+- ⚠️ iOS LiDAR setup documented ([IOS_SETUP_PHASE2.md](../setup/IOS_SETUP_PHASE2.md))
 - ⚠️ Native modules not yet implemented (requires Mac for iOS, ARCore device for Android testing)
 - ⚠️ [app/services/depth_volume_estimator.py](app/services/depth_volume_estimator.py): Depth-based volume calculation logic present but untested
 
@@ -292,7 +292,7 @@ These models were trained in [DSA330_Nutrition_TextRegression.ipynb](DSA330_Nutr
 - 🚧 Open3D point cloud processing integration
 - 🚧 Camera intrinsics calibration workflow
 
-**Phase 3 Tasks** ([PHASE3_SETUP_GUIDE.md](PHASE3_SETUP_GUIDE.md)):
+**Phase 3 Tasks** ([PHASE3_SETUP_GUIDE.md](../setup/PHASE3_SETUP_GUIDE.md)):
 - 🚧 Mobile feedback UI (thumbs up/down, portion adjustment sliders)
 - 🚧 Personalization profile API endpoints
 - 🚧 Density prior refinement from aggregated feedback
@@ -434,7 +434,7 @@ Initial implementation used `react-native-vision-camera` for advanced depth capa
 2. Phase 2: Custom development build with `react-native-vision-camera` for depth sensors
 3. Testing strategy: Physical LiDAR-capable devices (iPhone 12 Pro+) and ARCore devices (Pixel 4+)
 
-Comprehensive setup guides were created: [ANDROID_DEPTH_INTEGRATION.md](ANDROID_DEPTH_INTEGRATION.md), [IOS_SETUP_PHASE2.md](IOS_SETUP_PHASE2.md).
+Comprehensive setup guides were created: [ANDROID_DEPTH_INTEGRATION.md](../setup/ANDROID_DEPTH_INTEGRATION.md), [IOS_SETUP_PHASE2.md](../setup/IOS_SETUP_PHASE2.md).
 
 ### Vision API Integration and Cost Management
 
@@ -529,8 +529,8 @@ The system's hybrid approach—leveraging pre-trained embeddings for retrieval a
 - [README.md](README.md): System overview and quick start
 - [REPO_BREAKDOWN.md](REPO_BREAKDOWN.md): Comprehensive repository guide (1300 lines)
 - [PHASE2_STATUS.md](PHASE2_STATUS.md): Phase 2 implementation status
-- [PHASE3_SETUP_GUIDE.md](PHASE3_SETUP_GUIDE.md): Phase 3 implementation guide
-- [Implementation_Plans/Camera_Functionality_Plan.md](Implementation_Plans/Camera_Functionality_Plan.md): Camera feature architecture
+- [PHASE3_SETUP_GUIDE.md](../setup/PHASE3_SETUP_GUIDE.md): Phase 3 implementation guide
+- [Camera_Functionality_Plan.md](../setup/Camera_Functionality_Plan.md): Camera feature architecture
 
 **Technical Specifications:**
 - [schema.sql](schema.sql): PostgreSQL database schema

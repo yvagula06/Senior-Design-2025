@@ -39,7 +39,7 @@ function calcBMR(weightKg: number, heightCm: number, age: number, sex: Sex): num
 
 export const ProfileScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
-  const { calorieGoal, setCalorieGoal, macroGoals, setMacroGoals } = useFoodContext();
+  const { calorieGoal, setCalorieGoal, macroGoals, setMacroGoals, clearAllData } = useFoodContext();
   const { colors, isDark, accentName, displayName, profilePicUri, toggleDark, setAccentName, setDisplayName, setProfilePicUri } = useAppTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
@@ -182,8 +182,9 @@ export const ProfileScreen: React.FC = () => {
           text: 'Clear Everything',
           style: 'destructive',
           onPress: async () => {
+            await clearAllData();
             await AsyncStorage.clear();
-            Alert.alert('Done', 'All local data has been cleared. Restart the app to reset fully.');
+            Alert.alert('Done', 'All local data has been cleared.');
           },
         },
       ]
