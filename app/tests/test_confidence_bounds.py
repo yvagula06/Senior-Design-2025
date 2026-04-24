@@ -5,7 +5,6 @@ Validates that confidence scores are always within [0.0, 1.0] bounds
 and that tier assignments are correct for all scenarios.
 """
 
-import pytest
 from app.services.confidence_service import (
     compute_confidence,
     _compute_similarity_score,
@@ -330,7 +329,7 @@ if __name__ == "__main__":
         try:
             print(f"\n✓ Testing: {test_name}")
             test_func()
-            print(f"  ✅ PASSED")
+            print("  ✅ PASSED")
             passed += 1
         except AssertionError as e:
             print(f"  ❌ FAILED: {str(e)}")
@@ -341,18 +340,18 @@ if __name__ == "__main__":
     
     # Additional tests
     try:
-        print(f"\n✓ Testing: Weighted combination")
+        print("\n✓ Testing: Weighted combination")
         test_confidence_weighted_combination()
-        print(f"  ✅ PASSED")
+        print("  ✅ PASSED")
         passed += 1
     except Exception as e:
         print(f"  ❌ FAILED: {str(e)}")
         failed += 1
     
     try:
-        print(f"\n✓ Testing: Result structure")
+        print("\n✓ Testing: Result structure")
         test_confidence_result_structure()
-        print(f"  ✅ PASSED")
+        print("  ✅ PASSED")
         passed += 1
     except Exception as e:
         print(f"  ❌ FAILED: {str(e)}")

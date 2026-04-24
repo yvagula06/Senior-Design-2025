@@ -5,7 +5,6 @@ Tests that the vision orchestrator correctly detects estimation mode
 and returns expected estimation_mode values.
 """
 
-import pytest
 from app.schemas.vision import (
     VisionRequest,
     ImageData,

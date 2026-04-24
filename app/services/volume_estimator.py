@@ -9,7 +9,7 @@ Performs 3D volume estimation using:
 Integrates DepthVolumeEstimator for accurate depth-based volumes.
 """
 
-from typing import Dict, Optional, List
+from typing import Any, Dict, Optional, List
 import logging
 
 # Import depth volume estimator for Phase 2
@@ -73,7 +73,7 @@ class VolumeEstimator:
         depth_data: Optional[Dict] = None,
         camera_intrinsics: Optional[Dict] = None,
         plate_size: Optional[str] = None
-    ) -> Dict[str, any]:
+    ) -> Dict[str, Any]:
         """
         Estimate volume of food in images.
         
@@ -181,9 +181,9 @@ class VolumeEstimator:
     
     def _apply_plate_size_adjustment(
         self,
-        volume_result: Dict[str, any],
+        volume_result: Dict[str, Any],
         plate_size: str
-    ) -> Dict[str, any]:
+    ) -> Dict[str, Any]:
         """
         Apply plate size adjustment to existing volume estimate.
         
@@ -226,7 +226,7 @@ def estimate_volume(
     depth_data: Optional[Dict] = None,
     camera_intrinsics: Optional[Dict] = None,
     plate_size: Optional[str] = None
-) -> Dict[str, any]:
+) -> Dict[str, Any]:
     """
     Estimate volume (convenience function).
     

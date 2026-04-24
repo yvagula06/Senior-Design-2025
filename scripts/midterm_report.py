@@ -6,9 +6,7 @@ Generates a DOCX report with embedded diagrams (PNG) using python-docx and matpl
 Run from project root: python generate_midterm_report.py
 """
 
-import os
 import sys
-from datetime import datetime
 from pathlib import Path
 
 # Configuration
@@ -18,7 +16,7 @@ COURSE_NAME = "Senior Design Project"
 DATE = "March 2, 2026"
 
 # Output configuration
-OUTPUT_DIR = Path("report_out")
+OUTPUT_DIR = Path("assets/report_out")
 REPORT_FILENAME = "midterm_report.docx"
 FIG1_FILENAME = "fig1_architecture.png"
 FIG2_FILENAME = "fig2_dataflow.png"
@@ -32,7 +30,6 @@ try:
     from docx.oxml.ns import qn
     from docx.oxml import OxmlElement
     import matplotlib.pyplot as plt
-    import matplotlib.patches as mpatches
     from matplotlib.patches import FancyBboxPatch, FancyArrowPatch
 except ImportError as e:
     print("ERROR: Missing required dependencies.")
@@ -1175,7 +1172,7 @@ def generate_report():
     report_path = OUTPUT_DIR / REPORT_FILENAME
     doc.save(report_path)
     print(f"✓ Generated {report_path}")
-    print(f"\n✅ Report generation complete!")
+    print("\n✅ Report generation complete!")
     print(f"   Output directory: {OUTPUT_DIR.absolute()}")
     print(f"   Main report: {REPORT_FILENAME}")
     print(f"   Figures: {FIG1_FILENAME}, {FIG2_FILENAME}, {FIG3_FILENAME}")

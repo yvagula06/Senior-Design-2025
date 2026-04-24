@@ -5,8 +5,7 @@ Uses Clarifai API for dish classification as per Camera_Functionality_Plan.md.
 Falls back to OpenAI Vision API, then to mocked predictions if both fail.
 """
 
-from typing import List, Dict
-import base64
+from typing import Any, List, Dict
 import os
 import logging
 from openai import OpenAI
@@ -90,7 +89,7 @@ class DishClassifier:
         self,
         image_base64: str,
         top_k: int = 3
-    ) -> List[Dict[str, any]]:
+    ) -> List[Dict[str, Any]]:
         """
         Classify dish from base64-encoded image.
         
@@ -126,10 +125,10 @@ class DishClassifier:
                 logger.error(f"❌ OpenAI API also failed: {e}, using mocked fallback")
         
         # Last resort: return mocked predictions
-        logger.warning(f"Using mocked fallback predictions for dish classification")
+        logger.warning("Using mocked fallback predictions for dish classification")
         return self.fallback_predictions[:top_k]
     
-    def _classify_with_openai(self, image_base64: str, top_k: int) -> List[Dict[str, any]]:
+    def _classify_with_openai(self, image_base64: str, top_k: int) -> List[Dict[str, Any]]:
         """
         Use OpenAI Vision API to classify dish.
         
@@ -233,7 +232,7 @@ Be specific with dish names. If you see multiple components, name the main dish.
             logger.error(f"Failed to parse OpenAI response: {e}")
             raise
     
-    def _parse_natural_language(self, content: str, top_k: int) -> List[Dict[str, any]]:
+    def _parse_natural_language(self, content: str, top_k: int) -> List[Dict[str, Any]]:
         """
         Parse natural language response from OpenAI when JSON not returned.
         
@@ -290,7 +289,7 @@ def get_classifier() -> DishClassifier:
     return _classifier_instance
 
 
-def classify_dish(image_base64: str, top_k: int = 3) -> List[Dict[str, any]]:
+def classify_dish(image_base64: str, top_k: int = 3) -> List[Dict[str, Any]]:
     """
     Classify dish from image (convenience function).
     

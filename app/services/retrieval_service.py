@@ -13,10 +13,8 @@ Key Features:
 """
 
 from typing import List, Tuple
-from functools import lru_cache
 import numpy as np
 from sqlalchemy import text
-from sqlalchemy.orm import Session
 
 from app.schemas.label import Candidate, Nutrients
 from app.db.session import engine

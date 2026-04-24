@@ -9,7 +9,7 @@ segmentation. For Phase 1 MVP, this returns estimated segmentation quality.
 For true pixel-level segmentation, consider Segment Anything Model (SAM) integration.
 """
 
-from typing import List, Dict, Optional
+from typing import Any, List, Dict
 import logging
 
 # Import Clarifai client
@@ -52,7 +52,7 @@ class SegmentationService:
     def segment_food(
         self,
         images_base64: List[str]
-    ) -> List[Dict[str, any]]:
+    ) -> List[Dict[str, Any]]:
         """
         Segment food regions from images.
         
@@ -126,7 +126,7 @@ def get_segmentation_service() -> SegmentationService:
     return _segmentation_instance
 
 
-def segment_food(images_base64: List[str]) -> List[Dict[str, any]]:
+def segment_food(images_base64: List[str]) -> List[Dict[str, Any]]:
     """
     Segment food regions from images (convenience function).
     

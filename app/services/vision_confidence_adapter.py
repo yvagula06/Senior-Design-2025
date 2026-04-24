@@ -11,7 +11,7 @@ Confidence calculation factors:
 3. Volume uncertainty (from volume_estimator)
 """
 
-from typing import Dict
+from typing import Any, Dict
 
 
 # Mode-specific accuracy priors
@@ -42,7 +42,7 @@ class VisionConfidenceAdapter:
         estimation_mode: str,
         volume_uncertainty: float,
         segmentation_quality: float = 0.85
-    ) -> Dict[str, any]:
+    ) -> Dict[str, Any]:
         """
         Calculate overall confidence and range multiplier.
         
@@ -122,7 +122,7 @@ def calculate_confidence(
     estimation_mode: str,
     volume_uncertainty: float,
     segmentation_quality: float = 0.85
-) -> Dict[str, any]:
+) -> Dict[str, Any]:
     """
     Calculate confidence (convenience function).
     

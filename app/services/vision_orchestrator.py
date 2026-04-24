@@ -11,7 +11,6 @@ Orchestrates the entire vision-based meal estimation pipeline:
 7. Response assembly
 """
 
-from typing import Dict, List, Optional
 from datetime import datetime
 import time
 
@@ -219,7 +218,8 @@ class VisionOrchestrator:
             estimation_mode=estimation_mode,
             accuracy_score=round(accuracy_score, 3),
             suggested_meal_log=suggested_meal_log,
-            metadata=metadata
+            metadata=metadata,
+            estimate_id=None
         )
         
         return response

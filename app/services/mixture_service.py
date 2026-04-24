@@ -238,9 +238,9 @@ def _weighted_average_nutrients(
     # Compute weighted averages for all fields
     return Nutrients(
         calories=weighted_avg_field("calories") or 0.0,
-        protein_g=weighted_avg_field("protein_g"),
-        carbs_g=weighted_avg_field("carbs_g"),
-        fat_g=weighted_avg_field("fat_g"),
+        protein_g=weighted_avg_field("protein_g") or 0.0,
+        carbs_g=weighted_avg_field("carbs_g") or 0.0,
+        fat_g=weighted_avg_field("fat_g") or 0.0,
         fiber_g=weighted_avg_field("fiber_g"),
         sugar_g=weighted_avg_field("sugar_g"),
         sodium_mg=weighted_avg_field("sodium_mg"),

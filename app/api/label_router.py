@@ -14,7 +14,7 @@ import traceback
 from typing import Optional
 from sqlalchemy import text
 
-from app.schemas.label import LabelRequest, LabelResponse, Nutrients, Candidate
+from app.schemas.label import LabelRequest, LabelResponse
 from app.services.retrieval_service import retrieve_candidates
 from app.services.mixture_service import compute_mixture
 from app.services.scaling_service import scale_nutrients
@@ -198,7 +198,7 @@ def create_label(req: LabelRequest) -> LabelResponse:
         )
 
 
-def _build_query_text(dish_name: str, style: str = None) -> str:
+def _build_query_text(dish_name: str, style: Optional[str] = None) -> str:
     """Build query text with optional style hint appended as context."""
     name = dish_name.strip()
     if style and style.strip() and style.strip().lower() not in ("unknown", ""):

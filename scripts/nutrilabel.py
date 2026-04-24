@@ -74,23 +74,21 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import warnings
-from pathlib import Path
 
 # Scikit-learn imports
-from sklearn.model_selection import train_test_split, cross_val_score, cross_val_predict, KFold
+from sklearn.model_selection import train_test_split, KFold
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LinearRegression, Ridge
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
 from sklearn.multioutput import MultiOutputRegressor
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
-from sklearn.preprocessing import StandardScaler
 
 # Optional: Neural Network libraries
 try:
     import torch
     import torch.nn as nn
-    import torch.optim as optim
-    from torch.utils.data import TensorDataset, DataLoader
+    import torch.optim as optim  # noqa: F401
+    from torch.utils.data import TensorDataset, DataLoader  # noqa: F401
     PYTORCH_AVAILABLE = True
 except ImportError:
     PYTORCH_AVAILABLE = False
@@ -173,7 +171,7 @@ print(df.describe())
 # 5. **Train-test split:** 80/20 split for model evaluation
 
 # %%
-import re
+import re  # noqa: E402
 
 # Create a copy for processing
 df_clean = df.copy()
@@ -205,7 +203,7 @@ print("✓ Text cleaning complete")
 # 2. Handle missing values for critical target nutrients
 required_cols = ['energy_kcal', 'protein_g', 'carbohydrates_g', 'fat_total_g']
 
-print(f"\nMissing values before cleaning:")
+print("\nMissing values before cleaning:")
 for col in required_cols:
     if col in df_clean.columns:
         missing = df_clean[col].isna().sum()
@@ -213,7 +211,7 @@ for col in required_cols:
 
 # Drop rows with missing critical targets
 df_clean = df_clean.dropna(subset=required_cols)
-print(f"\n✓ Dropped rows with missing critical nutrients")
+print("\n✓ Dropped rows with missing critical nutrients")
 print(f"Dataset size after dropping: {len(df_clean)} rows")
 
 # 3. Filter outliers (optional but recommended)
@@ -225,7 +223,7 @@ df_clean = df_clean[
     (df_clean['fat_total_g'] >= 0) & (df_clean['fat_total_g'] <= 100)
 ]
 
-print(f"✓ Outliers filtered")
+print("✓ Outliers filtered")
 print(f"Final dataset size: {len(df_clean)} rows")
 
 # 4. Prepare target matrix
@@ -242,18 +240,17 @@ for col in optional_targets:
 y = df_clean[target_cols].values
 X_text = df_clean['text_features'].values
 
-print(f"\n✓ Target matrix prepared")
+print("\n✓ Target matrix prepared")
 print(f"  Shape: {y.shape}")
 print(f"  Targets: {target_cols}")
 
 # 5. Train-test split (80/20)
-from sklearn.model_selection import train_test_split
 
 X_text_train, X_text_test, y_train, y_test = train_test_split(
     X_text, y, test_size=0.2, random_state=42
 )
 
-print(f"\n✓ Train-test split complete")
+print("\n✓ Train-test split complete")
 print(f"  Training samples: {len(X_text_train)}")
 print(f"  Test samples: {len(X_text_test)}")
 
@@ -288,7 +285,7 @@ print("Fitting TF-IDF vectorizer on training data...")
 X_train_tfidf = vectorizer.fit_transform(X_text_train)
 X_test_tfidf = vectorizer.transform(X_text_test)
 
-print(f"✓ TF-IDF vectorization complete")
+print("✓ TF-IDF vectorization complete")
 print(f"  Training shape: {X_train_tfidf.shape}")
 print(f"  Test shape: {X_test_tfidf.shape}")
 print(f"  Vocabulary size: {len(vectorizer.vocabulary_)}")
@@ -296,7 +293,7 @@ print(f"  Sparsity: {(1 - X_train_tfidf.nnz / (X_train_tfidf.shape[0] * X_train_
 
 # Show some example features
 feature_names = vectorizer.get_feature_names_out()
-print(f"\nExample features (first 20):")
+print("\nExample features (first 20):")
 print(feature_names[:20])
 
 # %% [markdown]
@@ -692,7 +689,7 @@ print(cv_summary_df.to_string(index=False))
 # %%
 # Save best model (assuming Gradient Boosting performed best)
 output_dir = "../ml_models"
-import os
+import os  # noqa: E402
 os.makedirs(output_dir, exist_ok=True)
 
 # Save Gradient Boosting model
@@ -707,8 +704,8 @@ print("MODEL EXPORT COMPLETE")
 print("="*80)
 print(f"✓ Model saved to: {model_path}")
 print(f"✓ Vectorizer saved to: {vectorizer_path}")
-print(f"\nModel Details:")
-print(f"  - Algorithm: Gradient Boosting Multi-Output Regressor")
+print("\nModel Details:")
+print("  - Algorithm: Gradient Boosting Multi-Output Regressor")
 print(f"  - Input: TF-IDF vectors (max {vectorizer.max_features} features)")
 print(f"  - Output: {len(TARGET_NAMES)} nutrients - {', '.join(TARGET_NAMES)}")
 print(f"  - Training samples: {len(X_text_train)}")
@@ -727,7 +724,7 @@ test_vector = loaded_vectorizer.transform([test_description])
 test_prediction = loaded_model.predict(test_vector)[0]
 
 print(f"Test Input: '{test_description}'")
-print(f"Predicted Nutrients:")
+print("Predicted Nutrients:")
 for target, value in zip(TARGET_NAMES, test_prediction):
     print(f"  - {target}: {value:.2f}")
 

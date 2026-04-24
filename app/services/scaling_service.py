@@ -92,9 +92,9 @@ def scale_nutrients(
 
     return Nutrients(
         calories=canonical_nutrients.calories * scaling_factor,
-        protein_g=_scale(canonical_nutrients.protein_g),
-        carbs_g=_scale(canonical_nutrients.carbs_g),
-        fat_g=_scale(canonical_nutrients.fat_g),
+        protein_g=_scale(canonical_nutrients.protein_g) or 0.0,
+        carbs_g=_scale(canonical_nutrients.carbs_g) or 0.0,
+        fat_g=_scale(canonical_nutrients.fat_g) or 0.0,
         fiber_g=_scale(canonical_nutrients.fiber_g),
         sugar_g=_scale(canonical_nutrients.sugar_g),
         sodium_mg=_scale(canonical_nutrients.sodium_mg),

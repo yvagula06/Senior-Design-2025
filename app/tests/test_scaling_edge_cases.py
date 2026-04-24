@@ -255,7 +255,7 @@ if __name__ == "__main__":
         try:
             print(f"\n✓ Testing: {test_name}")
             test_func()
-            print(f"  ✅ PASSED")
+            print("  ✅ PASSED")
             passed += 1
         except AssertionError as e:
             print(f"  ❌ FAILED: {str(e)}")
@@ -265,9 +265,9 @@ if __name__ == "__main__":
             failed += 1
     
     try:
-        print(f"\n✓ Testing: Scaling factor calculation")
+        print("\n✓ Testing: Scaling factor calculation")
         test_scaling_factor_calculation()
-        print(f"  ✅ PASSED")
+        print("  ✅ PASSED")
         passed += 1
     except Exception as e:
         print(f"  ❌ FAILED: {str(e)}")
