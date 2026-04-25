@@ -1,4 +1,4 @@
-﻿import React, { useState, useRef, useMemo } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import {
   View,
   StyleSheet,
@@ -155,7 +155,7 @@ export const AddEntryScreen: React.FC = () => {
           <Card style={styles.card} elevation={8}>
             <Card.Content>
               <Animatable.View animation="fadeIn" delay={400}>
-                <Text style={styles.title}>ðŸ½ï¸ Add Food Entry</Text>
+                <Text style={styles.title}> Add Food Entry</Text>
                 <Text style={styles.subtitle}>Track your nutrition intake</Text>
               </Animatable.View>
               

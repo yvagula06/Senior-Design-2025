@@ -1,4 +1,4 @@
-﻿import React, { useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Spacing, Typography } from '../../theme';
 import { useAppTheme } from '../../context/ThemeContext';

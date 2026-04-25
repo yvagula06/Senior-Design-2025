@@ -1,4 +1,4 @@
-﻿import React, { useState, useRef, useMemo } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import {
   View,
   Text,
@@ -173,7 +173,7 @@ export const LabelResultScreen: React.FC = () => {
         <View style={[styles.confidenceBadge, { backgroundColor: getConfidenceColor() }]}>
           <MaterialCommunityIcons name="shield-check" size={16} color={colors.white} />
           <Text style={styles.confidenceBadgeText}>
-            {confidence}% Â· {getConfidenceLabel()}
+            {confidence}% · {getConfidenceLabel()}
           </Text>
         </View>
       </View>

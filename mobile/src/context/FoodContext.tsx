@@ -1,4 +1,4 @@
-﻿import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, ReactNode } from 'react';
 import { FoodEntry } from '../types/nutrition';
 import { MealCategory, saveFoodEntries, loadFoodEntries, StoredFoodEntry, loadSettings, saveSettings } from '../services/storage';
 
@@ -186,23 +186,23 @@ export const FoodProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     });
   }, []);
 
-  const clearAllData = async () => {
+  const clearAllData = useCallback(async () => {
     setFoodEntries([]);
     setRecentEntries([]);
     setStreak(0);
     setCalorieGoalState(2000);
     setMacroGoalsState({ protein: 150, carbs: 200, fat: 65 });
     try { await saveFoodEntries([]); } catch {}
-  };
+  }, []);
 
-  const deleteFoodEntry = (id: string) => {
+  const deleteFoodEntry = useCallback((id: string) => {
     setFoodEntries((prev) => {
       const next = prev.filter((e) => e.id !== id);
       computeStreak(next);
       computeRecents(next);
       return next;
     });
-  };
+  }, []);
 
   const getTotals = useCallback(() => {
     const today = todayDate();
@@ -219,8 +219,15 @@ export const FoodProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return foodEntries.filter((e) => e.date === today);
   }, [foodEntries]);
 
+  const contextValue = useMemo<FoodContextType>(() => ({
+    foodEntries, calorieGoal, macroGoals, setCalorieGoal, setMacroGoals,
+    clearAllData, addLabelEntry, deleteFoodEntry, getTotals, getTodayEntries,
+    streak, recentEntries, isLoading,
+  }), [foodEntries, calorieGoal, macroGoals, streak, recentEntries, isLoading,
+      setCalorieGoal, setMacroGoals, clearAllData, addLabelEntry, deleteFoodEntry, getTotals, getTodayEntries]);
+
   return (
-    <FoodContext.Provider value={{ foodEntries, calorieGoal, macroGoals, setCalorieGoal, setMacroGoals, clearAllData, addLabelEntry, deleteFoodEntry, getTotals, getTodayEntries, streak, recentEntries, isLoading }}>
+    <FoodContext.Provider value={contextValue}>
       {children}
     </FoodContext.Provider>
   );

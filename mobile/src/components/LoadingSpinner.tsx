@@ -1,4 +1,4 @@
-﻿import React, { useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { useAppTheme } from '../context/ThemeContext';
 
