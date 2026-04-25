@@ -115,9 +115,11 @@ const tabStyles = StyleSheet.create({
 });
 
 export const RootTabNavigator: React.FC = () => {
+  const { colors } = useAppTheme();
   return (
     <Tab.Navigator
       tabBar={(props) => <AppTabBar {...props} />}
+      sceneContainerStyle={{ backgroundColor: colors.background }}
       screenOptions={{ headerShown: false, animation: 'fade' }}
     >
       <Tab.Screen name="LabelStack"   component={LabelStackNavigator} />

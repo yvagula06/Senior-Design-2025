@@ -1,6 +1,6 @@
 import React from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { Text, TextInput } from 'react-native';
+import { View, Text, TextInput } from 'react-native';
 import { NavigationContainer, DarkTheme, DefaultTheme as LightNavTheme } from '@react-navigation/native';
 import { Provider as PaperProvider } from 'react-native-paper';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -70,12 +70,14 @@ function AppInner({ fontsLoaded }: { fontsLoaded: boolean }) {
   if (!fontsLoaded) return null;
 
   return (
-    <PaperProvider theme={theme}>
-      <NavigationContainer theme={navigationTheme}>
-        <RootTabNavigator />
-        <StatusBar style={isDark ? 'light' : 'dark'} backgroundColor="transparent" />
-      </NavigationContainer>
-    </PaperProvider>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+      <PaperProvider theme={theme}>
+        <NavigationContainer theme={navigationTheme}>
+          <RootTabNavigator />
+          <StatusBar style={isDark ? 'light' : 'dark'} backgroundColor="transparent" />
+        </NavigationContainer>
+      </PaperProvider>
+    </View>
   );
 }
 
