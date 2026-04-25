@@ -9,7 +9,7 @@ Maps (dish_id, volume_ml) to calorie estimates by:
 This service integrates with existing nutrition pipeline.
 """
 
-from typing import Dict, Optional, Tuple
+from typing import Any, Dict, Optional
 from app.services import retrieval_service, scaling_service
 from app.schemas.label import Candidate, Nutrients
 
@@ -36,7 +36,7 @@ class NutritionMapper:
         dish_name: str,
         volume_ml: float,
         density_override: Optional[float] = None,
-    ) -> Dict[str, any]:
+    ) -> Dict[str, Any]:
         """
         Map a dish name and volume to a calorie estimate.
 
@@ -71,7 +71,7 @@ class NutritionMapper:
         dish_id: str,
         volume_ml: float,
         density_override: Optional[float] = None,
-    ) -> Dict[str, any]:
+    ) -> Dict[str, Any]:
         """
         Map a known DB dish_id and volume to a calorie estimate.
 
@@ -104,7 +104,7 @@ class NutritionMapper:
         nutrients: "Nutrients",
         volume_ml: float,
         density_override: Optional[float],
-    ) -> Dict[str, any]:
+    ) -> Dict[str, Any]:
         """Shared compute logic once we have a resolved (Candidate, Nutrients)."""
         density = density_override or self._estimate_density(candidate.name)
         estimated_weight_g = volume_ml * density
@@ -141,7 +141,7 @@ class NutritionMapper:
     @staticmethod
     def _error_result(
         dish_ref: str, volume_ml: float, error: str
-    ) -> Dict[str, any]:
+    ) -> Dict[str, Any]:
         return {
             "dish_id": dish_ref,
             "dish_name": "Unknown Dish",
@@ -198,7 +198,7 @@ def map_by_name(
     dish_name: str,
     volume_ml: float,
     density_override: Optional[float] = None,
-) -> Dict[str, any]:
+) -> Dict[str, Any]:
     """
     Resolve a dish name via semantic search then map to calories (convenience function).
 
@@ -222,7 +222,7 @@ def map_to_calories(
     dish_id: str,
     volume_ml: float,
     density_override: Optional[float] = None,
-) -> Dict[str, any]:
+) -> Dict[str, Any]:
     """
     Map a known DB dish_id and volume to calories (convenience function).
 

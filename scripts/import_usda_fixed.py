@@ -59,7 +59,7 @@ def clamp_value(value: Optional[float], max_val: float = 999999.99) -> Optional[
 
 def load_embedding_model() -> SentenceTransformer:
     """Load the sentence-transformers model."""
-    print(f"Loading embedding model: sentence-transformers/all-MiniLM-L6-v2")
+    print("Loading embedding model: sentence-transformers/all-MiniLM-L6-v2")
     return SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
 
 
@@ -196,7 +196,7 @@ def import_dishes(csv_path: Path, engine, model: SentenceTransformer,
     
     elapsed = time.time() - start_time
     print(f"\n{'='*70}")
-    print(f"✅ Import complete!")
+    print("✅ Import complete!")
     print(f"   Total processed: {total_processed:,}")
     print(f"   Total inserted:  {total_inserted:,}")
     print(f"   Total skipped:   {total_skipped:,}")

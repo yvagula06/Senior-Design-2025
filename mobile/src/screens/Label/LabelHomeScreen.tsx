@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
   View,
   Text,
@@ -10,8 +10,15 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import type { RouteProp } from '@react-navigation/native';
-import type { LabelStackNavigationProp, LabelStackParamList } from '../../navigation/types';
+import type { CompositeNavigationProp, RouteProp } from '@react-navigation/native';
+import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { LabelStackParamList, RootTabParamList } from '../../navigation/types';
+
+type LabelHomeNavProp = CompositeNavigationProp<
+  NativeStackNavigationProp<LabelStackParamList>,
+  BottomTabNavigationProp<RootTabParamList>
+>;
 import { DishSearchInput, StyleOption } from '../../components/Label';
 import { Spacing, Typography, BorderRadius, Shadows, fadeIn, slideIn, scaleIn } from '../../theme';
 import { useAppTheme } from '../../context/ThemeContext';
@@ -39,7 +46,7 @@ export const LabelHomeScreen: React.FC = () => {
   const { colors } = useAppTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
-  const navigation = useNavigation<LabelStackNavigationProp>();
+  const navigation = useNavigation<LabelHomeNavProp>();
   const route = useRoute<LabelHomeRouteProp>();
   const [dishName, setDishName] = useState('');
   const [targetCalories, setTargetCalories] = useState('');
@@ -107,7 +114,7 @@ export const LabelHomeScreen: React.FC = () => {
    * Generate nutrition label using backend API
    */
   const handleOpenCamera = () => {
-    navigation.getParent()?.navigate('ExploreStack' as never, { screen: 'CameraCapture' } as never);
+    navigation.navigate('ExploreStack', { screen: 'CameraCapture' });
   };
 
   const handleGenerate = async () => {
@@ -127,13 +134,13 @@ export const LabelHomeScreen: React.FC = () => {
         prepStyle === 'unknown' ? undefined : (prepStyle as 'home' | 'restaurant' | 'fast_food')
       );
 
-      console.log('âœ… [Label] Generated label:', response);
+      console.log('[Label] Generated label:', response);
       
       // Store result for display
       setLabelResult(response);
 
     } catch (error) {
-      console.error('âŒ [Label] Failed to generate label:', error);
+      console.error('[Label] Failed to generate label:', error);
       
       // Set user-friendly error message
       setApiError(String(error));
@@ -143,7 +150,7 @@ export const LabelHomeScreen: React.FC = () => {
   };
 
   /**
-   * Save label result to daily totals â€” open meal picker first
+   * Save label result to daily totals open meal picker first
    */
   const handleSave = () => {
     if (!labelResult) return;
@@ -280,7 +287,7 @@ export const LabelHomeScreen: React.FC = () => {
       </Animated.View>
 
       {/* Barcode scan shortcut */}
-      <Animated.View style={{ opacity: headerFade, paddingHorizontal: Spacing.md, marginBottom: Spacing.sm }}>
+      <Animated.View style={{ opacity: headerFade, paddingHorizontal: Spacing.md, marginBottom: Spacing.sm, marginTop: Spacing.md }}>
         <TouchableOpacity
           style={styles.barcodeBanner}
           onPress={() => navigation.navigate('BarcodeScanner')}
@@ -454,7 +461,7 @@ export const LabelHomeScreen: React.FC = () => {
               </View>
 
               <View style={styles.macroItem}>
-                <MaterialCommunityIcons name="butter" size={20} color={colors.accent} />
+                <MaterialCommunityIcons name="egg" size={20} color={colors.accent} />
                 <Text style={styles.macroLabel}>Fat</Text>
                 <Text style={styles.macroValue}>{labelResult.nutrition.fat_g.toFixed(1)}g</Text>
               </View>
@@ -490,15 +497,6 @@ export const LabelHomeScreen: React.FC = () => {
             </View>
           </View>
 
-          {/* Explanation Card */}
-          <View style={styles.explanationCard}>
-            <View style={styles.explanationHeader}>
-              <MaterialCommunityIcons name="information" size={20} color={colors.accent} />
-              <Text style={styles.explanationTitle}>How We Calculated This</Text>
-            </View>
-            <Text style={styles.explanationText}>{labelResult.explanation}</Text>
-          </View>
-
           {/* Save Button */}
           <TouchableOpacity
             style={[
@@ -509,15 +507,24 @@ export const LabelHomeScreen: React.FC = () => {
             disabled={isSaved}
             activeOpacity={0.8}
           >
-            <MaterialCommunityIcons 
-              name={isSaved ? "check-circle" : "content-save"} 
-              size={24} 
-              color="#FFF" 
+            <MaterialCommunityIcons
+              name={isSaved ? "check-circle" : "content-save"}
+              size={24}
+              color="#FFF"
             />
             <Text style={styles.saveButtonText}>
               {isSaved ? 'Saved to Daily Totals' : 'Save to Daily Totals'}
             </Text>
           </TouchableOpacity>
+
+          {/* Explanation Card */}
+          <View style={[styles.explanationCard, { marginTop: Spacing.md }]}>
+            <View style={styles.explanationHeader}>
+              <MaterialCommunityIcons name="information" size={20} color={colors.accent} />
+              <Text style={styles.explanationTitle}>How We Calculated This</Text>
+            </View>
+            <Text style={styles.explanationText}>{labelResult.explanation}</Text>
+          </View>
         </View>
       )}
 
@@ -1046,6 +1053,7 @@ function createStyles(colors: CH) {
     paddingHorizontal: Spacing.xl,
     borderRadius: BorderRadius.xl,
     marginTop: Spacing.md,
+    marginBottom: Spacing.md,
     gap: Spacing.sm,
     ...Shadows.md,
   },

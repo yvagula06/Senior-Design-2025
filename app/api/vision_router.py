@@ -464,7 +464,7 @@ def get_personalization(user_id: str) -> PersonalizationProfile:
     - Tracking improvement over time
     """
 )
-def get_feedback_stats(user_id: str = None, days: int = 30):
+def get_feedback_stats(user_id: Optional[str] = None, days: int = 30):
     """
     Get feedback statistics.
     
@@ -479,7 +479,7 @@ def get_feedback_stats(user_id: str = None, days: int = 30):
         HTTPException: 500 for server errors
     """
     try:
-        stats = VisionFeedbackService.get_feedback_stats(user_id=user_id, days=days)
+        stats = VisionFeedbackService.get_feedback_stats(user_id=user_id, days=days)  # type: ignore[attr-defined]
         return stats
         
     except Exception as e:

@@ -715,7 +715,7 @@ curl "http://localhost:8000/vision/feedback/stats?days=30"
 
 ## Support & Resources
 
-- **Phase 3 Plan**: See [Implementation_Plans/Camera_Functionality_Plan.md](Implementation_Plans/Camera_Functionality_Plan.md) (lines 225-262)
+- **Phase 3 Plan**: See [Camera_Functionality_Plan.md](Camera_Functionality_Plan.md) (lines 225-262)
 - **Phase 1 Guide**: See [CAMERA_SETUP_GUIDE.md](CAMERA_SETUP_GUIDE.md)
 - **Phase 2 Guide**: See [PHASE2_SETUP_GUIDE.md](PHASE2_SETUP_GUIDE.md)
 - **Database Docs**: PostgreSQL 14+ with pgvector extension

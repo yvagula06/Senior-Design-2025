@@ -2,7 +2,7 @@
 
 ## Overview
 
-This guide covers the implementation of the camera-based meal estimation feature as specified in `Implementation_Plans/Camera_Functionality_Plan.md`. The implementation includes:
+This guide covers the implementation of the camera-based meal estimation feature as specified in `Camera_Functionality_Plan.md`. The implementation includes:
 
 - ✅ Clarifai API integration for dish classification and segmentation
 - ✅ Multi-angle capture mode (top + side photos)
@@ -337,7 +337,7 @@ Mobile handles:
 
 ## Support & Resources
 
-- **Plan Document**: `Implementation_Plans/Camera_Functionality_Plan.md`
+- **Plan Document**: `Camera_Functionality_Plan.md`
 - **Clarifai Docs**: https://docs.clarifai.com/
 - **FastAPI Docs**: https://fastapi.tiangolo.com/
 - **React Native Picker**: https://github.com/react-native-picker/picker

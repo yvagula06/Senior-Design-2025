@@ -179,7 +179,7 @@ Once you verify the native modules work:
 
 - **iOS Setup**: `IOS_SETUP_PHASE2.md`
 - **Android Full Implementation**: `ANDROID_DEPTH_INTEGRATION.md`
-- **Overall Status**: `PHASE2_STATUS.md`
+- **Overall Status**: `../reports/PHASE2_STATUS.md`
 - **Implementation Plan**: `PHASE2_IMPLEMENTATION_STEPS.md`
 
 ---

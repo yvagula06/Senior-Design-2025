@@ -5,7 +5,6 @@ Minimal but meaningful test that validates the complete pipeline:
 retrieval → mixture → scaling → confidence
 """
 
-import pytest
 from fastapi.testclient import TestClient
 from app.main import app
 

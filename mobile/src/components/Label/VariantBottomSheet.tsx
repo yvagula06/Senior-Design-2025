@@ -1,4 +1,4 @@
-﻿import React, { forwardRef, useImperativeHandle, useState, useMemo } from 'react';
+import React, { forwardRef, useImperativeHandle, useState, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, Modal, TouchableOpacity, Pressable } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Spacing, Typography, BorderRadius, Shadows } from '../../theme';

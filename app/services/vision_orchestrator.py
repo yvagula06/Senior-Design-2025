@@ -12,7 +12,6 @@ Orchestrates the full vision-based meal estimation pipeline:
 8. Response assembly with quality scores and retake recommendations
 """
 
-from typing import Dict, List, Optional
 from datetime import datetime
 import time
 
@@ -316,6 +315,7 @@ class VisionOrchestrator:
             estimated_height_cm=volume_result.get("height_cm"),
             retake_recommendation=retake_recommendation,
             debug_metadata=debug,
+            estimate_id=None
         )
     
     def _detect_mode(self, request: VisionRequest) -> EstimationMode:

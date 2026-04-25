@@ -1,4 +1,4 @@
-﻿import React, { useState, useRef, useMemo } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import {
   View,
   Text,
@@ -22,11 +22,6 @@ import {
 } from '../../components/Label';
 import { Spacing, Typography, BorderRadius, Shadows } from '../../theme';
 import { useAppTheme } from '../../context/ThemeContext';
-
-// Import API and type definitions
-// NOTE: saveHistoryEntry and deleteHistoryEntry must be implemented in '../../services/api.ts'
-import { saveHistoryEntry, deleteHistoryEntry } from '../../services/api';
-import { type HistoryEntry } from '../../components/History';
 import { useFoodContext } from '../../context/FoodContext';
 
 type LabelResultRouteProp = RouteProp<LabelStackParamList, 'LabelResult'>;
@@ -39,7 +34,7 @@ export const LabelResultScreen: React.FC = () => {
   const { dishName, calories } = route.params;
   const [isSaved, setIsSaved] = useState(false);
   const bottomSheetRef = useRef<VariantBottomSheetRef>(null);
-  const { addFoodEntry } = useFoodContext();
+  const { addLabelEntry } = useFoodContext();
 
   // --- MOCK DATA (Should be replaced by data received from LabelHomeScreen API call) ---
   // The full response structure needed to save to history
@@ -104,19 +99,21 @@ export const LabelResultScreen: React.FC = () => {
         savedHistoryId.current = null;
         Alert.alert('Unsaved', `${dishName} removed from history.`);
       } catch (error) {
-        console.error('âŒ Failed to delete history entry:', error);
+        console.error('Failed to delete history entry:', error);
         Alert.alert('Error', 'Failed to remove entry from history.');
       }
     } else {
       // Logic for SAVING (Creating a new entry)
       try {
         // Add to FoodContext so it appears in History
-        addFoodEntry({
-          foodName: dishName,
+        addLabelEntry({
+          dishName,
+          matchedDish: dishName,
           calories: nutritionData.calories,
           protein: nutritionData.protein,
           carbs: nutritionData.totalCarbohydrate,
           fats: nutritionData.totalFat,
+          confidence: 1,
         });
 
         // TODO: Also save to backend when ready
@@ -136,7 +133,7 @@ export const LabelResultScreen: React.FC = () => {
         Alert.alert('Saved', `${dishName} added to history!`);
 
       } catch (error) {
-        console.error('âŒ Failed to save history entry:', error);
+        console.error('Failed to save history entry:', error);
         Alert.alert('Error', 'Failed to save entry to history.');
       }
     }
@@ -176,7 +173,7 @@ export const LabelResultScreen: React.FC = () => {
         <View style={[styles.confidenceBadge, { backgroundColor: getConfidenceColor() }]}>
           <MaterialCommunityIcons name="shield-check" size={16} color={colors.white} />
           <Text style={styles.confidenceBadgeText}>
-            {confidence}% Â· {getConfidenceLabel()}
+            {confidence}% · {getConfidenceLabel()}
           </Text>
         </View>
       </View>

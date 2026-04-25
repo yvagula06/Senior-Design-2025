@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   View,
   Text,
@@ -7,8 +7,8 @@ import {
   TextInput,
   Alert,
   Animated,
-  ActivityIndicator,
   RefreshControl,
+  InteractionManager,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -19,15 +19,6 @@ import { HistoryItemCard, type HistoryEntry } from '../../components/History';
 import { Spacing, Typography, BorderRadius, Shadows } from '../../theme';
 import { useAppTheme } from '../../context/ThemeContext';
 import { MacroPieChart } from '../../components/MacroPieChart';
-import { 
-  fetchHistoryEntries, 
-  updateHistoryEntry, 
-  deleteHistoryEntry 
-} from '../../services/api';
-import { 
-  cacheHistoryEntries, 
-  loadCachedHistory 
-} from '../../services/storage';
 import { useFoodContext } from '../../context/FoodContext';
 
 type FilterType = 'all' | 'today' | 'home' | 'restaurant';
@@ -37,132 +28,67 @@ export const HistoryListScreen: React.FC = () => {
   const navigation = useNavigation<HistoryStackNavigationProp>();
   const { colors } = useAppTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
-  const { foodEntries, getTotals, deleteFoodEntry } = useFoodContext();
+  const { foodEntries, getTotals, deleteFoodEntry, calorieGoal } = useFoodContext();
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterType, setFilterType] = useState<FilterType>('all');
-  const [historyData, setHistoryData] = useState<HistoryEntry[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [filterType, setFilterType] = useState<FilterType>('today');
+  const [favoritedIds, setFavoritedIds] = useState<Set<string>>(new Set());
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [deletedItemIds, setDeletedItemIds] = useState<Set<string>>(new Set());
+  const rowAnimatedValues = useRef<Record<string, Animated.Value>>({}).current;
+  const barAnimValues = useRef(
+    Array.from({ length: 7 }, () => new Animated.Value(0))
+  ).current;
 
-  /**
-   * Load history entries from backend or cache
-   * 
-   * TODO: Backend Integration Steps:
-   * 1. Implement GET /api/history endpoint
-   * 2. Return array of HistoryEntry objects
-   * 3. Sort by date descending (newest first)
-   * 4. Handle pagination if needed (skip/limit params)
-   * 5. Implement pull-to-refresh
-   */
-  useEffect(() => {
-    loadHistory();
-  }, [foodEntries]); // Re-load when foodEntries change
+  const getRowAnim = (id: string) => {
+    if (!rowAnimatedValues[id]) rowAnimatedValues[id] = new Animated.Value(0);
+    return rowAnimatedValues[id];
+  };
 
-  const loadHistory = async () => {
-    try {
-      setIsLoading(true);
+  const getBarColor = (calories: number) => {
+    if (calories <= 0) return 'transparent';
+    if (calories > calorieGoal * 1.1) return colors.error;
+    if (calories >= calorieGoal * 0.75) return colors.success;
+    return colors.warning;
+  };
 
-      // Try loading from cache first (offline support)
-      const cached = await loadCachedHistory();
-      if (cached.length > 0) {
-        setHistoryData(mapHistoryData(cached));
-      }
+  const onSwipeValueChange = ({ key, value }: { key: string; value: number }) => {
+    getRowAnim(key).setValue(value);
+  };
 
-      // Then fetch from API
-      // TODO: Remove mock data and enable API call
-      // const entries = await fetchHistoryEntries();
-      // setHistoryData(mapHistoryData(entries));
-      // await cacheHistoryEntries(entries);
+  // Derived history: synchronously computed from context + static mock data
+  const historyData = useMemo<HistoryEntry[]>(() => {
+    const today = new Date().toISOString().split('T')[0];
+    const manualEntries: HistoryEntry[] = [...foodEntries].reverse().map((entry, index) => ({
+      id: entry.id,
+      dishName: entry.foodName,
+      calories: Math.round(entry.calories),
+      protein: entry.protein,
+      carbs: entry.carbs,
+      fats: entry.fats,
+      confidence: 100,
+      date: today,
+      prepStyle: 'home' as const,
+      isFavorite: favoritedIds.has(entry.id),
+      timestamp: Date.now() - index,
+    }));
 
-      // Mock data (remove when backend integrated)
-      const mockData: HistoryEntry[] = [
-        {
-          id: '1',
-          dishName: 'Butter Chicken with Basmati Rice',
-          calories: 520,
-          protein: 35,
-          carbs: 45,
-          fats: 18,
-          confidence: 78,
-          date: '2025-11-29',
-          prepStyle: 'restaurant',
-          isFavorite: true,
-        },
-        {
-          id: '2',
-          dishName: 'Chipotle Chicken Bowl',
-          calories: 650,
-          protein: 42,
-          carbs: 58,
-          fats: 22,
-          confidence: 85,
-          date: '2025-11-28',
-          prepStyle: 'restaurant',
-          isFavorite: false,
-        },
-      ];
+    const mockEntries: HistoryEntry[] = [
+      { id: 'mock1', dishName: 'Butter Chicken with Basmati Rice', calories: 520, protein: 35, carbs: 45, fats: 18, confidence: 78, date: '2025-11-29', prepStyle: 'restaurant', isFavorite: favoritedIds.has('mock1') },
+      { id: 'mock2', dishName: 'Chipotle Chicken Bowl', calories: 650, protein: 42, carbs: 58, fats: 22, confidence: 85, date: '2025-11-28', prepStyle: 'restaurant', isFavorite: favoritedIds.has('mock2') },
+    ];
 
-      // Convert FoodContext entries to HistoryEntry format
-      // Reverse to get newest first (FoodContext adds to end of array)
-      const manualEntries: HistoryEntry[] = [...foodEntries].reverse().map((entry, index) => ({
-        id: entry.id,
-        dishName: entry.foodName,
-        calories: Math.round(entry.calories),
-        protein: entry.protein,
-        carbs: entry.carbs,
-        fats: entry.fats,
-        confidence: 100, // Manual entries have 100% confidence
-        date: new Date().toISOString().split('T')[0], // Today's date
-        prepStyle: 'home' as const, // Default to home for manual entries
-        isFavorite: false,
-        timestamp: Date.now() - index, // Ensure newest entries appear first
-      }));
-
-      // Merge manual entries with mock data, excluding deleted items
-      const allEntries = [...manualEntries, ...mockData];
-      const filteredEntries = allEntries.filter(entry => !deletedItemIds.has(entry.id));
-      
-      // Sort by date (newest first), then by timestamp if available
-      filteredEntries.sort((a, b) => {
+    return [...manualEntries, ...mockEntries]
+      .filter(entry => !deletedItemIds.has(entry.id))
+      .sort((a, b) => {
         const dateCompare = b.date.localeCompare(a.date);
         if (dateCompare !== 0) return dateCompare;
-        // If dates are equal, use timestamp to maintain insertion order
         return (b.timestamp || 0) - (a.timestamp || 0);
       });
-      
-      setHistoryData(filteredEntries);
+  }, [foodEntries, deletedItemIds, favoritedIds]);
 
-    } catch (error) {
-      console.error('âŒ [History] Failed to load history:', error);
-      Alert.alert('Error', 'Failed to load history. Please try again.');
-    } finally {
-      setIsLoading(false);
-      setIsRefreshing(false);
-    }
-  };
-
-  // Handle pull-to-refresh
   const handleRefresh = () => {
     setIsRefreshing(true);
-    loadHistory();
-  };
-
-  /**
-   * Map API response to component format
-   * Handles any differences between API schema and UI requirements
-   */
-  const mapHistoryData = (entries: any[]): HistoryEntry[] => {
-    // TODO: Map backend HistoryEntry to component HistoryEntry
-    return entries.map(entry => ({
-      id: entry.id,
-      dishName: entry.dish_name,
-      calories: entry.calories,
-      confidence: entry.confidence,
-      date: entry.date,
-      prepStyle: entry.prep_style,
-      isFavorite: entry.is_favorite,
-    }));
+    setTimeout(() => setIsRefreshing(false), 400);
   };
 
   // Filter logic
@@ -184,13 +110,12 @@ export const HistoryListScreen: React.FC = () => {
     });
   };
 
-  // Handle favorite toggle
   const handleFavorite = (itemId: string) => {
-    setHistoryData((prevData) =>
-      prevData.map((item) =>
-        item.id === itemId ? { ...item, isFavorite: !item.isFavorite } : item
-      )
-    );
+    setFavoritedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(itemId)) next.delete(itemId); else next.add(itemId);
+      return next;
+    });
   };
 
   // Calculate totals from all history entries (including mock data)
@@ -199,9 +124,9 @@ export const HistoryListScreen: React.FC = () => {
       (acc, entry) => {
         // Use actual macro values if available, otherwise estimate from calories
         // Typical ratio: 40% carbs, 30% protein, 30% fats
-        const protein = entry.protein || ((entry.calories * 0.3) / 4); // 30% of cals Ã· 4 cal/g
-        const carbs = entry.carbs || ((entry.calories * 0.4) / 4); // 40% of cals Ã· 4 cal/g
-        const fats = entry.fats || ((entry.calories * 0.3) / 9); // 30% of cals Ã· 9 cal/g
+        const protein = entry.protein || ((entry.calories * 0.3) / 4); // 30% of cals  4 cal/g
+        const carbs = entry.carbs || ((entry.calories * 0.4) / 4); // 40% of cals  4 cal/g
+        const fats = entry.fats || ((entry.calories * 0.3) / 9); // 30% of cals  9 cal/g
         
         return {
           protein: acc.protein + protein,
@@ -232,6 +157,25 @@ export const HistoryListScreen: React.FC = () => {
     return days;
   }, [foodEntries]);
 
+  // Animate bars after any active navigation/interaction completes (prevents JS thread collision with tab fade)
+  useEffect(() => {
+    const task = InteractionManager.runAfterInteractions(() => {
+      const maxCal = Math.max(...weeklyData.map((d) => d.calories), calorieGoal, 1);
+      weeklyData.forEach((day, i) => {
+        const targetPx = day.calories > 0
+          ? Math.max((day.calories / maxCal) * 72, 3)
+          : 0;
+        Animated.spring(barAnimValues[i], {
+          toValue: targetPx,
+          useNativeDriver: false,
+          tension: 60,
+          friction: 8,
+        }).start();
+      });
+    });
+    return () => task.cancel();
+  }, [weeklyData, calorieGoal]);
+
   // Handle delete
   const handleDelete = (itemId: string, dishName: string) => {
     Alert.alert(
@@ -249,9 +193,6 @@ export const HistoryListScreen: React.FC = () => {
             // Add to deleted items set
             setDeletedItemIds(prev => new Set(prev).add(itemId));
             
-            // Remove from local state
-            setHistoryData((prevData) => prevData.filter((item) => item.id !== itemId));
-            
             // If it's a FoodContext entry, also delete from there
             const isFromContext = foodEntries.some(entry => entry.id === itemId);
             if (isFromContext) {
@@ -268,42 +209,60 @@ export const HistoryListScreen: React.FC = () => {
     <HistoryItemCard item={item} onPress={() => handleItemPress(item)} />
   );
 
-  // Render hidden swipe actions with slide-in animation
-  const renderHiddenItem = ({ item }: { item: HistoryEntry }, rowMap: any) => (
-    <Animated.View style={styles.hiddenContainer}>
-      {/* Favorite Button */}
-      <TouchableOpacity
-        style={[styles.hiddenButton, styles.favoriteButton]}
-        activeOpacity={0.7}
-        onPress={() => {
-          handleFavorite(item.id);
-          rowMap[item.id]?.closeRow();
-        }}
-      >
-        <MaterialCommunityIcons
-          name={item.isFavorite ? 'star' : 'star-outline'}
-          size={28}
-          color={colors.white}
-        />
-        <Text style={styles.hiddenButtonText}>
-          {item.isFavorite ? 'Unfav' : 'Favorite'}
-        </Text>
-      </TouchableOpacity>
+  // Render hidden swipe actions with animated scale/opacity
+  const renderHiddenItem = ({ item }: { item: HistoryEntry }, rowMap: any) => {
+    const anim = getRowAnim(item.id);
+    const scale = anim.interpolate({
+      inputRange: [-170, -85, 0],
+      outputRange: [1, 0.9, 0.6],
+      extrapolate: 'clamp',
+    });
+    const opacity = anim.interpolate({
+      inputRange: [-170, -60, 0],
+      outputRange: [1, 0.9, 0],
+      extrapolate: 'clamp',
+    });
 
-      {/* Delete Button */}
-      <TouchableOpacity
-        style={[styles.hiddenButton, styles.deleteButton]}
-        activeOpacity={0.7}
-        onPress={() => {
-          handleDelete(item.id, item.dishName);
-          rowMap[item.id]?.closeRow();
-        }}
-      >
-        <MaterialCommunityIcons name="delete" size={28} color={colors.white} />
-        <Text style={styles.hiddenButtonText}>Delete</Text>
-      </TouchableOpacity>
-    </Animated.View>
-  );
+    return (
+      <View style={styles.hiddenContainer}>
+        {/* Favorite Button */}
+        <Animated.View style={[styles.hiddenButton, styles.favoriteButton, { transform: [{ scale }], opacity }]}>
+          <TouchableOpacity
+            style={styles.hiddenButtonInner}
+            activeOpacity={0.7}
+            onPress={() => {
+              handleFavorite(item.id);
+              rowMap[item.id]?.closeRow();
+            }}
+          >
+            <MaterialCommunityIcons
+              name={item.isFavorite ? 'star' : 'star-outline'}
+              size={28}
+              color={colors.white}
+            />
+            <Text style={styles.hiddenButtonText}>
+              {item.isFavorite ? 'Unfav' : 'Favorite'}
+            </Text>
+          </TouchableOpacity>
+        </Animated.View>
+
+        {/* Delete Button */}
+        <Animated.View style={[styles.hiddenButton, styles.deleteButton, { transform: [{ scale }], opacity }]}>
+          <TouchableOpacity
+            style={styles.hiddenButtonInner}
+            activeOpacity={0.7}
+            onPress={() => {
+              handleDelete(item.id, item.dishName);
+              rowMap[item.id]?.closeRow();
+            }}
+          >
+            <MaterialCommunityIcons name="delete" size={28} color={colors.white} />
+            <Text style={styles.hiddenButtonText}>Delete</Text>
+          </TouchableOpacity>
+        </Animated.View>
+      </View>
+    );
+  };
 
   return (
     <View style={styles.container}>
@@ -322,7 +281,7 @@ export const HistoryListScreen: React.FC = () => {
         />
         <TextInput
           style={styles.searchInput}
-          placeholder="Search past dishesâ€¦"
+          placeholder="Search past dishes"
           value={searchQuery}
           onChangeText={setSearchQuery}
           placeholderTextColor={colors.textTertiary}
@@ -433,8 +392,10 @@ export const HistoryListScreen: React.FC = () => {
         rightOpenValue={-170}
         disableRightSwipe
         friction={10}
+        tension={40}
         swipeToOpenPercent={20}
         swipeToClosePercent={20}
+        onSwipeValueChange={onSwipeValueChange}
         contentContainerStyle={styles.listContent}
         refreshControl={
           <RefreshControl
@@ -450,29 +411,49 @@ export const HistoryListScreen: React.FC = () => {
               {/* Weekly calorie bar chart */}
               {weeklyData.some((d) => d.calories > 0) && (
                 <View style={styles.weeklyCard}>
-                  <Text style={styles.weeklyTitle}>7-Day Calorie Trend</Text>
+                  <View style={styles.weeklyHeader}>
+                    <Text style={styles.weeklyTitle}>7-Day Calorie Trend</Text>
+                    <Text style={styles.weeklyGoalLabel}>Goal: {calorieGoal} kcal</Text>
+                  </View>
                   <View style={styles.weeklyChart}>
-                    {(() => {
-                      const maxCal = Math.max(...weeklyData.map((d) => d.calories), 1);
-                      const today = new Date().toISOString().split('T')[0];
-                      return weeklyData.map((day) => (
+                    {weeklyData.map((day, i) => {
+                      const isToday = day.date === today;
+                      const barColor = getBarColor(day.calories);
+                      const calLabel = day.calories >= 1000
+                        ? `${(day.calories / 1000).toFixed(1)}k`
+                        : day.calories > 0 ? Math.round(day.calories).toString() : '';
+                      return (
                         <View key={day.date} style={styles.weeklyBar}>
-                          <Text style={styles.weeklyBarCal}>
-                            {day.calories > 0 ? Math.round(day.calories) : ''}
+                          <Text style={[styles.weeklyBarCal, isToday && { color: colors.accent }]}>
+                            {calLabel}
                           </Text>
                           <View style={styles.weeklyBarTrack}>
-                            <View style={[
+                            <Animated.View style={[
                               styles.weeklyBarFill,
-                              { height: `${Math.max((day.calories / maxCal) * 100, day.calories > 0 ? 4 : 0)}%` as any },
-                              day.date === today && { backgroundColor: colors.accent },
+                              { height: barAnimValues[i], backgroundColor: barColor },
                             ]} />
                           </View>
-                          <Text style={[styles.weeklyDayLabel, day.date === today && { color: colors.accent, fontWeight: '700' }]}>
+                          <Text style={[styles.weeklyDayLabel, isToday && { color: colors.accent, fontWeight: '700' }]}>
                             {day.label}
                           </Text>
                         </View>
-                      ));
-                    })()}
+                      );
+                    })}
+                  </View>
+                  {/* Legend */}
+                  <View style={styles.weeklyLegend}>
+                    <View style={styles.legendItem}>
+                      <View style={[styles.legendDot, { backgroundColor: colors.success }]} />
+                      <Text style={styles.legendText}>On target</Text>
+                    </View>
+                    <View style={styles.legendItem}>
+                      <View style={[styles.legendDot, { backgroundColor: colors.warning }]} />
+                      <Text style={styles.legendText}>Too low</Text>
+                    </View>
+                    <View style={styles.legendItem}>
+                      <View style={[styles.legendDot, { backgroundColor: colors.error }]} />
+                      <Text style={styles.legendText}>Over limit</Text>
+                    </View>
                   </View>
                 </View>
               )}
@@ -627,16 +608,22 @@ function createStyles(colors: CS) {
       paddingBottom: Spacing.xxl,
     },
     hiddenContainer: {
+      flex: 1,
       flexDirection: 'row',
-      alignItems: 'stretch',
+      alignItems: 'center',
       justifyContent: 'flex-end',
       marginHorizontal: Spacing.lg,
       marginBottom: Spacing.md,
-      borderRadius: BorderRadius.lg,
-      overflow: 'hidden',
+      borderRadius: BorderRadius.xl,
     },
     hiddenButton: {
       width: 85,
+      alignSelf: 'stretch',
+      borderRadius: BorderRadius.xl,
+      overflow: 'hidden',
+    },
+    hiddenButtonInner: {
+      flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
     },
@@ -715,13 +702,23 @@ function createStyles(colors: CS) {
       borderWidth: 1,
       borderColor: colors.border,
     },
+    weeklyHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: Spacing.md,
+    },
     weeklyTitle: {
       fontSize: Typography.fontSize.sm,
       fontWeight: '700',
       color: colors.textSecondary,
-      marginBottom: Spacing.md,
       textTransform: 'uppercase',
       letterSpacing: 0.8,
+    },
+    weeklyGoalLabel: {
+      fontSize: 10,
+      color: colors.textTertiary,
+      fontWeight: '500',
     },
     weeklyChart: {
       flexDirection: 'row',
@@ -751,13 +748,36 @@ function createStyles(colors: CS) {
     },
     weeklyBarFill: {
       width: '100%',
-      backgroundColor: colors.success,
       borderRadius: 4,
     },
     weeklyDayLabel: {
       fontSize: 10,
       color: colors.textSecondary,
       marginTop: 4,
+    },
+    weeklyLegend: {
+      flexDirection: 'row',
+      justifyContent: 'center',
+      gap: Spacing.lg,
+      marginTop: Spacing.md,
+      paddingTop: Spacing.sm,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: colors.border,
+    },
+    legendItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 5,
+    },
+    legendDot: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+    },
+    legendText: {
+      fontSize: 10,
+      color: colors.textSecondary,
+      fontWeight: '500',
     },
   });
 }

@@ -1,6 +1,5 @@
 """Test nutrition label generation with the new database"""
 import requests
-import json
 
 def test_label(dish_name, target_calories=None):
     print(f"\n{'='*70}")
@@ -20,7 +19,7 @@ def test_label(dish_name, target_calories=None):
         
         print(f"\n✅ Matched: {result['matched_dish']}")
         print(f"🔍 Confidence: {result['confidence']*100:.1f}% - {result['explanation']}")
-        print(f"\n📊 Nutrition Facts (per 100g):")
+        print("\n📊 Nutrition Facts (per 100g):")
         nutrition = result['nutrition']
         print(f"   Calories:    {nutrition.get('calories', 'N/A')} kcal")
         print(f"   Protein:     {nutrition.get('protein_g', 'N/A')}g")

@@ -5,7 +5,6 @@ Validates that POST /vision/estimate response matches the locked schema.
 Tests required fields, data types, and value constraints.
 """
 
-import pytest
 from fastapi.testclient import TestClient
 from app.main import app
 

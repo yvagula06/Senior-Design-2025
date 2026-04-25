@@ -1070,7 +1070,7 @@ npm start
 - Test text search: "pizza" or "Big Mac"
 - Test camera: take a photo of a meal
 
-See [QUICKSTART.md](QUICKSTART.md) for detailed instructions.
+See [QUICKSTART.md](../setup/QUICKSTART.md) for detailed instructions.
 
 ---
 
@@ -1647,13 +1647,13 @@ chore: maintenance tasks
 ## 📚 Documentation Index
 
 ### Getting Started (Read First)
-1. **[QUICKSTART.md](QUICKSTART.md)** - Complete setup walkthrough (5-10 minutes)
+1. **[QUICKSTART.md](../setup/QUICKSTART.md)** - Complete setup walkthrough (5-10 minutes)
 2. **[REPO_BREAKDOWN.md](REPO_BREAKDOWN.md)** - This file: full repository guide
 3. **[README.md](README.md)** - Project overview and quick reference
 
 ### Technical Documentation
-- **[LABEL_ROUTER_API.md](LABEL_ROUTER_API.md)** - API endpoint documentation
-- **[MOBILE_INTEGRATION.md](MOBILE_INTEGRATION.md)** - Mobile-backend integration
+- **[LABEL_ROUTER_API.md](../api/LABEL_ROUTER_API.md)** - API endpoint documentation
+- **[MOBILE_INTEGRATION.md](../api/MOBILE_INTEGRATION.md)** - Mobile-backend integration
 - **[DATASET_PLAN.md](DATASET_PLAN.md)** - Data acquisition and expansion strategy
 - **[schema.sql](schema.sql)** - PostgreSQL database schema
 
@@ -1724,7 +1724,7 @@ chore: maintenance tasks
 ## 💡 Tips for New Contributors
 
 ### First-Time Setup
-1. Read [QUICKSTART.md](QUICKSTART.md) for environment setup
+1. Read [QUICKSTART.md](../setup/QUICKSTART.md) for environment setup
 2. Start backend and populate database
 3. Test API: `curl http://localhost:8000/docs`
 4. Run mobile app and test both label generation and camera capture
@@ -1746,7 +1746,7 @@ chore: maintenance tasks
 - **View logs:** `docker logs nutrition_api -f`
 
 ### Getting Help
-- Check [QUICKSTART.md](QUICKSTART.md) troubleshooting section
+- Check [QUICKSTART.md](../setup/QUICKSTART.md) troubleshooting section
 - Review API documentation at `/docs`
 - Inspect database with provided scripts
 - Check GitHub issues for similar problems

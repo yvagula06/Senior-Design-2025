@@ -18,6 +18,7 @@ Normal-camera paths:
                         from a lookup table and returns a wide calorie range.
 """
 
+from typing import Any, Dict, Optional, List
 import logging
 import math
 from typing import Dict, Optional, List, Any
@@ -116,6 +117,7 @@ class VolumeEstimator:
         masks: List[Dict],
         depth_data: Optional[Dict] = None,
         camera_intrinsics: Optional[Dict] = None,
+<<<<<<< HEAD
         # Normal-camera extras
         normal_camera_mode: Optional[str] = None,
         plate_type: Optional[str] = None,
@@ -124,6 +126,9 @@ class VolumeEstimator:
         reference_object_size_cm: Optional[float] = None,
         dish_category: Optional[str] = None,
         segmentation_info: Optional[Dict] = None,
+=======
+        plate_size: Optional[str] = None
+>>>>>>> 67851a08e0a9f015fa6da7bb6e0417637d11eba3
     ) -> Dict[str, Any]:
         """
         Dispatch to the appropriate estimation path.
@@ -273,9 +278,14 @@ class VolumeEstimator:
 
     def _estimate_multi_angle(
         self,
+<<<<<<< HEAD
         images_count: int,
         food_area_ratio: float,
         dish_category: Optional[str],
+=======
+        volume_result: Dict[str, Any],
+        plate_size: str
+>>>>>>> 67851a08e0a9f015fa6da7bb6e0417637d11eba3
     ) -> Dict[str, Any]:
         """
         Multi-angle: use top image for area + side/angled image for height.
@@ -433,8 +443,12 @@ def estimate_volume(
     masks: List[Dict],
     depth_data: Optional[Dict] = None,
     camera_intrinsics: Optional[Dict] = None,
+<<<<<<< HEAD
     plate_size: Optional[str] = None,     # legacy kwarg kept for compat
     **kwargs: Any,
+=======
+    plate_size: Optional[str] = None
+>>>>>>> 67851a08e0a9f015fa6da7bb6e0417637d11eba3
 ) -> Dict[str, Any]:
     """
     Estimate volume (convenience function).

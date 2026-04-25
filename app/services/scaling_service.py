@@ -92,9 +92,9 @@ def scale_nutrients(
 
     return Nutrients(
         calories=canonical_nutrients.calories * scaling_factor,
-        protein_g=_scale(canonical_nutrients.protein_g),
-        carbs_g=_scale(canonical_nutrients.carbs_g),
-        fat_g=_scale(canonical_nutrients.fat_g),
+        protein_g=_scale(canonical_nutrients.protein_g) or 0.0,
+        carbs_g=_scale(canonical_nutrients.carbs_g) or 0.0,
+        fat_g=_scale(canonical_nutrients.fat_g) or 0.0,
         fiber_g=_scale(canonical_nutrients.fiber_g),
         sugar_g=_scale(canonical_nutrients.sugar_g),
         sodium_mg=_scale(canonical_nutrients.sodium_mg),
@@ -142,9 +142,11 @@ def compute_scaling_factor(
     
     if clamp:
         if factor < MIN_SCALING_FACTOR:
-            return MIN_SCALING_FACTOR
+            factor = MIN_SCALING_FACTOR
         elif factor > MAX_SCALING_FACTOR:
-            return MAX_SCALING_FACTOR
+            factor = MAX_SCALING_FACTOR
+
+    return factor
 
 
 def get_scaling_factor(
@@ -154,12 +156,10 @@ def get_scaling_factor(
 ) -> float:
     """
     Alias for compute_scaling_factor for backward compatibility.
-    
+
     Deprecated: Use compute_scaling_factor instead.
     """
     return compute_scaling_factor(canonical_calories, target_calories, clamp)
-    
-    return factor
 
 
 def estimate_portion_size(scaling_factor: float) -> str:

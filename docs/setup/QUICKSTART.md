@@ -413,8 +413,8 @@ docker-compose up -d
 - **Troubleshooting Guide:** See `TROUBLESHOOTING.md` for common issues and solutions
 - **Mobile App Architecture:** See `mobile/README.md`
 - **Repository Overview:** See main `README.md`
-- **Data Sources:** See `DATASET_PLAN.md`
-- **API Integration:** See `MOBILE_INTEGRATION.md`
+- **Data Sources:** See `../reports/DATASET_PLAN.md`
+- **API Integration:** See `../api/MOBILE_INTEGRATION.md`
 
 ---
 

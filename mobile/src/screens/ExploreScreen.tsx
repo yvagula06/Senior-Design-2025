@@ -1,7 +1,8 @@
-﻿import React, { useEffect, useState, useRef, useMemo } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
 import {
   View,
   Text,
+  Image,
   StyleSheet,
   ScrollView,
   FlatList,
@@ -23,7 +24,7 @@ import { useAppTheme } from '../context/ThemeContext';
 import { fetchFeaturedDishes } from '../services/api';
 import { cacheFeaturedDishes, loadCachedDishes } from '../services/storage';
 
-// â”€â”€â”€ Static curated content â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Static curated content ──────────────────────────────────────────────────
 
 type NutritionFact = { label: string; value: string; icon: string; color: string };
 
@@ -167,10 +168,38 @@ type HealthTip = { tip: string; icon: string };
 const HEALTH_TIPS: HealthTip[] = [
   { tip: 'Eating protein with every meal helps keep you full longer.', icon: 'arm-flex' },
   { tip: 'Swapping white rice for cauliflower rice saves ~170 kcal per cup.', icon: 'swap-horizontal' },
-  { tip: 'Restaurant portions are often 2â€“3Ã— larger than standard serving sizes.', icon: 'scale' },
+  { tip: 'Restaurant portions are often 2% to 3% larger than standard serving sizes.', icon: 'scale' },
   { tip: 'Drinking water before meals can reduce calorie intake by ~13%.', icon: 'water' },
   { tip: 'Adding a salad before your main course typically cuts total intake by ~10%.', icon: 'leaf' },
   { tip: 'Cooking at home saves an average of 200 kcal vs. eating out.', icon: 'home-heart' },
+];
+
+
+const _mdb = (file: string) => `https://www.themealdb.com/images/media/meals/${file}`;
+
+const MOCK_DISHES: DishCardData[] = [
+  // Restaurant
+  { id: 'r1',  name: 'Chipotle Chicken Bowl',        description: 'Rice, black beans, grilled chicken, cheese, lettuce, salsa',            calories: 650, prepStyle: 'restaurant', estimatedProtein: 45, estimatedCarbs: 68, estimatedFat: 22, imageUrl: _mdb('wuyd2h1765655837.jpg')    },
+  { id: 'r2',  name: 'Paneer Tikka Masala',          description: 'Creamy tomato curry with cottage cheese, served with naan',             calories: 580, prepStyle: 'restaurant', estimatedProtein: 24, estimatedCarbs: 52, estimatedFat: 28, imageUrl: _mdb('sstssx1487349585.jpg')    },
+  { id: 'r3',  name: 'Margherita Pizza (2 slices)',  description: 'Classic Neapolitan pizza with fresh mozzarella and basil',              calories: 520, prepStyle: 'restaurant', estimatedProtein: 22, estimatedCarbs: 62, estimatedFat: 18, imageUrl: _mdb('x0lk931587671540.jpg')    },
+  { id: 'r4',  name: 'Pad Thai (Shrimp)',            description: 'Rice noodles, shrimp, egg, peanuts, bean sprouts, lime',                calories: 720, prepStyle: 'restaurant', estimatedProtein: 28, estimatedCarbs: 88, estimatedFat: 26, imageUrl: _mdb('rg9ze01763479093.jpg')    },
+  { id: 'r5',  name: 'Classic Cheeseburger & Fries', description: 'Beef patty, American cheese, lettuce, tomato, brioche bun',            calories: 920, prepStyle: 'restaurant', estimatedProtein: 38, estimatedCarbs: 85, estimatedFat: 48, imageUrl: _mdb('lgmnff1763789847.jpg')    },
+  { id: 'r6',  name: 'Salmon Teriyaki Bowl',         description: 'Grilled salmon over steamed rice with teriyaki glaze, edamame',        calories: 620, prepStyle: 'restaurant', estimatedProtein: 42, estimatedCarbs: 58, estimatedFat: 16, imageUrl: _mdb('xxyupu1468262513.jpg')    },
+  { id: 'r7',  name: 'Falafel Wrap',                 description: 'Crispy chickpea falafel, hummus, tabbouleh, pickled turnips in a pita', calories: 480, prepStyle: 'restaurant', estimatedProtein: 18, estimatedCarbs: 55, estimatedFat: 22, imageUrl: _mdb('u5e9qq1763795441.jpg')    },
+  { id: 'r8',  name: 'Tom Yum Soup',                 description: 'Thai hot-and-sour broth with shrimp, mushrooms, lemongrass',            calories: 190, prepStyle: 'restaurant', estimatedProtein: 18, estimatedCarbs: 12, estimatedFat: 6,  imageUrl: _mdb('l50vz41763422681.jpg')    },
+  { id: 'r9',  name: 'Steak & Vegetables',           description: '8 oz sirloin steak with grilled asparagus and mashed potato',          calories: 780, prepStyle: 'restaurant', estimatedProtein: 58, estimatedCarbs: 32, estimatedFat: 42, imageUrl: _mdb('vussxq1511882648.jpg')    },
+  { id: 'r10', name: 'Sushi Roll (8 pc California)', description: 'Crab, avocado, cucumber, sesame seeds',                                calories: 310, prepStyle: 'restaurant', estimatedProtein: 14, estimatedCarbs: 38, estimatedFat: 10, imageUrl: _mdb('g046bb1663960946.jpg')    },
+  // Home cooked
+  { id: 'h1',  name: 'Grilled Chicken Breast',       description: 'Simply grilled with garlic, lemon, and herbs',                         calories: 280, prepStyle: 'home', estimatedProtein: 48, estimatedCarbs: 0,  estimatedFat: 8,  imageUrl: _mdb('nlxald1764112200.jpg')    },
+  { id: 'h2',  name: 'Overnight Oats',               description: 'Rolled oats, Greek yogurt, chia seeds, banana, almond milk',           calories: 380, prepStyle: 'home', estimatedProtein: 18, estimatedCarbs: 58, estimatedFat: 8,  imageUrl: _mdb('sng9bm1765320170.jpg')    },
+  { id: 'h3',  name: 'Scrambled Eggs & Toast',       description: '3 eggs with butter, 2 slices whole wheat toast',                       calories: 420, prepStyle: 'home', estimatedProtein: 24, estimatedCarbs: 32, estimatedFat: 20, imageUrl: _mdb('1550440197.jpg')          },
+  { id: 'h4',  name: 'Spaghetti Bolognese',          description: 'Pasta with ground beef, tomato sauce, garlic, parmesan',               calories: 620, prepStyle: 'home', estimatedProtein: 34, estimatedCarbs: 72, estimatedFat: 18, imageUrl: _mdb('sutysw1468247559.jpg')    },
+  { id: 'h5',  name: 'Greek Yogurt Parfait',         description: 'Plain Greek yogurt, mixed berries, granola, honey',                   calories: 280, prepStyle: 'home', estimatedProtein: 18, estimatedCarbs: 42, estimatedFat: 5,  imageUrl: _mdb('y2irzl1585563479.jpg')    },
+  { id: 'h6',  name: 'Avocado Toast with Egg',       description: 'Sourdough, smashed avocado, poached egg, everything bagel seasoning',  calories: 350, prepStyle: 'home', estimatedProtein: 14, estimatedCarbs: 28, estimatedFat: 22, imageUrl: _mdb('1549542994.jpg')          },
+  { id: 'h7',  name: 'Tuna Salad Sandwich',          description: 'Canned tuna, light mayo, celery, on whole wheat bread',                calories: 340, prepStyle: 'home', estimatedProtein: 30, estimatedCarbs: 32, estimatedFat: 10, imageUrl: _mdb('yypwwq1511304979.jpg')    },
+  { id: 'h8',  name: 'Lentil Soup',                  description: 'Red lentils, carrots, cumin, turmeric, lemon',                         calories: 260, prepStyle: 'home', estimatedProtein: 16, estimatedCarbs: 42, estimatedFat: 4,  imageUrl: _mdb('vpxyqt1511464175.jpg')    },
+  { id: 'h9',  name: 'Baked Salmon Fillet',          description: '6 oz salmon with lemon-butter, roasted broccoli',                     calories: 410, prepStyle: 'home', estimatedProtein: 46, estimatedCarbs: 8,  estimatedFat: 22, imageUrl: _mdb('1548772327.jpg')          },
+  { id: 'h10', name: 'Chicken Stir-Fry',             description: 'Chicken breast, bell peppers, snap peas, soy-ginger sauce over rice', calories: 480, prepStyle: 'home', estimatedProtein: 38, estimatedCarbs: 48, estimatedFat: 12, imageUrl: _mdb('rwvw8q1765660071.jpg')    },
 ];
 
 export const ExploreScreen: React.FC = () => {
@@ -178,16 +207,16 @@ export const ExploreScreen: React.FC = () => {
   const { colors } = useAppTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const navigation = useNavigation<ExploreStackNavigationProp>();
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearch, setShowSearch] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('All');
-  const [restaurantDishes, setRestaurantDishes] = useState<DishCardData[]>([]);
-  const [homeCookedMeals, setHomeCookedMeals] = useState<DishCardData[]>([]);
-  const [highProteinDishes, setHighProteinDishes] = useState<DishCardData[]>([]);
-  const [lowCalDishes, setLowCalDishes] = useState<DishCardData[]>([]);
-  const [allDishes, setAllDishes] = useState<DishCardData[]>([]);
+  const [restaurantDishes, setRestaurantDishes] = useState<DishCardData[]>(() => MOCK_DISHES.filter(d => d.prepStyle === 'restaurant'));
+  const [homeCookedMeals, setHomeCookedMeals] = useState<DishCardData[]>(() => MOCK_DISHES.filter(d => d.prepStyle === 'home'));
+  const [highProteinDishes, setHighProteinDishes] = useState<DishCardData[]>(() => MOCK_DISHES.filter(d => (d.estimatedProtein || 0) >= 25).sort((a, b) => (b.estimatedProtein || 0) - (a.estimatedProtein || 0)));
+  const [lowCalDishes, setLowCalDishes] = useState<DishCardData[]>(() => MOCK_DISHES.filter(d => (d.calories || 999) <= 350).sort((a, b) => (a.calories || 0) - (b.calories || 0)));
+  const [allDishes, setAllDishes] = useState<DishCardData[]>(MOCK_DISHES);
   const [tipIndex, setTipIndex] = useState(0);
   const [factIndex, setFactIndex] = useState(0);
   const [selectedDish, setSelectedDish] = useState<DishCardData | null>(null);
@@ -197,20 +226,22 @@ export const ExploreScreen: React.FC = () => {
 
   const categories = ['All', 'High Protein', 'Low Calorie', 'Vegetarian', 'Keto', 'Low Carb'];
 
-  useEffect(() => { loadFeaturedDishes(); }, []);
+  // On mount, silently try to hydrate from cache without blocking the render
+  useEffect(() => {
+    loadCachedDishes()
+      .then(cached => { if (cached.length > 0) applyDishData(cached.map(mapDishItem)); })
+      .catch(() => {});
+  }, []);
 
   const loadFeaturedDishes = async (isRefresh = false) => {
+    if (!isRefresh) return;
     try {
-      isRefresh ? setIsRefreshing(true) : setIsLoading(true);
+      setIsRefreshing(true);
       const cached = await loadCachedDishes();
-      if (cached.length > 0 && !isRefresh) {
-        applyDishData(cached.map((d: any) => mapDishItem(d)));
-      }
-      loadMockData();
+      if (cached.length > 0) applyDishData(cached.map((d: any) => mapDishItem(d)));
     } catch {
-      loadMockData();
+      // keep existing mock data
     } finally {
-      setIsLoading(false);
       setIsRefreshing(false);
     }
   };
@@ -289,33 +320,7 @@ export const ExploreScreen: React.FC = () => {
     });
   };
 
-  const loadMockData = () => {
-    const all: DishCardData[] = [
-      // â”€â”€ Restaurant â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-      { id: 'r1', name: 'Chipotle Chicken Bowl', description: 'Rice, black beans, grilled chicken, cheese, lettuce, salsa', calories: 650, prepStyle: 'restaurant', estimatedProtein: 45, estimatedCarbs: 68, estimatedFat: 22 },
-      { id: 'r2', name: 'Paneer Tikka Masala', description: 'Creamy tomato curry with cottage cheese, served with naan', calories: 580, prepStyle: 'restaurant', estimatedProtein: 24, estimatedCarbs: 52, estimatedFat: 28 },
-      { id: 'r3', name: 'Margherita Pizza (2 slices)', description: 'Classic Neapolitan pizza with fresh mozzarella and basil', calories: 520, prepStyle: 'restaurant', estimatedProtein: 22, estimatedCarbs: 62, estimatedFat: 18 },
-      { id: 'r4', name: 'Pad Thai (Shrimp)', description: 'Rice noodles, shrimp, egg, peanuts, bean sprouts, lime', calories: 720, prepStyle: 'restaurant', estimatedProtein: 28, estimatedCarbs: 88, estimatedFat: 26 },
-      { id: 'r5', name: 'Classic Cheeseburger & Fries', description: 'Beef patty, American cheese, lettuce, tomato, brioche bun', calories: 920, prepStyle: 'restaurant', estimatedProtein: 38, estimatedCarbs: 85, estimatedFat: 48 },
-      { id: 'r6', name: 'Salmon Teriyaki Bowl', description: 'Grilled salmon over steamed rice with teriyaki glaze, edamame', calories: 620, prepStyle: 'restaurant', estimatedProtein: 42, estimatedCarbs: 58, estimatedFat: 16 },
-      { id: 'r7', name: 'Falafel Wrap', description: 'Crispy chickpea falafel, hummus, tabbouleh, pickled turnips in a pita', calories: 480, prepStyle: 'restaurant', estimatedProtein: 18, estimatedCarbs: 55, estimatedFat: 22 },
-      { id: 'r8', name: 'Tom Yum Soup', description: 'Thai hot-and-sour broth with shrimp, mushrooms, lemongrass', calories: 190, prepStyle: 'restaurant', estimatedProtein: 18, estimatedCarbs: 12, estimatedFat: 6 },
-      { id: 'r9', name: 'Steak & Vegetables', description: '8 oz sirloin steak with grilled asparagus and mashed potato', calories: 780, prepStyle: 'restaurant', estimatedProtein: 58, estimatedCarbs: 32, estimatedFat: 42 },
-      { id: 'r10', name: 'Sushi Roll (8 pc California)', description: 'Crab, avocado, cucumber, sesame seeds', calories: 310, prepStyle: 'restaurant', estimatedProtein: 14, estimatedCarbs: 38, estimatedFat: 10 },
-      // â”€â”€ Home â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-      { id: 'h1', name: 'Grilled Chicken Breast', description: 'Simply grilled with garlic, lemon, and herbs', calories: 280, prepStyle: 'home', estimatedProtein: 48, estimatedCarbs: 0, estimatedFat: 8 },
-      { id: 'h2', name: 'Overnight Oats', description: 'Rolled oats, Greek yogurt, chia seeds, banana, almond milk', calories: 380, prepStyle: 'home', estimatedProtein: 18, estimatedCarbs: 58, estimatedFat: 8 },
-      { id: 'h3', name: 'Scrambled Eggs & Toast', description: '3 eggs with butter, 2 slices whole wheat toast', calories: 420, prepStyle: 'home', estimatedProtein: 24, estimatedCarbs: 32, estimatedFat: 20 },
-      { id: 'h4', name: 'Spaghetti Bolognese', description: 'Pasta with ground beef, tomato sauce, garlic, parmesan', calories: 620, prepStyle: 'home', estimatedProtein: 34, estimatedCarbs: 72, estimatedFat: 18 },
-      { id: 'h5', name: 'Greek Yogurt Parfait', description: 'Plain Greek yogurt, mixed berries, granola, honey', calories: 280, prepStyle: 'home', estimatedProtein: 18, estimatedCarbs: 42, estimatedFat: 5 },
-      { id: 'h6', name: 'Avocado Toast with Egg', description: 'Sourdough, smashed avocado, poached egg, everything bagel seasoning', calories: 350, prepStyle: 'home', estimatedProtein: 14, estimatedCarbs: 28, estimatedFat: 22 },
-      { id: 'h7', name: 'Tuna Salad Sandwich', description: 'Canned tuna, light mayo, celery, on whole wheat bread', calories: 340, prepStyle: 'home', estimatedProtein: 30, estimatedCarbs: 32, estimatedFat: 10 },
-      { id: 'h8', name: 'Lentil Soup', description: 'Red lentils, carrots, cumin, turmeric, lemon', calories: 260, prepStyle: 'home', estimatedProtein: 16, estimatedCarbs: 42, estimatedFat: 4 },
-      { id: 'h9', name: 'Baked Salmon Fillet', description: '6 oz salmon with lemon-butter, roasted broccoli', calories: 410, prepStyle: 'home', estimatedProtein: 46, estimatedCarbs: 8, estimatedFat: 22 },
-      { id: 'h10', name: 'Chicken Stir-Fry', description: 'Chicken breast, bell peppers, snap peas, soy-ginger sauce over rice', calories: 480, prepStyle: 'home', estimatedProtein: 38, estimatedCarbs: 48, estimatedFat: 12 },
-    ];
-    applyDishData(all);
-  };
+  const loadMockData = () => applyDishData(MOCK_DISHES);
 
   const filteredAll = filterDishes(allDishes);
   const filteredRestaurant = filterDishes(restaurantDishes);
@@ -354,7 +359,7 @@ export const ExploreScreen: React.FC = () => {
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={() => loadFeaturedDishes(true)} tintColor={colors.accent} colors={[colors.accent]} />}
       >
-        {/* â”€â”€ Header â”€â”€ */}
+        {/* ── Header ── */}
         <View style={[styles.header, { paddingTop: insets.top + Spacing.lg }]}>
           <View style={styles.headerContent}>
             <View style={styles.headerTextContainer}>
@@ -383,7 +388,7 @@ export const ExploreScreen: React.FC = () => {
           </Animated.View>
         </View>
 
-        {/* â”€â”€ Category Chips â”€â”€ */}
+        {/* ── Category Chips ── */}
         <View style={styles.categorySection}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryScrollContent}>
             {categories.map(cat => (
@@ -399,7 +404,7 @@ export const ExploreScreen: React.FC = () => {
           </ScrollView>
         </View>
 
-        {/* â”€â”€ Filter result count â”€â”€ */}
+        {/* ── Filter result count ── */}
         {isFiltering && (
           <View style={styles.filterResultRow}>
             <Text style={styles.filterResultText}>
@@ -419,7 +424,7 @@ export const ExploreScreen: React.FC = () => {
           </View>
         )}
 
-        {/* â”€â”€ Quick Actions (only when not filtering) â”€â”€ */}
+        {/* ── Quick Actions (only when not filtering) ── */}
         {!isFiltering && (
           <View style={styles.quickActionsRow}>
             <TouchableOpacity style={styles.quickAction} onPress={() => navigation.navigate('CameraCapture')} activeOpacity={0.8}>
@@ -443,7 +448,7 @@ export const ExploreScreen: React.FC = () => {
           </View>
         )}
 
-        {/* â”€â”€ Did You Know (rotatable fact) â”€â”€ */}
+        {/* ── Did You Know (rotatable fact) ── */}
         {!isFiltering && (
           <TouchableOpacity style={styles.factCard} onPress={() => setFactIndex(i => i + 1)} activeOpacity={0.85}>
             <View style={[styles.factIconBox, { backgroundColor: currentFact.color + '22' }]}>
@@ -458,7 +463,7 @@ export const ExploreScreen: React.FC = () => {
           </TouchableOpacity>
         )}
 
-        {/* â”€â”€ Trending Searches â”€â”€ */}
+        {/* ── Trending Searches ── */}
         {!isFiltering && (
           <>
             <View style={styles.sectionHeader}>
@@ -480,7 +485,7 @@ export const ExploreScreen: React.FC = () => {
           </>
         )}
 
-        {/* â”€â”€ High Protein Section â”€â”€ */}
+        {/* ── High Protein Section ── */}
         {(!isFiltering || selectedCategory === 'High Protein') && highProteinDishes.length > 0 && (
           <>
             <CategoryHeader title="High Protein Picks" subtitle="25 g+ protein per serving" icon="arm-flex" />
@@ -488,7 +493,7 @@ export const ExploreScreen: React.FC = () => {
           </>
         )}
 
-        {/* â”€â”€ Low Calorie Section â”€â”€ */}
+        {/* ── Low Calorie Section ── */}
         {(!isFiltering || selectedCategory === 'Low Calorie') && lowCalDishes.length > 0 && (
           <>
             <CategoryHeader title="Light & Low Calorie" subtitle="Under 350 kcal per serving" icon="leaf" />
@@ -496,7 +501,7 @@ export const ExploreScreen: React.FC = () => {
           </>
         )}
 
-        {/* â”€â”€ Restaurant Section â”€â”€ */}
+        {/* ── Restaurant Section ── */}
         {filteredRestaurant.length > 0 && (
           <>
             <CategoryHeader title="Restaurant Dishes" subtitle="Popular picks from restaurants" icon="silverware-fork-knife" />
@@ -504,7 +509,7 @@ export const ExploreScreen: React.FC = () => {
           </>
         )}
 
-        {/* â”€â”€ Home Cooked Section â”€â”€ */}
+        {/* ── Home Cooked Section ── */}
         {filteredHome.length > 0 && (
           <>
             <CategoryHeader title="Home Cooked Meals" subtitle="Simple, wholesome recipes" icon="home-heart" />
@@ -512,20 +517,20 @@ export const ExploreScreen: React.FC = () => {
           </>
         )}
 
-        {/* â”€â”€ Health Tip â”€â”€ */}
+        {/* Health Tip */}
         {!isFiltering && (
           <TouchableOpacity style={styles.tipCard} onPress={() => setTipIndex(i => i + 1)} activeOpacity={0.85}>
             <View style={styles.tipIconBox}>
               <MaterialCommunityIcons name={currentTip.icon as any} size={24} color={colors.primary} />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.tipTitle}>Health Tip  â€¢  tap for next</Text>
+              <Text style={styles.tipTitle}>Health Tip @ tap for next</Text>
               <Text style={styles.tipText}>{currentTip.tip}</Text>
             </View>
           </TouchableOpacity>
         )}
 
-        {/* â”€â”€ Calorie Reference â”€â”€ */}
+        {/* ── Calorie Reference ── */}
         {!isFiltering && (
           <>
             <View style={styles.sectionHeader}>
@@ -581,6 +586,15 @@ export const ExploreScreen: React.FC = () => {
                     showsVerticalScrollIndicator={false}
                     bounces={false}
                   >
+                    {/* Hero image */}
+                    {selectedDish.imageUrl && (
+                      <Image
+                        source={{ uri: selectedDish.imageUrl }}
+                        style={styles.modalHeroImage}
+                        resizeMode="cover"
+                      />
+                    )}
+
                     {/* Title + macros */}
                     <View style={styles.modalHeader}>
                       <Text style={styles.modalTitle}>{selectedDish.name}</Text>
@@ -753,26 +767,31 @@ function createStyles(colors: C2) {
   },
   modalHandle: { width: 40, height: 4, borderRadius: 2, backgroundColor: colors.border, alignSelf: 'center', marginTop: Spacing.md, marginBottom: Spacing.xs },
   modalScroll: { flexShrink: 1 },
-  modalScrollContent: { paddingHorizontal: Spacing.lg, paddingBottom: Spacing.md },
-  modalHeader: { paddingBottom: Spacing.md, borderBottomWidth: 1, borderBottomColor: colors.border },
+  modalScrollContent: { paddingBottom: Spacing.md },
+  modalHeroImage: {
+    width: '100%',
+    height: 200,
+    marginBottom: Spacing.md,
+  },
+  modalHeader: { paddingHorizontal: Spacing.lg, paddingBottom: Spacing.md, borderBottomWidth: 1, borderBottomColor: colors.border },
   modalTitle: { fontSize: Typography.fontSize.xl, fontWeight: '800', color: colors.text, marginBottom: Spacing.xs },
   modalDesc: { fontSize: Typography.fontSize.sm, color: colors.textSecondary, marginBottom: Spacing.md },
   macroBadgeRow: { flexDirection: 'row', gap: Spacing.sm, flexWrap: 'wrap' },
   macroBadge: { borderRadius: BorderRadius.md, paddingHorizontal: Spacing.md, paddingVertical: Spacing.xs, alignItems: 'center', minWidth: 60 },
   macroBadgeVal: { fontSize: Typography.fontSize.md, fontWeight: '800' },
   macroBadgeLabel: { fontSize: Typography.fontSize.xs, color: colors.textTertiary, fontWeight: '600' },
-  recipeMeta: { flexDirection: 'row', gap: Spacing.lg, paddingVertical: Spacing.md, borderBottomWidth: 1, borderBottomColor: colors.border },
+  recipeMeta: { flexDirection: 'row', gap: Spacing.lg, paddingVertical: Spacing.md, paddingHorizontal: Spacing.lg, borderBottomWidth: 1, borderBottomColor: colors.border },
   recipeMetaItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   recipeMetaText: { fontSize: Typography.fontSize.sm, color: colors.textSecondary },
-  recipeSection: { fontSize: Typography.fontSize.md, fontWeight: '700', color: colors.text, marginTop: Spacing.lg, marginBottom: Spacing.sm },
-  ingredientRow: { flexDirection: 'row', alignItems: 'flex-start', gap: Spacing.sm, paddingVertical: 4 },
+  recipeSection: { fontSize: Typography.fontSize.md, fontWeight: '700', color: colors.text, marginTop: Spacing.lg, marginBottom: Spacing.sm, paddingHorizontal: Spacing.lg },
+  ingredientRow: { flexDirection: 'row', alignItems: 'flex-start', gap: Spacing.sm, paddingVertical: 4, paddingHorizontal: Spacing.lg },
   ingredientDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.accent, marginTop: 7 },
   ingredientText: { flex: 1, fontSize: Typography.fontSize.sm, color: colors.textSecondary, lineHeight: 20 },
-  stepRow: { flexDirection: 'row', alignItems: 'flex-start', gap: Spacing.md, paddingVertical: 6 },
+  stepRow: { flexDirection: 'row', alignItems: 'flex-start', gap: Spacing.md, paddingVertical: 6, paddingHorizontal: Spacing.lg },
   stepNumber: { width: 26, height: 26, borderRadius: 13, backgroundColor: colors.accent, justifyContent: 'center', alignItems: 'center', marginTop: 1 },
   stepNumberText: { fontSize: Typography.fontSize.xs, fontWeight: '800', color: '#FFF' },
   stepText: { flex: 1, fontSize: Typography.fontSize.sm, color: colors.textSecondary, lineHeight: 20 },
-  noRecipeBox: { alignItems: 'center', paddingVertical: Spacing.xxl, gap: Spacing.sm },
+  noRecipeBox: { alignItems: 'center', paddingVertical: Spacing.xxl, gap: Spacing.sm, paddingHorizontal: Spacing.lg },
   noRecipeText: { fontSize: Typography.fontSize.sm, color: colors.textTertiary },
   modalFooter: {
     paddingHorizontal: Spacing.lg,

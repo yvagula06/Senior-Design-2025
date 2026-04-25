@@ -368,7 +368,7 @@ No schema changes. Depth mode returns same response structure with:
 
 ## Support & Resources
 
-- **Phase 2 Plan**: See [Implementation_Plans/Camera_Functionality_Plan.md](Implementation_Plans/Camera_Functionality_Plan.md)
+- **Phase 2 Plan**: See [Camera_Functionality_Plan.md](Camera_Functionality_Plan.md)
 - **Phase 1 Guide**: See [CAMERA_SETUP_GUIDE.md](CAMERA_SETUP_GUIDE.md)
 - **Open3D Docs**: http://www.open3d.org/docs/
 - **ARKit (iOS)**: https://developer.apple.com/augmented-reality/

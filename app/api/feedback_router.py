@@ -72,7 +72,7 @@ def save_meal_log(request: SaveMealLogRequest):
                     "model_version": request.model_version,
                 },
             )
-            new_id = result.fetchone()[0]
+            new_id = result.fetchone()[0]  # type: ignore[index]
             conn.commit()
 
         return {"ok": True, "id": new_id}

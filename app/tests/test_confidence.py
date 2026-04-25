@@ -1,4 +1,3 @@
-import pytest
 from app.services.confidence_service import confidence
 
 def test_confidence_high_entropy():

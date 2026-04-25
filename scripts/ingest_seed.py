@@ -18,7 +18,6 @@ from pathlib import Path
 from typing import Optional
 
 from sqlalchemy import create_engine, text
-from sqlalchemy.orm import Session
 from sentence_transformers import SentenceTransformer
 
 DATABASE_URL = os.getenv("DATABASE_URL")

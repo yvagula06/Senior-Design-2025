@@ -312,7 +312,7 @@ if __name__ == "__main__":
         try:
             print(f"\n✓ Testing: {test_name}")
             test_func()
-            print(f"  ✅ PASSED")
+            print("  ✅ PASSED")
         except AssertionError as e:
             print(f"  ❌ FAILED: {str(e)}")
         except Exception as e:

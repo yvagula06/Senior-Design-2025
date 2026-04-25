@@ -14,7 +14,7 @@ According to Camera_Functionality_Plan.md Phase 2:
 import base64
 import numpy as np
 import logging
-from typing import Dict, Optional, Tuple, List
+from typing import Any, Dict, Optional
 
 # Optional Open3D import (will use fallback if not available)
 try:
@@ -64,7 +64,7 @@ class DepthVolumeEstimator:
         depth_scale: float,
         camera_intrinsics: Dict,
         mask: Optional[Dict] = None
-    ) -> Dict[str, any]:
+    ) -> Dict[str, Any]:
         """
         Estimate volume from depth map using 3D reconstruction.
 
@@ -244,7 +244,7 @@ class DepthVolumeEstimator:
         width: int, height: int,
         mask: Optional[Dict],
         quality_score: float
-    ) -> Dict[str, any]:
+    ) -> Dict[str, Any]:
         """
         Compute volume using Open3D point cloud processing.
         
@@ -348,7 +348,7 @@ class DepthVolumeEstimator:
         width: int, height: int,
         mask: Optional[Dict],
         quality_score: float
-    ) -> Dict[str, any]:
+    ) -> Dict[str, Any]:
         """
         Compute volume using simplified approach without Open3D.
         
@@ -421,7 +421,7 @@ class DepthVolumeEstimator:
             }
         }
     
-    def _fallback_volume_estimate(self, quality_score: float) -> Dict[str, any]:
+    def _fallback_volume_estimate(self, quality_score: float) -> Dict[str, Any]:
         """
         Fallback volume estimate when depth processing fails.
         
@@ -457,7 +457,7 @@ def estimate_volume_from_depth(
     depth_scale: float,
     camera_intrinsics: Dict,
     mask: Optional[Dict] = None
-) -> Dict[str, any]:
+) -> Dict[str, Any]:
     """
     Estimate volume from depth map (convenience function).
     

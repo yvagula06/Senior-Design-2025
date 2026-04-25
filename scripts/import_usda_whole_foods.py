@@ -306,7 +306,7 @@ def import_dataset(data_dir: Path, engine, model: SentenceTransformer, source: s
 
     elapsed = time.time() - start_time
     print(f"\n{'='*70}")
-    print(f"✅ Import complete!")
+    print("✅ Import complete!")
     print(f"   Total processed: {total_processed:,}")
     print(f"   Total inserted:  {total_inserted:,}")
     print(f"   Total skipped:   {total_skipped:,}")

@@ -12,14 +12,14 @@ According to Camera_Functionality_Plan.md:
 import os
 import base64
 import logging
-from typing import List, Dict, Optional, Tuple
+from typing import Any, List, Dict, Optional
 from dotenv import load_dotenv
 from clarifai_grpc.channel.clarifai_channel import ClarifaiChannel
 
 load_dotenv()
-from clarifai_grpc.grpc.api import resources_pb2, service_pb2, service_pb2_grpc
-from clarifai_grpc.grpc.api.status import status_code_pb2
-import time
+from clarifai_grpc.grpc.api import resources_pb2, service_pb2, service_pb2_grpc  # noqa: E402
+from clarifai_grpc.grpc.api.status import status_code_pb2  # noqa: E402
+import time  # noqa: E402
 
 logger = logging.getLogger(__name__)
 
@@ -73,7 +73,7 @@ class ClarifaiClient:
         self,
         image_base64: str,
         top_k: int = 3
-    ) -> List[Dict[str, any]]:
+    ) -> List[Dict[str, Any]]:
         """
         Classify dish from base64-encoded image using Clarifai.
         
@@ -192,7 +192,7 @@ class ClarifaiClient:
     def segment_food(
         self,
         image_base64: str
-    ) -> Dict[str, any]:
+    ) -> Dict[str, Any]:
         """
         Segment food regions from image using Clarifai.
         
@@ -312,13 +312,13 @@ def get_clarifai_client() -> ClarifaiClient:
 
 
 # Convenience functions
-def predict_dish(image_base64: str, top_k: int = 3) -> List[Dict[str, any]]:
+def predict_dish(image_base64: str, top_k: int = 3) -> List[Dict[str, Any]]:
     """Predict dish from image (convenience function)."""
     client = get_clarifai_client()
     return client.predict_dish(image_base64, top_k)
 
 
-def segment_food(image_base64: str) -> Dict[str, any]:
+def segment_food(image_base64: str) -> Dict[str, Any]:
     """Segment food from image (convenience function)."""
     client = get_clarifai_client()
     return client.segment_food(image_base64)

@@ -1,5 +1,4 @@
 import requests
-import json
 
 tests = [
     {"dish_name": "pepperoni pizza"},
@@ -27,7 +26,7 @@ for test in tests:
     print(f"🎯 Confidence: {result['confidence']*100:.1f}% - {result['explanation']}")
     
     n = result['nutrition']
-    print(f"\n📊 Nutrition (per 100g unless scaled):")
+    print("\n📊 Nutrition (per 100g unless scaled):")
     print(f"   Calories:  {n['calories']} kcal")
     print(f"   Protein:   {n['protein_g']}g")
     print(f"   Carbs:     {n['carbs_g']}g")

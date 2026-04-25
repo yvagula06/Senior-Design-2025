@@ -1,4 +1,4 @@
-﻿/**
+/**
  * CameraGuide Component
  * 
  * Visual guide overlay for camera capture showing optimal framing.

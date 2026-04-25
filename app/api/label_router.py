@@ -9,16 +9,19 @@ Mobile app endpoint for nutrition label generation:
 
 from fastapi import APIRouter, HTTPException, status
 import json
+import os
 import traceback
 from typing import Optional
 from sqlalchemy import text
 
-from app.schemas.label import LabelRequest, LabelResponse, Nutrients, Candidate
+from app.schemas.label import LabelRequest, LabelResponse
 from app.services.retrieval_service import retrieve_candidates
 from app.services.mixture_service import compute_mixture
 from app.services.scaling_service import scale_nutrients
 from app.services.confidence_service import compute_confidence
 from app.db.session import engine, get_or_create_user_id
+
+_SIM_THRESHOLD = float(os.getenv("SIM_THRESHOLD", "0.3"))
 
 
 router = APIRouter(
@@ -61,15 +64,18 @@ def create_label(req: LabelRequest) -> LabelResponse:
         query_text = _build_query_text(req.dish_name, req.style)
         candidates_with_nutrients = retrieve_candidates(
             dish_name=query_text,
-            k=5,  # Always retrieve top 5
-            similarity_threshold=0.3
+            k=5,
+            similarity_threshold=_SIM_THRESHOLD
         )
-        
-        # Handle no matches - return 404
+
+        # Step 1b: LLM fallback when pgvector finds no match
         if not candidates_with_nutrients:
+            llm_result = _llm_fallback(req.dish_name, req.target_calories)
+            if llm_result:
+                return llm_result
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="No matching dish found"
+                detail=f"No matching dish found for '{req.dish_name}'"
             )
         
         # Step 2: Mixture - Aggregate candidates (if top_k > 1)
@@ -160,7 +166,7 @@ def create_label(req: LabelRequest) -> LabelResponse:
                             "serving_multiplier": round(scaling_factor, 4),
                             "confidence": round(confidence_result.score, 4),
                         },
-                    ).fetchone()[0]
+                    ).fetchone()[0]  # type: ignore[index]
                     conn.commit()
             except Exception:
                 # Persistence failure must not break the label response.
@@ -175,14 +181,16 @@ def create_label(req: LabelRequest) -> LabelResponse:
             meal_log_id=meal_log_id,
         )
     
+    except HTTPException:
+        raise
+
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Invalid request: {str(e)}"
         )
-    
+
     except Exception as e:
-        # Log error and return 500
         traceback.print_exc()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -190,8 +198,68 @@ def create_label(req: LabelRequest) -> LabelResponse:
         )
 
 
-def _build_query_text(dish_name: str, style: str = None) -> str:
-    """Build query text with optional style hint."""
-    if style and style.strip():
-        return f"{style.strip().lower()} {dish_name.strip()}"
-    return dish_name.strip()
+def _build_query_text(dish_name: str, style: Optional[str] = None) -> str:
+    """Build query text with optional style hint appended as context."""
+    name = dish_name.strip()
+    if style and style.strip() and style.strip().lower() not in ("unknown", ""):
+        return f"{name} {style.strip().lower()} style"
+    return name
+
+
+def _llm_fallback(dish_name: str, target_calories: Optional[float]) -> Optional[LabelResponse]:
+    """
+    Use OpenAI GPT to estimate nutrition when pgvector finds no match.
+    Returns None if OpenAI key is missing or the call fails.
+    """
+    api_key = os.getenv("OPENAI_API_KEY")
+    model = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+    if not api_key:
+        return None
+
+    try:
+        from openai import OpenAI
+        client = OpenAI(api_key=api_key)
+
+        portion_hint = f" for a {target_calories:.0f} kcal portion" if target_calories else " per 100g"
+        prompt = (
+            f"Give me the nutrition facts for '{dish_name}'{portion_hint}.\n"
+            "Respond ONLY with a JSON object with these exact keys:\n"
+            "matched_dish, calories, protein_g, carbs_g, fat_g, fiber_g, sugar_g, sodium_mg, potassium_mg\n"
+            "All values must be numbers (use null if unknown). No extra text."
+        )
+
+        resp = client.chat.completions.create(
+            model=model,
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0,
+            max_tokens=300,
+            response_format={"type": "json_object"},
+        )
+
+        data = json.loads(resp.choices[0].message.content or "{}")  # type: ignore[arg-type]
+
+        nutrition_dict = {
+            "calories":     round(float(data.get("calories") or 0), 1),
+            "protein_g":    round(float(data.get("protein_g") or 0), 1),
+            "carbs_g":      round(float(data.get("carbs_g") or 0), 1),
+            "fat_g":        round(float(data.get("fat_g") or 0), 1),
+            "fiber_g":      round(float(data["fiber_g"]), 1) if data.get("fiber_g") is not None else None,
+            "sugar_g":      round(float(data["sugar_g"]), 1) if data.get("sugar_g") is not None else None,
+            "sodium_mg":    round(float(data["sodium_mg"]), 0) if data.get("sodium_mg") is not None else None,
+            "potassium_mg": round(float(data["potassium_mg"]), 0) if data.get("potassium_mg") is not None else None,
+            "saturated_fat_g": None, "trans_fat_g": None, "cholesterol_mg": None,
+            "vitamin_a_mcg": None, "vitamin_c_mg": None, "vitamin_d_mcg": None,
+            "calcium_mg": None, "iron_mg": None,
+        }
+
+        return LabelResponse(
+            matched_dish=data.get("matched_dish", dish_name.title()),
+            nutrition=nutrition_dict,
+            confidence=0.60,
+            explanation="Estimated by AI — no exact match found in database.",
+            meal_log_id=None,
+        )
+
+    except Exception:
+        traceback.print_exc()
+        return None

@@ -1,4 +1,4 @@
-﻿import React, { useMemo } from 'react';
+import React, { useMemo } from 'react';
 import {
   View,
   Text,
@@ -57,7 +57,7 @@ export const DishSearchInput: React.FC<DishSearchInputProps> = ({
           />
           <TextInput
             style={styles.input}
-            placeholder="e.g., Chicken tikka masala with rice"
+            placeholder="Chicken tikka masala with rice"
             placeholderTextColor={colors.textTertiary}
             value={dishName}
             onChangeText={onDishNameChange}
@@ -87,7 +87,7 @@ export const DishSearchInput: React.FC<DishSearchInputProps> = ({
           />
           <TextInput
             style={styles.input}
-            placeholder="e.g., 500"
+            placeholder="100"
             placeholderTextColor={colors.textTertiary}
             value={targetCalories}
             onChangeText={onTargetCaloriesChange}

@@ -43,10 +43,10 @@ import numpy as np
 
 # OFF CSV has some very large fields (ingredient lists, etc.)
 csv.field_size_limit(10 * 1024 * 1024)  # 10 MB
-from sqlalchemy import create_engine, text
-from sqlalchemy.orm import Session
-from sentence_transformers import SentenceTransformer
-from tqdm import tqdm
+from sqlalchemy import create_engine, text  # noqa: E402
+from sqlalchemy.orm import Session  # noqa: E402
+from sentence_transformers import SentenceTransformer  # noqa: E402
+from tqdm import tqdm  # noqa: E402
 
 BATCH_SIZE = 500
 EMBED_BATCH_SIZE = 256
@@ -275,7 +275,7 @@ def import_dishes(csv_path: Path, engine, model: SentenceTransformer,
 
     elapsed = time.time() - start_time
     print(f"\n{'='*70}")
-    print(f"✅ Import complete!")
+    print("✅ Import complete!")
     print(f"   Total processed: {total_processed:,}")
     print(f"   Total inserted:  {total_inserted:,}")
     print(f"   Total skipped:   {total_skipped:,}")

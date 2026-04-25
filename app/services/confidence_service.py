@@ -20,7 +20,7 @@ Confidence Formula:
 """
 
 import math
-from typing import List, Tuple, Optional, Dict
+from typing import List, Optional, Dict
 from dataclasses import dataclass
 
 
@@ -278,7 +278,7 @@ def _generate_explanation(
         "portion size": scaling
     }
     
-    strongest = max(factors.items(), key=lambda x: x[1])
+    _strongest = max(factors.items(), key=lambda x: x[1])
     weakest = min(factors.items(), key=lambda x: x[1])
     
     if tier == "High":
@@ -382,11 +382,11 @@ if __name__ == "__main__":
         target_calories=600
     )
     
-    print(f"\n✅ Result:")
+    print("\n✅ Result:")
     print(f"   Score: {result1.score:.3f}")
     print(f"   Tier: {result1.tier}")
     print(f"   Explanation: {result1.explanation}")
-    print(f"   Breakdown:")
+    print("   Breakdown:")
     for key, value in result1.breakdown.items():
         if isinstance(value, float):
             print(f"     - {key}: {value:.3f}")
@@ -407,11 +407,11 @@ if __name__ == "__main__":
         target_calories=350
     )
     
-    print(f"\n⚠️  Result:")
+    print("\n⚠️  Result:")
     print(f"   Score: {result2.score:.3f}")
     print(f"   Tier: {result2.tier}")
     print(f"   Explanation: {result2.explanation}")
-    print(f"   Breakdown:")
+    print("   Breakdown:")
     for key, value in result2.breakdown.items():
         if isinstance(value, float):
             print(f"     - {key}: {value:.3f}")
@@ -432,11 +432,11 @@ if __name__ == "__main__":
         target_calories=1200
     )
     
-    print(f"\n❌ Result:")
+    print("\n❌ Result:")
     print(f"   Score: {result3.score:.3f}")
     print(f"   Tier: {result3.tier}")
     print(f"   Explanation: {result3.explanation}")
-    print(f"   Breakdown:")
+    print("   Breakdown:")
     for key, value in result3.breakdown.items():
         if isinstance(value, float):
             print(f"     - {key}: {value:.3f}")
@@ -457,11 +457,11 @@ if __name__ == "__main__":
         target_calories=170
     )
     
-    print(f"\n⭐ Result:")
+    print("\n⭐ Result:")
     print(f"   Score: {result4.score:.3f}")
     print(f"   Tier: {result4.tier}")
     print(f"   Explanation: {result4.explanation}")
-    print(f"   Breakdown:")
+    print("   Breakdown:")
     for key, value in result4.breakdown.items():
         if isinstance(value, float):
             print(f"     - {key}: {value:.3f}")
