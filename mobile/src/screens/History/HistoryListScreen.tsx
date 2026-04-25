@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useMemo } from 'react';
+﻿import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   View,
   Text,
@@ -44,6 +44,16 @@ export const HistoryListScreen: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [deletedItemIds, setDeletedItemIds] = useState<Set<string>>(new Set());
+  const rowAnimatedValues = useRef<Record<string, Animated.Value>>({}).current;
+
+  const getRowAnim = (id: string) => {
+    if (!rowAnimatedValues[id]) rowAnimatedValues[id] = new Animated.Value(0);
+    return rowAnimatedValues[id];
+  };
+
+  const onSwipeValueChange = ({ key, value }: { key: string; value: number }) => {
+    getRowAnim(key).setValue(value);
+  };
 
   /**
    * Load history entries from backend or cache
@@ -134,7 +144,7 @@ export const HistoryListScreen: React.FC = () => {
       setHistoryData(filteredEntries);
 
     } catch (error) {
-      console.error('âŒ [History] Failed to load history:', error);
+      console.error('Œ [History] Failed to load history:', error);
       Alert.alert('Error', 'Failed to load history. Please try again.');
     } finally {
       setIsLoading(false);
@@ -199,9 +209,9 @@ export const HistoryListScreen: React.FC = () => {
       (acc, entry) => {
         // Use actual macro values if available, otherwise estimate from calories
         // Typical ratio: 40% carbs, 30% protein, 30% fats
-        const protein = entry.protein || ((entry.calories * 0.3) / 4); // 30% of cals Ã· 4 cal/g
-        const carbs = entry.carbs || ((entry.calories * 0.4) / 4); // 40% of cals Ã· 4 cal/g
-        const fats = entry.fats || ((entry.calories * 0.3) / 9); // 30% of cals Ã· 9 cal/g
+        const protein = entry.protein || ((entry.calories * 0.3) / 4); // 30% of cals  4 cal/g
+        const carbs = entry.carbs || ((entry.calories * 0.4) / 4); // 40% of cals  4 cal/g
+        const fats = entry.fats || ((entry.calories * 0.3) / 9); // 30% of cals  9 cal/g
         
         return {
           protein: acc.protein + protein,
@@ -268,42 +278,60 @@ export const HistoryListScreen: React.FC = () => {
     <HistoryItemCard item={item} onPress={() => handleItemPress(item)} />
   );
 
-  // Render hidden swipe actions with slide-in animation
-  const renderHiddenItem = ({ item }: { item: HistoryEntry }, rowMap: any) => (
-    <Animated.View style={styles.hiddenContainer}>
-      {/* Favorite Button */}
-      <TouchableOpacity
-        style={[styles.hiddenButton, styles.favoriteButton]}
-        activeOpacity={0.7}
-        onPress={() => {
-          handleFavorite(item.id);
-          rowMap[item.id]?.closeRow();
-        }}
-      >
-        <MaterialCommunityIcons
-          name={item.isFavorite ? 'star' : 'star-outline'}
-          size={28}
-          color={colors.white}
-        />
-        <Text style={styles.hiddenButtonText}>
-          {item.isFavorite ? 'Unfav' : 'Favorite'}
-        </Text>
-      </TouchableOpacity>
+  // Render hidden swipe actions with animated scale/opacity
+  const renderHiddenItem = ({ item }: { item: HistoryEntry }, rowMap: any) => {
+    const anim = getRowAnim(item.id);
+    const scale = anim.interpolate({
+      inputRange: [-170, -85, 0],
+      outputRange: [1, 0.9, 0.6],
+      extrapolate: 'clamp',
+    });
+    const opacity = anim.interpolate({
+      inputRange: [-170, -60, 0],
+      outputRange: [1, 0.9, 0],
+      extrapolate: 'clamp',
+    });
 
-      {/* Delete Button */}
-      <TouchableOpacity
-        style={[styles.hiddenButton, styles.deleteButton]}
-        activeOpacity={0.7}
-        onPress={() => {
-          handleDelete(item.id, item.dishName);
-          rowMap[item.id]?.closeRow();
-        }}
-      >
-        <MaterialCommunityIcons name="delete" size={28} color={colors.white} />
-        <Text style={styles.hiddenButtonText}>Delete</Text>
-      </TouchableOpacity>
-    </Animated.View>
-  );
+    return (
+      <View style={styles.hiddenContainer}>
+        {/* Favorite Button */}
+        <Animated.View style={[styles.hiddenButton, styles.favoriteButton, { transform: [{ scale }], opacity }]}>
+          <TouchableOpacity
+            style={styles.hiddenButtonInner}
+            activeOpacity={0.7}
+            onPress={() => {
+              handleFavorite(item.id);
+              rowMap[item.id]?.closeRow();
+            }}
+          >
+            <MaterialCommunityIcons
+              name={item.isFavorite ? 'star' : 'star-outline'}
+              size={28}
+              color={colors.white}
+            />
+            <Text style={styles.hiddenButtonText}>
+              {item.isFavorite ? 'Unfav' : 'Favorite'}
+            </Text>
+          </TouchableOpacity>
+        </Animated.View>
+
+        {/* Delete Button */}
+        <Animated.View style={[styles.hiddenButton, styles.deleteButton, { transform: [{ scale }], opacity }]}>
+          <TouchableOpacity
+            style={styles.hiddenButtonInner}
+            activeOpacity={0.7}
+            onPress={() => {
+              handleDelete(item.id, item.dishName);
+              rowMap[item.id]?.closeRow();
+            }}
+          >
+            <MaterialCommunityIcons name="delete" size={28} color={colors.white} />
+            <Text style={styles.hiddenButtonText}>Delete</Text>
+          </TouchableOpacity>
+        </Animated.View>
+      </View>
+    );
+  };
 
   return (
     <View style={styles.container}>
@@ -322,7 +350,7 @@ export const HistoryListScreen: React.FC = () => {
         />
         <TextInput
           style={styles.searchInput}
-          placeholder="Search past dishesâ€¦"
+          placeholder="Search past dishes"
           value={searchQuery}
           onChangeText={setSearchQuery}
           placeholderTextColor={colors.textTertiary}
@@ -433,8 +461,10 @@ export const HistoryListScreen: React.FC = () => {
         rightOpenValue={-170}
         disableRightSwipe
         friction={10}
+        tension={40}
         swipeToOpenPercent={20}
         swipeToClosePercent={20}
+        onSwipeValueChange={onSwipeValueChange}
         contentContainerStyle={styles.listContent}
         refreshControl={
           <RefreshControl
@@ -627,16 +657,22 @@ function createStyles(colors: CS) {
       paddingBottom: Spacing.xxl,
     },
     hiddenContainer: {
+      flex: 1,
       flexDirection: 'row',
-      alignItems: 'stretch',
+      alignItems: 'center',
       justifyContent: 'flex-end',
       marginHorizontal: Spacing.lg,
       marginBottom: Spacing.md,
-      borderRadius: BorderRadius.lg,
-      overflow: 'hidden',
+      borderRadius: BorderRadius.xl,
     },
     hiddenButton: {
       width: 85,
+      alignSelf: 'stretch',
+      borderRadius: BorderRadius.xl,
+      overflow: 'hidden',
+    },
+    hiddenButtonInner: {
+      flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
     },

@@ -80,7 +80,7 @@ export const BarcodeScannerScreen: React.FC = () => {
     try {
       addLabelEntry({
         dishName: product.productName,
-        matchedDish: `${product.brand ? product.brand + ' â€” ' : ''}${product.productName}`,
+        matchedDish: `${product.brand ? product.brand + ' €” ' : ''}${product.productName}`,
         calories: product.nutrition.calories,
         protein: product.nutrition.protein_g,
         carbs: product.nutrition.carbs_g,
@@ -109,7 +109,7 @@ export const BarcodeScannerScreen: React.FC = () => {
     setScanState('scanning');
   };
 
-  // â”€â”€ Permission denied â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ”€”€ Permission denied ”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€
   if (permission && !permission.granted) {
     return (
       <View style={[styles.container, styles.center, { paddingTop: insets.top }]}>
@@ -129,12 +129,12 @@ export const BarcodeScannerScreen: React.FC = () => {
     return (
       <View style={[styles.container, styles.center, { paddingTop: insets.top }]}>
         <ActivityIndicator size="large" color={colors.accent} />
-        <Text style={styles.loadingText}>Starting cameraâ€¦</Text>
+        <Text style={styles.loadingText}>Starting camera€¦</Text>
       </View>
     );
   }
 
-  // â”€â”€ Macro row helper â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ”€”€ Macro row helper ”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€
   const MacroChip = ({ label, value, unit }: { label: string; value: number; unit: string }) => (
     <View style={styles.macroChip}>
       <Text style={styles.macroValue}>
@@ -156,7 +156,7 @@ export const BarcodeScannerScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      {/* â”€â”€ Camera viewfinder (always rendered in background) â”€â”€ */}
+      {/* ”€”€ Camera viewfinder (always rendered in background) ”€”€ */}
       <CameraView
         style={StyleSheet.absoluteFill}
         facing="back"
@@ -167,7 +167,7 @@ export const BarcodeScannerScreen: React.FC = () => {
         onBarcodeScanned={scanState === 'scanning' ? onBarcodeScanned : undefined}
       />
 
-      {/* â”€â”€ Scanning overlay â”€â”€ */}
+      {/* ”€”€ Scanning overlay ”€”€ */}
       {scanState === 'scanning' && (
         <View style={styles.overlay}>
           {/* Top bar */}
@@ -202,18 +202,18 @@ export const BarcodeScannerScreen: React.FC = () => {
         </View>
       )}
 
-      {/* â”€â”€ Loading â”€â”€ */}
+      {/* ”€”€ Loading ”€”€ */}
       {scanState === 'loading' && (
         <View style={[styles.overlay, styles.center]}>
           <View style={styles.loadingCard}>
             <ActivityIndicator size="large" color={colors.accent} />
-            <Text style={styles.loadingTitle}>Looking up productâ€¦</Text>
+            <Text style={styles.loadingTitle}>Looking up product€¦</Text>
             <Text style={styles.loadingBarcode}>{lastScanned}</Text>
           </View>
         </View>
       )}
 
-      {/* â”€â”€ Error â”€â”€ */}
+      {/* ”€”€ Error ”€”€ */}
       {scanState === 'error' && (
         <View style={[styles.overlay, styles.center]}>
           <View style={[styles.bottomSheet, { paddingBottom: insets.bottom + Spacing.xl }]}>
@@ -234,7 +234,7 @@ export const BarcodeScannerScreen: React.FC = () => {
         </View>
       )}
 
-      {/* â”€â”€ Result sheet â”€â”€ */}
+      {/* ”€”€ Result sheet ”€”€ */}
       {scanState === 'result' && product && (
         <View style={[styles.overlay, styles.sheetBg]}>
           <View style={[styles.bottomSheet, { paddingBottom: insets.bottom + Spacing.lg }]}>
@@ -265,7 +265,7 @@ export const BarcodeScannerScreen: React.FC = () => {
                 <Text style={styles.brandText}>{product.brand.toUpperCase()}</Text>
               ) : null}
               <Text style={styles.productName}>{product.productName}</Text>
-              <Text style={styles.servingLabel}>Per serving Â· {product.servingSize}</Text>
+              <Text style={styles.servingLabel}>Per serving  {product.servingSize}</Text>
 
               {/* Macro chips */}
               <View style={styles.macroRow}>
@@ -316,7 +316,7 @@ export const BarcodeScannerScreen: React.FC = () => {
   );
 };
 
-// â”€â”€ Reticle corner helper â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ”€”€ Reticle corner helper ”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€
 const CORNER = 22;
 const BORDER = 3;
 
@@ -340,7 +340,7 @@ function createStyles(colors: CV) {
     justifyContent: 'flex-end',
   },
 
-  // â”€â”€ Top bar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ”€”€ Top bar ”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€
   topBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -362,7 +362,7 @@ function createStyles(colors: CV) {
     fontWeight: '700',
   },
 
-  // â”€â”€ Reticle â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ”€”€ Reticle ”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€
   reticleContainer: {
     flex: 1,
     alignItems: 'center',
@@ -399,7 +399,7 @@ function createStyles(colors: CV) {
     textAlign: 'center',
   },
 
-  // â”€â”€ Loading â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ”€”€ Loading ”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€
   loadingCard: {
     backgroundColor: colors.cardBackground,
     borderRadius: BorderRadius.xl,
@@ -424,7 +424,7 @@ function createStyles(colors: CV) {
     fontSize: Typography.fontSize.sm,
   },
 
-  // â”€â”€ Bottom sheet â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ”€”€ Bottom sheet ”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€
   bottomSheet: {
     backgroundColor: colors.cardBackground,
     borderTopLeftRadius: BorderRadius.xl,
@@ -473,7 +473,7 @@ function createStyles(colors: CV) {
     marginBottom: Spacing.lg,
   },
 
-  // â”€â”€ Macros â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ”€”€ Macros ”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€
   macroRow: {
     flexDirection: 'row',
     gap: Spacing.sm,
@@ -501,7 +501,7 @@ function createStyles(colors: CV) {
     marginTop: 2,
   },
 
-  // â”€â”€ Nutrients â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ”€”€ Nutrients ”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€
   nutrientsCard: {
     backgroundColor: colors.surface,
     borderRadius: BorderRadius.md,
@@ -523,7 +523,7 @@ function createStyles(colors: CV) {
     fontWeight: '600',
   },
 
-  // â”€â”€ Error â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ”€”€ Error ”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€
   errorTitle: {
     color: colors.text,
     fontSize: Typography.fontSize.xl,
@@ -538,7 +538,7 @@ function createStyles(colors: CV) {
     marginBottom: Spacing.xl,
   },
 
-  // â”€â”€ Action buttons â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ”€”€ Action buttons ”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€
   actionRow: {
     flexDirection: 'row',
     gap: Spacing.sm,
@@ -579,7 +579,7 @@ function createStyles(colors: CV) {
     fontWeight: '600',
   },
 
-  // â”€â”€ Permission â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ”€”€ Permission ”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€
   permissionTitle: {
     color: colors.text,
     fontSize: Typography.fontSize.xl,

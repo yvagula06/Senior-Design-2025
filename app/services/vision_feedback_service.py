@@ -58,7 +58,7 @@ class VisionFeedbackService:
 
         Args:
             device_id: Mobile device UUID (resolved to users.id; creates user if new).
-            image_storage_keys: List of storage path/key strings â€” NOT base64.
+            image_storage_keys: List of storage path/key strings €” NOT base64.
         """
         with engine.connect() as conn:
             user_id: Optional[int] = None
@@ -128,7 +128,7 @@ class VisionFeedbackService:
             VisionFeedbackResponse with confirmation and personalisation updates.
         """
         with engine.connect() as conn:
-            # Resolve device_id â†’ users.id (nullable)
+            # Resolve device_id †’ users.id (nullable)
             user_id: Optional[int] = None
             if feedback_request.user_id:
                 user_id = get_or_create_user_id(feedback_request.user_id, conn)

@@ -36,7 +36,11 @@ export const HistoryStackNavigator: React.FC = () => {
       <Stack.Screen
         name="HistoryDetail"
         component={HistoryDetailScreen}
-        options={{ title: 'Dish Details' }}
+        options={{
+          title: 'Dish Details',
+          headerBackTitle: 'HistoryList',
+          headerTintColor: '#FFFFFF',
+        }}
       />
     </Stack.Navigator>
   );

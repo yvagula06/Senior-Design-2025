@@ -99,7 +99,7 @@ export const LabelResultScreen: React.FC = () => {
         savedHistoryId.current = null;
         Alert.alert('Unsaved', `${dishName} removed from history.`);
       } catch (error) {
-        console.error('âŒ Failed to delete history entry:', error);
+        console.error('Failed to delete history entry:', error);
         Alert.alert('Error', 'Failed to remove entry from history.');
       }
     } else {
@@ -133,7 +133,7 @@ export const LabelResultScreen: React.FC = () => {
         Alert.alert('Saved', `${dishName} added to history!`);
 
       } catch (error) {
-        console.error('âŒ Failed to save history entry:', error);
+        console.error('Failed to save history entry:', error);
         Alert.alert('Error', 'Failed to save entry to history.');
       }
     }

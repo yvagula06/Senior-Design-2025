@@ -1,4 +1,4 @@
-﻿import React, { useState, useMemo } from 'react';
+﻿import React, { useState, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
@@ -29,6 +29,23 @@ export const HistoryDetailScreen: React.FC = () => {
   const navigation = useNavigation();
   const { dishId, dishName } = route.params;
   const [isFavorite, setIsFavorite] = useState(false);
+
+  useEffect(() => {
+    navigation.setOptions({
+      headerTintColor: '#FFFFFF',
+      headerTitleStyle: { fontWeight: 'bold', color: '#FFFFFF' },
+      headerLeft: () => (
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}
+          activeOpacity={0.7}
+        >
+          <MaterialCommunityIcons name="chevron-left" size={28} color="#FFFFFF" />
+          <Text style={{ color: '#FFFFFF', fontSize: 17 }}>History List</Text>
+        </TouchableOpacity>
+      ),
+    });
+  }, [navigation]);
 
   // Mock data - replace with actual data fetch based on dishId
   const dishData = {

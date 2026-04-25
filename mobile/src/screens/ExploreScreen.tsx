@@ -23,7 +23,7 @@ import { useAppTheme } from '../context/ThemeContext';
 import { fetchFeaturedDishes } from '../services/api';
 import { cacheFeaturedDishes, loadCachedDishes } from '../services/storage';
 
-// â”€â”€â”€ Static curated content â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ”€”€”€ Static curated content ”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€
 
 type NutritionFact = { label: string; value: string; icon: string; color: string };
 
@@ -167,7 +167,7 @@ type HealthTip = { tip: string; icon: string };
 const HEALTH_TIPS: HealthTip[] = [
   { tip: 'Eating protein with every meal helps keep you full longer.', icon: 'arm-flex' },
   { tip: 'Swapping white rice for cauliflower rice saves ~170 kcal per cup.', icon: 'swap-horizontal' },
-  { tip: 'Restaurant portions are often 2â€“3Ã— larger than standard serving sizes.', icon: 'scale' },
+  { tip: 'Restaurant portions are often 2€“3— larger than standard serving sizes.', icon: 'scale' },
   { tip: 'Drinking water before meals can reduce calorie intake by ~13%.', icon: 'water' },
   { tip: 'Adding a salad before your main course typically cuts total intake by ~10%.', icon: 'leaf' },
   { tip: 'Cooking at home saves an average of 200 kcal vs. eating out.', icon: 'home-heart' },
@@ -291,7 +291,7 @@ export const ExploreScreen: React.FC = () => {
 
   const loadMockData = () => {
     const all: DishCardData[] = [
-      // â”€â”€ Restaurant â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+      // ”€”€ Restaurant ”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€
       { id: 'r1', name: 'Chipotle Chicken Bowl', description: 'Rice, black beans, grilled chicken, cheese, lettuce, salsa', calories: 650, prepStyle: 'restaurant', estimatedProtein: 45, estimatedCarbs: 68, estimatedFat: 22 },
       { id: 'r2', name: 'Paneer Tikka Masala', description: 'Creamy tomato curry with cottage cheese, served with naan', calories: 580, prepStyle: 'restaurant', estimatedProtein: 24, estimatedCarbs: 52, estimatedFat: 28 },
       { id: 'r3', name: 'Margherita Pizza (2 slices)', description: 'Classic Neapolitan pizza with fresh mozzarella and basil', calories: 520, prepStyle: 'restaurant', estimatedProtein: 22, estimatedCarbs: 62, estimatedFat: 18 },
@@ -302,7 +302,7 @@ export const ExploreScreen: React.FC = () => {
       { id: 'r8', name: 'Tom Yum Soup', description: 'Thai hot-and-sour broth with shrimp, mushrooms, lemongrass', calories: 190, prepStyle: 'restaurant', estimatedProtein: 18, estimatedCarbs: 12, estimatedFat: 6 },
       { id: 'r9', name: 'Steak & Vegetables', description: '8 oz sirloin steak with grilled asparagus and mashed potato', calories: 780, prepStyle: 'restaurant', estimatedProtein: 58, estimatedCarbs: 32, estimatedFat: 42 },
       { id: 'r10', name: 'Sushi Roll (8 pc California)', description: 'Crab, avocado, cucumber, sesame seeds', calories: 310, prepStyle: 'restaurant', estimatedProtein: 14, estimatedCarbs: 38, estimatedFat: 10 },
-      // â”€â”€ Home â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+      // ”€”€ Home ”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€
       { id: 'h1', name: 'Grilled Chicken Breast', description: 'Simply grilled with garlic, lemon, and herbs', calories: 280, prepStyle: 'home', estimatedProtein: 48, estimatedCarbs: 0, estimatedFat: 8 },
       { id: 'h2', name: 'Overnight Oats', description: 'Rolled oats, Greek yogurt, chia seeds, banana, almond milk', calories: 380, prepStyle: 'home', estimatedProtein: 18, estimatedCarbs: 58, estimatedFat: 8 },
       { id: 'h3', name: 'Scrambled Eggs & Toast', description: '3 eggs with butter, 2 slices whole wheat toast', calories: 420, prepStyle: 'home', estimatedProtein: 24, estimatedCarbs: 32, estimatedFat: 20 },
@@ -354,7 +354,7 @@ export const ExploreScreen: React.FC = () => {
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={() => loadFeaturedDishes(true)} tintColor={colors.accent} colors={[colors.accent]} />}
       >
-        {/* â”€â”€ Header â”€â”€ */}
+        {/* ”€”€ Header ”€”€ */}
         <View style={[styles.header, { paddingTop: insets.top + Spacing.lg }]}>
           <View style={styles.headerContent}>
             <View style={styles.headerTextContainer}>
@@ -383,7 +383,7 @@ export const ExploreScreen: React.FC = () => {
           </Animated.View>
         </View>
 
-        {/* â”€â”€ Category Chips â”€â”€ */}
+        {/* ”€”€ Category Chips ”€”€ */}
         <View style={styles.categorySection}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryScrollContent}>
             {categories.map(cat => (
@@ -399,7 +399,7 @@ export const ExploreScreen: React.FC = () => {
           </ScrollView>
         </View>
 
-        {/* â”€â”€ Filter result count â”€â”€ */}
+        {/* ”€”€ Filter result count ”€”€ */}
         {isFiltering && (
           <View style={styles.filterResultRow}>
             <Text style={styles.filterResultText}>
@@ -419,7 +419,7 @@ export const ExploreScreen: React.FC = () => {
           </View>
         )}
 
-        {/* â”€â”€ Quick Actions (only when not filtering) â”€â”€ */}
+        {/* ”€”€ Quick Actions (only when not filtering) ”€”€ */}
         {!isFiltering && (
           <View style={styles.quickActionsRow}>
             <TouchableOpacity style={styles.quickAction} onPress={() => navigation.navigate('CameraCapture')} activeOpacity={0.8}>
@@ -443,7 +443,7 @@ export const ExploreScreen: React.FC = () => {
           </View>
         )}
 
-        {/* â”€â”€ Did You Know (rotatable fact) â”€â”€ */}
+        {/* ”€”€ Did You Know (rotatable fact) ”€”€ */}
         {!isFiltering && (
           <TouchableOpacity style={styles.factCard} onPress={() => setFactIndex(i => i + 1)} activeOpacity={0.85}>
             <View style={[styles.factIconBox, { backgroundColor: currentFact.color + '22' }]}>
@@ -458,7 +458,7 @@ export const ExploreScreen: React.FC = () => {
           </TouchableOpacity>
         )}
 
-        {/* â”€â”€ Trending Searches â”€â”€ */}
+        {/* ”€”€ Trending Searches ”€”€ */}
         {!isFiltering && (
           <>
             <View style={styles.sectionHeader}>
@@ -480,7 +480,7 @@ export const ExploreScreen: React.FC = () => {
           </>
         )}
 
-        {/* â”€â”€ High Protein Section â”€â”€ */}
+        {/* ”€”€ High Protein Section ”€”€ */}
         {(!isFiltering || selectedCategory === 'High Protein') && highProteinDishes.length > 0 && (
           <>
             <CategoryHeader title="High Protein Picks" subtitle="25 g+ protein per serving" icon="arm-flex" />
@@ -488,7 +488,7 @@ export const ExploreScreen: React.FC = () => {
           </>
         )}
 
-        {/* â”€â”€ Low Calorie Section â”€â”€ */}
+        {/* ”€”€ Low Calorie Section ”€”€ */}
         {(!isFiltering || selectedCategory === 'Low Calorie') && lowCalDishes.length > 0 && (
           <>
             <CategoryHeader title="Light & Low Calorie" subtitle="Under 350 kcal per serving" icon="leaf" />
@@ -496,7 +496,7 @@ export const ExploreScreen: React.FC = () => {
           </>
         )}
 
-        {/* â”€â”€ Restaurant Section â”€â”€ */}
+        {/* ”€”€ Restaurant Section ”€”€ */}
         {filteredRestaurant.length > 0 && (
           <>
             <CategoryHeader title="Restaurant Dishes" subtitle="Popular picks from restaurants" icon="silverware-fork-knife" />
@@ -504,7 +504,7 @@ export const ExploreScreen: React.FC = () => {
           </>
         )}
 
-        {/* â”€â”€ Home Cooked Section â”€â”€ */}
+        {/* ”€”€ Home Cooked Section ”€”€ */}
         {filteredHome.length > 0 && (
           <>
             <CategoryHeader title="Home Cooked Meals" subtitle="Simple, wholesome recipes" icon="home-heart" />
@@ -512,20 +512,20 @@ export const ExploreScreen: React.FC = () => {
           </>
         )}
 
-        {/* â”€â”€ Health Tip â”€â”€ */}
+        {/* ”€”€ Health Tip ”€”€ */}
         {!isFiltering && (
           <TouchableOpacity style={styles.tipCard} onPress={() => setTipIndex(i => i + 1)} activeOpacity={0.85}>
             <View style={styles.tipIconBox}>
               <MaterialCommunityIcons name={currentTip.icon as any} size={24} color={colors.primary} />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.tipTitle}>Health Tip  â€¢  tap for next</Text>
+              <Text style={styles.tipTitle}>Health Tip  €¢  tap for next</Text>
               <Text style={styles.tipText}>{currentTip.tip}</Text>
             </View>
           </TouchableOpacity>
         )}
 
-        {/* â”€â”€ Calorie Reference â”€â”€ */}
+        {/* ”€”€ Calorie Reference ”€”€ */}
         {!isFiltering && (
           <>
             <View style={styles.sectionHeader}>

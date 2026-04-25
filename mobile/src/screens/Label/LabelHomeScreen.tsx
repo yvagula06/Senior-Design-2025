@@ -134,13 +134,13 @@ export const LabelHomeScreen: React.FC = () => {
         prepStyle === 'unknown' ? undefined : (prepStyle as 'home' | 'restaurant' | 'fast_food')
       );
 
-      console.log('âœ… [Label] Generated label:', response);
+      console.log('[Label] Generated label:', response);
       
       // Store result for display
       setLabelResult(response);
 
     } catch (error) {
-      console.error('âŒ [Label] Failed to generate label:', error);
+      console.error('[Label] Failed to generate label:', error);
       
       // Set user-friendly error message
       setApiError(String(error));
@@ -150,7 +150,7 @@ export const LabelHomeScreen: React.FC = () => {
   };
 
   /**
-   * Save label result to daily totals â€” open meal picker first
+   * Save label result to daily totals open meal picker first
    */
   const handleSave = () => {
     if (!labelResult) return;
@@ -497,15 +497,6 @@ export const LabelHomeScreen: React.FC = () => {
             </View>
           </View>
 
-          {/* Explanation Card */}
-          <View style={styles.explanationCard}>
-            <View style={styles.explanationHeader}>
-              <MaterialCommunityIcons name="information" size={20} color={colors.accent} />
-              <Text style={styles.explanationTitle}>How We Calculated This</Text>
-            </View>
-            <Text style={styles.explanationText}>{labelResult.explanation}</Text>
-          </View>
-
           {/* Save Button */}
           <TouchableOpacity
             style={[
@@ -516,15 +507,24 @@ export const LabelHomeScreen: React.FC = () => {
             disabled={isSaved}
             activeOpacity={0.8}
           >
-            <MaterialCommunityIcons 
-              name={isSaved ? "check-circle" : "content-save"} 
-              size={24} 
-              color="#FFF" 
+            <MaterialCommunityIcons
+              name={isSaved ? "check-circle" : "content-save"}
+              size={24}
+              color="#FFF"
             />
             <Text style={styles.saveButtonText}>
               {isSaved ? 'Saved to Daily Totals' : 'Save to Daily Totals'}
             </Text>
           </TouchableOpacity>
+
+          {/* Explanation Card */}
+          <View style={[styles.explanationCard, { marginTop: Spacing.md }]}>
+            <View style={styles.explanationHeader}>
+              <MaterialCommunityIcons name="information" size={20} color={colors.accent} />
+              <Text style={styles.explanationTitle}>How We Calculated This</Text>
+            </View>
+            <Text style={styles.explanationText}>{labelResult.explanation}</Text>
+          </View>
         </View>
       )}
 
@@ -1053,6 +1053,7 @@ function createStyles(colors: CH) {
     paddingHorizontal: Spacing.xl,
     borderRadius: BorderRadius.xl,
     marginTop: Spacing.md,
+    marginBottom: Spacing.md,
     gap: Spacing.sm,
     ...Shadows.md,
   },
