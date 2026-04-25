@@ -28,6 +28,9 @@ export const estimateMeal = async (request: VisionRequest): Promise<VisionRespon
       deviceType: request.metadata.device_type,
       hasDepthData: !!request.depth_data,
       hasReferenceObject: !!request.reference_object,
+      normalCameraMode: request.normal_camera_mode,
+      plateType: request.plate_type,
+      referenceObjectType: request.reference_object_type,
     });
 
     // Vision processing can take longer (model loading, segmentation, etc.)

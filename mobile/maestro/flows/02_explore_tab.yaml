@@ -1,0 +1,78 @@
+# ─── Flow 2: Explore Tab ─────────────────────────────────────────────────────
+# Demonstrates: browsing dishes, opening the recipe bottom sheet modal,
+#               scrolling through recipe steps, and tapping Create Nutrition Label.
+
+# Navigate to Explore tab
+- tapOn:
+    text: "Explore"
+- waitForAnimationToEnd
+
+# Assert Explore header loaded
+- assertVisible:
+    text: "Discover dishes & nutrition insights"
+
+# Pause on the header so the audience can read it
+- waitForAnimationToEnd
+
+# Scroll down past Quick Actions and the Did You Know card
+- scroll:
+    direction: DOWN
+    duration: 800
+
+# Scroll until Trending Searches section is visible
+- scrollUntilVisible:
+    element:
+      text: "Trending Searches"
+    direction: DOWN
+    timeout: 5000
+- waitForAnimationToEnd
+
+# Scroll further to reach the horizontal dish rows
+- scroll:
+    direction: DOWN
+    duration: 800
+
+# Tap a dish card — Chipotle Chicken Bowl (first card in Restaurant Dishes row)
+- scrollUntilVisible:
+    element:
+      text: "Chipotle Chicken Bowl"
+    direction: DOWN
+    timeout: 5000
+- tapOn:
+    text: "Chipotle Chicken Bowl"
+- waitForAnimationToEnd
+
+# Recipe modal is now open — assert key content
+- assertVisible:
+    text: "Chipotle Chicken Bowl"
+- assertVisible:
+    text: "Create Nutrition Label"
+
+# Scroll down inside the modal to show the recipe steps
+- swipe:
+    start: "50%, 70%"
+    end: "50%, 30%"
+    duration: 800
+- waitForAnimationToEnd
+
+- swipe:
+    start: "50%, 70%"
+    end: "50%, 30%"
+    duration: 800
+- waitForAnimationToEnd
+
+# Tap the CTA — this closes the modal and navigates to LabelHome with prefill
+- tapOn:
+    text: "Create Nutrition Label"
+- waitForAnimationToEnd
+
+# Assert we landed back on LabelHome with the dish prefilled
+- assertVisible:
+    text: "NutriLabelAI"
+- assertVisible:
+    text: "Chipotle Chicken Bowl"
+
+# Return to Explore for the next flow (press back or tap tab)
+- tapOn:
+    text: "Explore"
+- waitForAnimationToEnd

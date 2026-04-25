@@ -12,9 +12,38 @@
  */
 
 export type CaptureAngle = 'top' | 'side' | 'diagonal';
-export type DeviceType = 'ios' | 'android' | 'unknown';
-export type CaptureMode = 'single' | 'multi_angle' | 'reference_object';
+export type DeviceType =
+  | 'ios'
+  | 'android'
+  | 'realsense'
+  | 'ios_lidar'
+  | 'iphone_camera'
+  | 'android_camera'
+  | 'unknown';
+export type CaptureMode = 'single' | 'multi_angle' | 'depth';
 export type EstimationMode = 'depth' | 'multi_angle' | 'reference_based';
+
+// Normal-camera sub-modes
+export type NormalCameraMode =
+  | 'plate_reference'
+  | 'multi_angle'
+  | 'reference_object'
+  | 'basic_single';
+
+export type PlateType =
+  | 'small_plate'
+  | 'medium_plate'
+  | 'large_plate'
+  | 'bowl'
+  | 'cup'
+  | 'container';
+
+export type ReferenceObjectType =
+  | 'credit_card'
+  | 'fork'
+  | 'spoon'
+  | 'soda_can'
+  | 'custom';
 
 export interface ImageData {
   data: string;              // base64 encoded image
@@ -35,6 +64,7 @@ export interface CameraIntrinsics {
   principal_point_y: number;
   image_width: number;
   image_height: number;
+  depth_scale?: number;      // depth units in metres per value (e.g. 0.001 for RealSense)
 }
 
 export interface ReferenceObject {
@@ -55,6 +85,12 @@ export interface VisionRequest {
   camera_intrinsics?: CameraIntrinsics;
   reference_object?: ReferenceObject;
   metadata: RequestMetadata;
+  // Normal-camera estimation hints
+  normal_camera_mode?: NormalCameraMode;
+  plate_type?: PlateType;
+  plate_diameter_cm?: number;
+  reference_object_type?: ReferenceObjectType;
+  reference_object_size_cm?: number;
 }
 
 /**
@@ -119,11 +155,18 @@ export interface VisionResponse {
   dish_predictions: DishPrediction[];
   selected_dish: SelectedDish;
   calorie_estimate: CalorieEstimate;
-  accuracy_score: AccuracyScore | number;  // Can be simple number or full object
-  estimation_mode: EstimationMode;  // At root level per API spec
+  accuracy_score: AccuracyScore | number;
+  estimation_mode: EstimationMode;
   metadata: ResponseMetadata;
-  volume_estimate?: VolumeEstimate;  // Optional field from API
-  suggested_meal_log?: any;  // Optional field from API
+  volume_estimate?: VolumeEstimate;
+  suggested_meal_log?: any;
+  // Enhanced quality / guidance fields
+  image_quality_score?: number;
+  segmentation_quality_score?: number;
+  estimated_area_cm2?: number | null;
+  estimated_height_cm?: number | null;
+  retake_recommendation?: string | null;
+  debug_metadata?: Record<string, any>;
 }
 
 /**

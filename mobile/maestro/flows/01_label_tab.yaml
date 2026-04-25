@@ -1,0 +1,65 @@
+# ─── Flow 1: Label Tab ────────────────────────────────────────────────────────
+# Demonstrates: typing a dish, generating a nutrition label, saving to Daily Totals.
+# NOTE: Requires the backend API to be reachable. If the API is unavailable the
+#       "Matched Dish" assertion will time out after 30 s and the flow will fail.
+
+# Navigate to Label tab
+- tapOn:
+    text: "Label"
+- waitForAnimationToEnd
+
+# Assert landing screen
+- assertVisible:
+    text: "NutriLabelAI"
+
+# Pause so the screen animations finish
+- waitForAnimationToEnd
+
+# Tap the dish-name input (uses placeholder text as the hit target)
+- tapOn:
+    text: "e.g., Chicken tikka masala with rice"
+- clearText
+- inputText: "Grilled Salmon with Roasted Broccoli"
+- hideKeyboard
+- waitForAnimationToEnd
+
+# Scroll down slightly so the Generate button is fully visible
+- scroll:
+    direction: DOWN
+    duration: 600
+
+# Tap Generate
+- tapOn:
+    text: "Generate Label"
+- waitForAnimationToEnd
+
+# Wait up to 30 s for the API response
+- assertVisible:
+    text: "Matched Dish"
+    timeout: 30000
+
+# Scroll down to reveal the Save button
+- scrollUntilVisible:
+    element:
+      text: "Save to Daily Totals"
+    direction: DOWN
+    timeout: 5000
+- waitForAnimationToEnd
+
+# Save the entry
+- tapOn:
+    text: "Save to Daily Totals"
+- waitForAnimationToEnd
+
+# Meal picker appears — choose Lunch
+- assertVisible:
+    text: "Lunch"
+- tapOn:
+    text: "Lunch"
+- waitForAnimationToEnd
+
+# Confirm the toast or the button changed to "Saved"
+- assertVisible:
+    text: "Saved to Daily Totals"
+    timeout: 5000
+- waitForAnimationToEnd

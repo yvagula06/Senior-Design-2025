@@ -215,7 +215,9 @@ class VisionEstimate(Base):
 
     # Capture metadata
     capture_mode: Mapped[str] = mapped_column(String(20), nullable=False)
-    device_type: Mapped[Optional[str]] = mapped_column(String(10), nullable=True)
+    # device_type values: ios, android, realsense, ios_lidar, iphone_camera,
+    #                     android_camera, unknown  (max length = 16)
+    device_type: Mapped[Optional[str]] = mapped_column(String(30), nullable=True)
     num_images: Mapped[int] = mapped_column(Integer, nullable=False)
     has_depth_data: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 

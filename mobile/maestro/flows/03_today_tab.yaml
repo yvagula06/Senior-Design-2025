@@ -1,0 +1,39 @@
+# ─── Flow 3: Today Tab ───────────────────────────────────────────────────────
+# Demonstrates: daily calorie progress card, macro bars, and the meal entry
+#               that was saved in Flow 1 (Grilled Salmon → Lunch).
+
+# Navigate to Today tab
+- tapOn:
+    text: "Today"
+- waitForAnimationToEnd
+
+# Calorie progress card should be visible
+- assertVisible:
+    text: "of"     # part of "X of Y kcal goal"
+- assertVisible:
+    text: "Macros"
+
+# Pause to let viewer read the calorie ring
+- waitForAnimationToEnd
+
+# Scroll down to show macro bars
+- scroll:
+    direction: DOWN
+    duration: 700
+- waitForAnimationToEnd
+
+# Scroll further to reveal the Lunch meal group that was saved in Flow 1
+- scroll:
+    direction: DOWN
+    duration: 700
+- waitForAnimationToEnd
+
+# Assert the entry is present (dish name set in Flow 1)
+- assertVisible:
+    text: "Lunch"
+
+# Scroll back to top for a clean exit
+- scroll:
+    direction: UP
+    duration: 1000
+- waitForAnimationToEnd

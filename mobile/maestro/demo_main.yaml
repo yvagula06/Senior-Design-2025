@@ -1,0 +1,29 @@
+appId: com.seniordesign.nutritionestimator
+---
+# ─── NutriLabelAI — Full Demo Flow ───────────────────────────────────────────
+# Runs every sub-flow in sequence.
+# Prerequisites:
+#   • Device/emulator connected (adb devices or iOS simulator running)
+#   • Backend running at the configured IP (or mock mode)
+#   • App already installed (expo run:android / expo run:ios)
+#   • Maestro installed: curl -Ls "https://get.maestro.mobile.dev" | bash
+# Run: maestro test maestro/demo_main.yaml
+
+- launchApp:
+    clearState: false
+- waitForAnimationToEnd
+
+# ── 1. Label tab ─────────────────────────────────────────────────────────────
+- runFlow: flows/01_label_tab.yaml
+
+# ── 2. Explore tab ───────────────────────────────────────────────────────────
+- runFlow: flows/02_explore_tab.yaml
+
+# ── 3. Today tab ─────────────────────────────────────────────────────────────
+- runFlow: flows/03_today_tab.yaml
+
+# ── 4. History tab ───────────────────────────────────────────────────────────
+- runFlow: flows/04_history_tab.yaml
+
+# ── 5. Profile tab ───────────────────────────────────────────────────────────
+- runFlow: flows/05_profile_tab.yaml

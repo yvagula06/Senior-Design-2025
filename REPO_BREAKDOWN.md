@@ -259,6 +259,7 @@ Senior-Design-2025/
 │   │   │   │   ├── VariantBottomSheet.tsx
 │   │   │   │   ├── VariantDrawerButton.tsx
 │   │   │   │   └── index.ts
+│   │   │   ├── Toast.tsx             # Toast notification component
 │   │   │   ├── Profile/              # Profile-specific components
 │   │   │   │   ├── InfoCard.tsx
 │   │   │   │   ├── SectionHeader.tsx
@@ -276,7 +277,8 @@ Senior-Design-2025/
 │   │   │   └── fonts.ts              # Font definitions
 │   │   │
 │   │   ├── context/                   # State management
-│   │   │   └── FoodContext.tsx       # Global food state
+│   │   │   ├── FoodContext.tsx       # Global food state
+│   │   │   └── ThemeContext.tsx      # Theme/dark-mode state
 │   │   │
 │   │   ├── hooks/                     # Custom React hooks
 │   │   │   ├── index.ts              # Hook exports
@@ -296,7 +298,8 @@ Senior-Design-2025/
 │   │   ├── screens/                   # Main app screens
 │   │   │   ├── Label/                # Label generation screens
 │   │   │   │   ├── LabelHomeScreen.tsx    # Input form
-│   │   │   │   └── LabelResultScreen.tsx  # Results display
+│   │   │   │   ├── LabelResultScreen.tsx  # Results display
+│   │   │   │   └── BarcodeScannerScreen.tsx # Barcode scan interface
 │   │   │   ├── Vision/               # Camera-based screens
 │   │   │   │   ├── CameraCaptureScreen.tsx  # Camera interface
 │   │   │   │   └── EstimationResultScreen.tsx # Vision results
@@ -311,6 +314,7 @@ Senior-Design-2025/
 │   │   │
 │   │   ├── services/                  # API communication
 │   │   │   ├── api.ts                # Axios client config
+│   │   │   ├── barcode.ts            # Barcode scanning service
 │   │   │   ├── label.ts              # Label API calls
 │   │   │   ├── labelApi.ts           # Label service
 │   │   │   ├── visionApi.ts          # Vision API calls
@@ -450,6 +454,9 @@ Senior-Design-2025/
 │   ├── embed_dishes.py               # Generate embeddings
 │   ├── import_usda_dishes.py         # Populate dishes from USDA data ⭐⭐
 │   ├── import_usda_fixed.py          # Fixed USDA import variant
+│   ├── import_usda_whole_foods.py    # Import USDA whole foods subset
+│   ├── import_fastfood.py            # Import fast food dataset
+│   ├── import_openfoodfacts.py       # Import Open Food Facts data
 │   ├── import_continuous.ps1         # Continuous import PowerShell script
 │   ├── populate_db_simple.py         # Simplified database population
 │   ├── reduce_dataset.py             # Preprocess CSVs
@@ -461,8 +468,7 @@ Senior-Design-2025/
 │   └── README_PREPROCESSING.md       # Preprocessing guide
 │
 ├── 📓 Jupyter Notebooks               # ML Experimentation
-│   ├── DSA330_Nutrition_TextRegression.ipynb # Text regression experiments
-│   └── fairposter.ipynb              # Poster/presentation notebook
+│   └── DSA330_Nutrition_TextRegression.ipynb # Text regression experiments
 │
 ├── 🖼️ Visualization Assets
 │   ├── pipeline_horizontal.png       # System pipeline diagram (PNG)
@@ -489,9 +495,6 @@ Senior-Design-2025/
 │   ├── QUICK_START_PHASE2.md         # Phase 2 quick start
 │   ├── REPO_BREAKDOWN.md             # This file ⭐⭐
 │   ├── REPO_BREAKDOWN.pdf            # PDF export of this file
-│   ├── NutriLabelAI_Final_Report.docx # Final project report ⭐⭐
-│   ├── MIDTERM_REPORT.md             # Academic midterm report
-│   ├── MIDTERM_REPORT.pdf            # PDF export of midterm report
 │   ├── DATASET_PLAN.md               # Data acquisition strategy
 │   ├── MOBILE_INTEGRATION.md         # Mobile-backend integration
 │   ├── LABEL_ROUTER_API.md           # API documentation
@@ -506,13 +509,30 @@ Senior-Design-2025/
 │   ├── PHASE3_SETUP_GUIDE.md         # Phase 3 setup instructions
 │   └── schema.sql                    # Database schema reference
 │
+├── 📚 Reports/                         # Academic Reports & Deliverables
+│   ├── NutriLabelAI_Final_Report.docx  # Final project report ⭐⭐
+│   ├── NutriLabelAI_Final_Report_REVISED.md # Revised final report (Markdown)
+│   ├── NutriLabelAI_Final_Report_BACKUP.docx  # Final report backup
+│   ├── NutriLabelAI_Final_Report_BACKUP2.docx # Final report backup 2
+│   ├── MIDTERM_REPORT.md             # Academic midterm report
+│   ├── MIDTERM_REPORT.pdf            # PDF export of midterm report
+│   ├── midterm_report.py             # Midterm report generation script
+│   ├── final_report_extracted.txt    # Extracted text from final report
+│   ├── fairposter.ipynb              # Poster/presentation notebook
+│   └── Senior Design Fall 2025 Proposal.pdf # Project proposal
+│
+├── 📊 report_out/                      # Generated Report Figures
+│   ├── fig1_architecture.png         # Architecture figure
+│   ├── fig2_dataflow.png             # Data flow figure
+│   ├── fig3_vision_pipeline.png      # Vision pipeline figure
+│   └── midterm_report.docx           # Generated midterm report (Word)
+│
 ├── 🧪 Root-Level Utilities & Test Scripts
 │   ├── check_db_status.py            # Check database connection & row counts
 │   ├── check_models.py               # Verify ML model files are present
 │   ├── check-import-progress.ps1     # Monitor dish import progress
 │   ├── debug_openai.py               # Debug OpenAI Vision API integration
 │   ├── insert_sample_dishes.py       # Insert sample records for testing
-│   ├── midterm_report.py             # Midterm report generation script
 │   ├── nutrilabel.py                 # Standalone nutrition label utility
 │   ├── seed_db.py                    # Seed database with initial data
 │   ├── setup-backend.ps1             # PowerShell backend setup script
@@ -882,7 +902,8 @@ App.tsx
   └── RootTabNavigator
         ├── Label Tab (LabelStackNavigator)
         │     ├── LabelHomeScreen (text input form)
-        │     └── LabelResultScreen (nutrition card)
+        │     ├── LabelResultScreen (nutrition card)
+        │     └── BarcodeScannerScreen (barcode scan interface)
         ├── Camera Tab
         │     ├── CameraCaptureScreen (camera interface)
         │     └── EstimationResultScreen (vision results)
@@ -895,9 +916,9 @@ App.tsx
         └── Profile Tab (settings)
 ```
 
-**State Management (FoodContext):**
+**State Management (FoodContext + ThemeContext):**
 ```typescript
-// Global state for food entries
+// FoodContext — global food entries and daily totals
 const FoodContext = {
   foods: [],                    // All food entries
   dailyTotals: {                // Calculated totals
@@ -909,6 +930,13 @@ const FoodContext = {
   addFood: (food) => {},        // Add new entry
   removeFood: (id) => {},       // Delete entry
   updateFood: (id, updates) => {} // Edit entry
+};
+
+// ThemeContext — dark/light mode preference
+const ThemeContext = {
+  isDark: false,                // Current theme mode
+  toggleTheme: () => {},        // Switch between dark/light
+  colors: { ... }               // Active colour palette
 };
 ```
 
@@ -1013,6 +1041,13 @@ This takes 2-3 minutes and loads:
 - 1 seed dish (Chicken Tikka Masala)
 - 515 fast food items (McDonald's, Burger King, Subway, etc.)
 - 778 searchable variants with embeddings
+
+Alternative scripts available:
+```bash
+docker exec -it nutrition_api python /app/scripts/import_fastfood.py         # Fast food only
+docker exec -it nutrition_api python /app/scripts/import_usda_whole_foods.py # USDA whole foods
+docker exec -it nutrition_api python /app/scripts/import_openfoodfacts.py    # Open Food Facts
+```
 
 **4. Configure mobile app**
 ```bash
@@ -1507,12 +1542,14 @@ const BASE_URL = 'http://YOUR_IP:8000';  // Update with your IP
 - [x] React Native app with Expo
 - [x] 5-tab navigation (Label, Camera, History, Explore, Profile)
 - [x] Label generation UI with full FDA nutrition card + confidence display
+- [x] Barcode scanner screen (BarcodeScannerScreen in Label tab)
 - [x] Camera capture interface for meal photos
 - [x] Daily food tracking (DailyConsumerScreen — client-side FoodContext)
 - [x] Manual entry screen (AddEntryScreen)
 - [x] Platform-aware API configuration
 - [x] TypeScript type safety
 - [x] Material Design UI (React Native Paper)
+- [x] Dark/light theme support (ThemeContext)
 
 **Data:**
 - [x] 516 dishes in database
@@ -1620,6 +1657,12 @@ chore: maintenance tasks
 - **[DATASET_PLAN.md](DATASET_PLAN.md)** - Data acquisition and expansion strategy
 - **[schema.sql](schema.sql)** - PostgreSQL database schema
 
+### Academic Reports (Reports/)
+- **[Reports/NutriLabelAI_Final_Report.docx](Reports/NutriLabelAI_Final_Report.docx)** - Final project report ⭐⭐
+- **[Reports/NutriLabelAI_Final_Report_REVISED.md](Reports/NutriLabelAI_Final_Report_REVISED.md)** - Revised final report (Markdown)
+- **[Reports/MIDTERM_REPORT.md](Reports/MIDTERM_REPORT.md)** - Academic midterm report
+- **[Reports/Senior Design Fall 2025 Proposal.pdf](Reports/Senior%20Design%20Fall%202025%20Proposal.pdf)** - Project proposal
+
 ### Development Guides
 - **[mobile/README.md](mobile/README.md)** - Mobile app architecture
 - **[scripts/README_PREPROCESSING.md](scripts/README_PREPROCESSING.md)** - Data preprocessing
@@ -1658,10 +1701,11 @@ chore: maintenance tasks
 - Platform-aware API configuration
 
 **5. Comprehensive Documentation**
-- 9 detailed markdown guides
+- 11 detailed markdown guides
 - Interactive API documentation
 - Step-by-step setup instructions
 - Architecture diagrams and workflows
+- Full academic report suite (proposal, midterm, final)
 
 ### Technical Achievements
 - ✅ 516+ dishes with 778+ searchable variants
@@ -1709,5 +1753,5 @@ chore: maintenance tasks
 
 ---
 
-*Last Updated: February 8, 2026*  
-*Version: 1.1 - Vision Pipeline Integration*
+*Last Updated: April 23, 2026*  
+*Version: 1.2 - Barcode Scanner, Theme Support, Expanded Scripts & Reports*

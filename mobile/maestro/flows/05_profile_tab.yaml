@@ -1,0 +1,108 @@
+# ─── Flow 5: Profile Tab ─────────────────────────────────────────────────────
+# Demonstrates: avatar, dark-mode toggle, accent color picker,
+#               daily goals section, and the BMR calculator.
+
+# Navigate to Profile tab
+- tapOn:
+    text: "Profile"
+- waitForAnimationToEnd
+
+# Assert header
+- assertVisible:
+    text: "Appearance"
+- waitForAnimationToEnd
+
+# Scroll down to show Appearance section
+- scroll:
+    direction: DOWN
+    duration: 600
+- waitForAnimationToEnd
+
+# Demonstrate dark-mode toggle (tap once to flip, tap again to restore)
+- tapOn:
+    text: "Dark Mode"
+- waitForAnimationToEnd
+- tapOn:
+    text: "Light Mode"
+- waitForAnimationToEnd
+
+# Scroll down to Daily Goals section
+- scrollUntilVisible:
+    element:
+      text: "Daily Goals"
+    direction: DOWN
+    timeout: 5000
+- waitForAnimationToEnd
+
+# Open the Calorie Goal modal
+- tapOn:
+    text: "Calorie Goal"
+- waitForAnimationToEnd
+- assertVisible:
+    text: "Daily Calorie Goal"
+
+# Tap a preset to show interaction, then close via × icon
+- tapOn:
+    text: "2000"
+- waitForAnimationToEnd
+- tapOn:
+    id: "close"         # fallback if testID is present
+    optional: true
+# If no testID, dismiss by tapping outside the modal overlay
+- tapOn:
+    text: "Daily Calorie Goal"
+    optional: true
+- back
+- waitForAnimationToEnd
+
+# Scroll to BMR / TDEE Calculator
+- scrollUntilVisible:
+    element:
+      text: "BMR / TDEE Calculator"
+    direction: DOWN
+    timeout: 5000
+
+# Open the BMR modal
+- tapOn:
+    text: "BMR / TDEE Calculator"
+- waitForAnimationToEnd
+- assertVisible:
+    text: "BMR"
+
+# Fill in weight (kg), height (cm), age using placeholder text as hit targets
+- tapOn:
+    text: "70"
+- inputText: "75"
+- tapOn:
+    text: "170"
+- inputText: "178"
+- tapOn:
+    text: "25"
+- inputText: "24"
+- hideKeyboard
+- waitForAnimationToEnd
+
+# Calculate
+- tapOn:
+    text: "Calculate"
+- waitForAnimationToEnd
+
+# Close the BMR modal via back press
+- back
+- waitForAnimationToEnd
+
+# Scroll down to show the Info cards at the bottom
+- scroll:
+    direction: DOWN
+    duration: 800
+- waitForAnimationToEnd
+
+# Assert one of the info cards is visible
+- assertVisible:
+    text: "Smart Recipe Database"
+
+# Scroll back to the top for a clean exit
+- scroll:
+    direction: UP
+    duration: 1200
+- waitForAnimationToEnd

@@ -67,28 +67,29 @@ class DepthVolumeEstimator:
     ) -> Dict[str, any]:
         """
         Estimate volume from depth map using 3D reconstruction.
-        
+
         Args:
             depth_map_base64: Base64-encoded depth map
-            depth_format: "png_16bit" or "binary_float32"
-            depth_scale: Depth units in meters per value
+            depth_format: "png_16bit", "binary_float32", or "npy"
+            depth_scale: Depth units in meters per value (ignored for NPY –
+                         NPY arrays are already in meters)
             camera_intrinsics: Camera calibration parameters
             mask: Optional segmentation mask for food region
-            
+
         Returns:
             Dict with volume (ml), uncertainty, confidence, and metadata
         """
         try:
             # Decode depth map
             depth_array = self._decode_depth_map(depth_map_base64, depth_format, depth_scale)
-            
+
             # Validate depth data
             quality_score = self._validate_depth_quality(depth_array)
-            
+
             if quality_score < 0.3:
                 logger.warning(f"⚠️ Low depth quality ({quality_score:.2f}), using fallback")
                 return self._fallback_volume_estimate(quality_score)
-            
+
             # Extract intrinsics
             fx = camera_intrinsics["focal_length_x"]
             fy = camera_intrinsics["focal_length_y"]
@@ -96,7 +97,7 @@ class DepthVolumeEstimator:
             cy = camera_intrinsics["principal_point_y"]
             width = camera_intrinsics["image_width"]
             height = camera_intrinsics["image_height"]
-            
+
             # Use Open3D for accurate volume if available
             if self.use_open3d:
                 return self._compute_volume_with_open3d(
@@ -106,9 +107,64 @@ class DepthVolumeEstimator:
                 return self._compute_volume_approximation(
                     depth_array, fx, fy, cx, cy, width, height, mask, quality_score
                 )
-                
+
         except Exception as e:
             logger.error(f"❌ Depth volume estimation failed: {e}")
+            return self._fallback_volume_estimate(0.2)
+
+    def estimate_volume_from_numpy(
+        self,
+        depth_m: np.ndarray,
+        camera_intrinsics: Dict,
+        mask: Optional[Dict] = None,
+    ) -> Dict[str, any]:
+        """
+        Estimate volume directly from a float32 NumPy depth array in **meters**.
+
+        This is the RealSense-specific entry point called when the caller has
+        already decoded the .npy file and has the array in hand.  Internally it
+        reuses the same quality-check → Open3D / approximation path as the
+        base64 route.
+
+        Args:
+            depth_m:           HxW float32 array, depth in metres.
+            camera_intrinsics: Camera calibration dict (fx, fy, cx, cy, w, h).
+            mask:              Optional segmentation mask.
+
+        Returns:
+            Dict with volume_ml, uncertainty, confidence, and metadata.
+        """
+        try:
+            # Convert metres → millimetres for the shared quality / compute methods
+            depth_mm = (depth_m * 1000.0).astype(np.float32)
+
+            quality_score = self._validate_depth_quality(depth_mm)
+            if quality_score < 0.3:
+                logger.warning(f"⚠️ Low RealSense depth quality ({quality_score:.2f}), using fallback")
+                return self._fallback_volume_estimate(quality_score)
+
+            fx = camera_intrinsics["focal_length_x"]
+            fy = camera_intrinsics["focal_length_y"]
+            cx = camera_intrinsics["principal_point_x"]
+            cy = camera_intrinsics["principal_point_y"]
+            width = camera_intrinsics["image_width"]
+            height = camera_intrinsics["image_height"]
+
+            if self.use_open3d:
+                result = self._compute_volume_with_open3d(
+                    depth_mm, fx, fy, cx, cy, width, height, mask, quality_score
+                )
+            else:
+                result = self._compute_volume_approximation(
+                    depth_mm, fx, fy, cx, cy, width, height, mask, quality_score
+                )
+
+            # Tag the result so callers can distinguish the source
+            result["estimation_method"] = result.get("estimation_method", "depth") + "_realsense"
+            return result
+
+        except Exception as exc:
+            logger.error(f"❌ RealSense numpy volume estimation failed: {exc}")
             return self._fallback_volume_estimate(0.2)
     
     def _decode_depth_map(
@@ -119,33 +175,36 @@ class DepthVolumeEstimator:
     ) -> np.ndarray:
         """
         Decode base64 depth map to numpy array.
-        
-        Args:
-            depth_map_base64: Base64-encoded depth data
-            depth_format: Format specification
-            depth_scale: Scale factor (meters per unit)
-            
+
+        Supported formats:
+          - png_16bit:      16-bit PNG (iOS LiDAR / ARCore)
+          - binary_float32: Raw float32 bytes
+          - npy:            NumPy .npy file (float32 metres, from RealSense)
+
         Returns:
-            Numpy array of depth values in millimeters
+            Numpy array of depth values in millimetres (float32, 1-D; the
+            caller is responsible for reshaping using the known image dims).
         """
-        # Decode base64
+        import io as _io
+
         depth_bytes = base64.b64decode(depth_map_base64)
-        
-        if depth_format == "png_16bit":
+
+        if depth_format == "npy":
+            # The bytes are a complete .npy file saved by np.save().
+            # Values are float32 in **metres** – no additional scale needed.
+            depth_raw = np.load(_io.BytesIO(depth_bytes))
+            depth_mm = depth_raw.astype(np.float32) * 1000.0  # metres → mm
+        elif depth_format == "png_16bit":
             # PNG 16-bit format (common for iOS LiDAR)
-            import struct
             depth_raw = np.frombuffer(depth_bytes, dtype=np.uint16)
-            # Reshape based on typical image dimensions (will need actual dimensions)
-            # For now, assume square or use provided dimensions
+            depth_mm = depth_raw.astype(np.float32) * depth_scale * 1000.0
         elif depth_format == "binary_float32":
             # Raw float32 array
             depth_raw = np.frombuffer(depth_bytes, dtype=np.float32)
+            depth_mm = depth_raw * depth_scale * 1000.0
         else:
             raise ValueError(f"Unsupported depth format: {depth_format}")
-        
-        # Convert to millimeters
-        depth_mm = depth_raw * depth_scale * 1000.0
-        
+
         return depth_mm
     
     def _validate_depth_quality(self, depth_array: np.ndarray) -> float:
@@ -404,7 +463,7 @@ def estimate_volume_from_depth(
     
     Args:
         depth_map_base64: Base64-encoded depth map
-        depth_format: "png_16bit" or "binary_float32"
+        depth_format: "png_16bit", "binary_float32", or "npy"
         depth_scale: Depth units in meters per value
         camera_intrinsics: Camera calibration parameters
         mask: Optional segmentation mask
@@ -420,3 +479,26 @@ def estimate_volume_from_depth(
         camera_intrinsics,
         mask
     )
+
+
+def estimate_volume_from_numpy(
+    depth_m: np.ndarray,
+    camera_intrinsics: Dict,
+    mask: Optional[Dict] = None,
+) -> Dict[str, any]:
+    """
+    Estimate volume from a float32 NumPy depth array in metres.
+
+    This is the preferred entry point when the caller has already loaded a
+    RealSense .npy file with ``np.load()``.
+
+    Args:
+        depth_m:           HxW float32 array, depth in metres.
+        camera_intrinsics: Camera calibration dict.
+        mask:              Optional segmentation mask.
+
+    Returns:
+        Volume estimate dict.
+    """
+    estimator = get_depth_volume_estimator()
+    return estimator.estimate_volume_from_numpy(depth_m, camera_intrinsics, mask)

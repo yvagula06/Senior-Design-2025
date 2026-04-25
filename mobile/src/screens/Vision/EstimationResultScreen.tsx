@@ -237,6 +237,65 @@ export const EstimationResultScreen: React.FC = () => {
           </Text>
         </View>
 
+        {/* Retake recommendation banner */}
+        {response.retake_recommendation && (
+          <View style={styles.retakeBanner}>
+            <MaterialCommunityIcons name="alert-circle" size={20} color={colors.warning} />
+            <Text style={styles.retakeBannerText}>{response.retake_recommendation}</Text>
+          </View>
+        )}
+
+        {/* Quality badges row */}
+        {(response.image_quality_score !== undefined || response.segmentation_quality_score !== undefined) && (
+          <View style={styles.qualityRow}>
+            {response.image_quality_score !== undefined && (
+              <View style={[styles.qualityBadge, {
+                backgroundColor: response.image_quality_score >= 0.75
+                  ? (colors.success + '22')
+                  : response.image_quality_score >= 0.5
+                    ? (colors.warning + '22')
+                    : (colors.error + '22'),
+              }]}>
+                <Text style={[styles.qualityBadgeText, {
+                  color: response.image_quality_score >= 0.75
+                    ? colors.success
+                    : response.image_quality_score >= 0.5
+                      ? colors.warning
+                      : colors.error,
+                }]}>
+                  📷 Image: {Math.round(response.image_quality_score * 100)}%
+                </Text>
+              </View>
+            )}
+            {response.segmentation_quality_score !== undefined && (
+              <View style={[styles.qualityBadge, {
+                backgroundColor: response.segmentation_quality_score >= 0.75
+                  ? (colors.success + '22')
+                  : response.segmentation_quality_score >= 0.5
+                    ? (colors.warning + '22')
+                    : (colors.error + '22'),
+              }]}>
+                <Text style={[styles.qualityBadgeText, {
+                  color: response.segmentation_quality_score >= 0.75
+                    ? colors.success
+                    : response.segmentation_quality_score >= 0.5
+                      ? colors.warning
+                      : colors.error,
+                }]}>
+                  🔍 Seg: {Math.round(response.segmentation_quality_score * 100)}%
+                </Text>
+              </View>
+            )}
+            {response.estimated_area_cm2 !== undefined && response.estimated_area_cm2 !== null && (
+              <View style={[styles.qualityBadge, { backgroundColor: colors.primary + '22' }]}>
+                <Text style={[styles.qualityBadgeText, { color: colors.primary }]}>
+                  📐 {response.estimated_area_cm2.toFixed(0)} cm²
+                </Text>
+              </View>
+            )}
+          </View>
+        )}
+
         {/* Dish Picker */}
         <View style={styles.pickerContainer}>
           <Text style={styles.pickerLabel}>Select Dish (if different)</Text>
@@ -1033,6 +1092,37 @@ function createStyles(colors: CV) {
     ...Typography.button,
     color: colors.text,
   },
+  retakeBanner: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: colors.warning + '22',
+    borderRadius: BorderRadius.md,
+    padding: Spacing.md,
+    marginBottom: Spacing.md,
+    gap: Spacing.sm,
+    borderLeftWidth: 3,
+    borderLeftColor: colors.warning,
+  },
+  retakeBannerText: {
+    flex: 1,
+    ...Typography.caption,
+    color: colors.warning,
+    lineHeight: 18,
+  },
+  qualityRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.xs,
+    marginBottom: Spacing.md,
+  },
+  qualityBadge: {
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 4,
+    borderRadius: 20,
+  },
+  qualityBadgeText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
   });
 }
-

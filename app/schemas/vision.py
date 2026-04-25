@@ -6,7 +6,7 @@ These schemas match the locked design document specifications.
 """
 
 from pydantic import BaseModel, Field, field_validator
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict, Any
 from enum import Enum
 from datetime import datetime
 
@@ -22,12 +22,20 @@ class DepthFormat(str, Enum):
     """Supported depth map formats."""
     PNG_16BIT = "png_16bit"
     BINARY_FLOAT32 = "binary_float32"
+    NPY = "npy"  # NumPy .npy file (float32, depth in meters) from RealSense
 
 
 class DeviceType(str, Enum):
-    """Mobile device operating system."""
+    """Device / sensor type for the capture source."""
+    # Legacy mobile values (keep for backward compatibility)
     IOS = "ios"
     ANDROID = "android"
+    # Extended values
+    REALSENSE = "realsense"       # Intel RealSense D435i (desktop demo)
+    IOS_LIDAR = "ios_lidar"       # iPhone with LiDAR (12 Pro+)
+    IPHONE_CAMERA = "iphone_camera"  # Regular iPhone (no LiDAR)
+    ANDROID_CAMERA = "android_camera"  # Android without depth sensor
+    UNKNOWN = "unknown"
 
 
 class CaptureMode(str, Enum):
@@ -35,6 +43,33 @@ class CaptureMode(str, Enum):
     DEPTH = "depth"
     MULTI_ANGLE = "multi_angle"
     SINGLE = "single"
+
+
+class NormalCameraMode(str, Enum):
+    """Sub-mode used when depth sensor is unavailable."""
+    PLATE_REFERENCE = "plate_reference"      # Known plate diameter → scale
+    MULTI_ANGLE = "multi_angle"              # Top + angled photos for height
+    REFERENCE_OBJECT = "reference_object"    # Credit card / utensil for scale
+    BASIC_SINGLE = "basic_single"            # Single photo, avg serving fallback
+
+
+class PlateType(str, Enum):
+    """Standard plate/container sizes."""
+    SMALL_PLATE = "small_plate"      # ~20 cm diameter
+    MEDIUM_PLATE = "medium_plate"    # ~25 cm diameter (standard dinner plate)
+    LARGE_PLATE = "large_plate"      # ~30 cm diameter
+    BOWL = "bowl"                    # ~15 cm diameter, deeper
+    CUP = "cup"                      # Cup / mug (200–350 ml)
+    CONTAINER = "container"          # Takeaway / food-storage container
+
+
+class ReferenceObjectType(str, Enum):
+    """Known real-world objects used for scale calibration."""
+    CREDIT_CARD = "credit_card"   # 85.6 × 54.0 mm
+    FORK = "fork"                  # ~19 cm long
+    SPOON = "spoon"                # ~17 cm long
+    SODA_CAN = "soda_can"          # 6.6 cm diameter, 12.2 cm tall
+    CUSTOM = "custom"              # User-supplied dimension
 
 
 class EstimationMode(str, Enum):
@@ -108,6 +143,13 @@ class CameraIntrinsics(BaseModel):
     principal_point_y: float = Field(..., ge=0)
     image_width: int = Field(..., gt=0)
     image_height: int = Field(..., gt=0)
+    # depth_scale: meters per depth unit (D435i default 0.001, i.e. 1 mm/unit)
+    # Required when uploading a .npy depth file so the estimator can convert
+    # raw float values to the correct metric unit.
+    depth_scale: Optional[float] = Field(
+        None, gt=0,
+        description="Depth units in meters per value (e.g. 0.001 for RealSense)"
+    )
 
 
 class RequestMetadata(BaseModel):
@@ -166,6 +208,31 @@ class VisionRequest(BaseModel):
     preferences: Optional[Preferences] = Field(
         None,
         description="Optional user preferences for estimation"
+    )
+    # ----- Normal-camera enhanced fields -----
+    normal_camera_mode: Optional[NormalCameraMode] = Field(
+        None,
+        description="Sub-mode for normal (non-depth) cameras"
+    )
+    plate_type: Optional[PlateType] = Field(
+        None,
+        description="Type/size of plate or container"
+    )
+    plate_diameter_cm: Optional[float] = Field(
+        None,
+        gt=0,
+        le=100,
+        description="Exact plate diameter in cm (overrides plate_type lookup)"
+    )
+    reference_object_type: Optional[ReferenceObjectType] = Field(
+        None,
+        description="Known reference object placed beside the food"
+    )
+    reference_object_size_cm: Optional[float] = Field(
+        None,
+        gt=0,
+        le=200,
+        description="Size of the reference object in cm (longest dimension, or custom)"
     )
 
     @field_validator('images')
@@ -300,7 +367,38 @@ class VisionResponse(BaseModel):
     )
     estimate_id: Optional[str] = Field(
         None,
-        description="vision_estimates row ID \u2014 pass this when saving to meal_logs or submitting feedback",
+        description="vision_estimates row ID — pass this when saving to meal_logs or submitting feedback",
+    )
+    # ----- Quality / enhanced fields (normal camera pipeline) -----
+    image_quality_score: Optional[float] = Field(
+        None,
+        ge=0.0,
+        le=1.0,
+        description="Overall image quality score (blur, brightness, centering)"
+    )
+    segmentation_quality_score: Optional[float] = Field(
+        None,
+        ge=0.0,
+        le=1.0,
+        description="Quality of the food/plate segmentation"
+    )
+    estimated_area_cm2: Optional[float] = Field(
+        None,
+        gt=0,
+        description="Estimated food surface area in cm² (when scale reference available)"
+    )
+    estimated_height_cm: Optional[float] = Field(
+        None,
+        gt=0,
+        description="Estimated food height in cm (from side/angled image or heuristic)"
+    )
+    retake_recommendation: Optional[str] = Field(
+        None,
+        description="Human-readable suggestion to retake if quality is poor"
+    )
+    debug_metadata: Optional[Dict] = Field(
+        None,
+        description="Internal debug info (segmentation ratios, scale factors, etc.)"
     )
 
 

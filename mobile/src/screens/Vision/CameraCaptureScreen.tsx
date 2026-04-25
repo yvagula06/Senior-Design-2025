@@ -32,12 +32,12 @@ import * as ImagePicker from 'expo-image-picker';
 import * as Device from 'expo-device';
 import { Typography, Spacing, BorderRadius, Shadows } from '../../theme';
 import { useAppTheme } from '../../context/ThemeContext';
-import { CameraGuide, ARScanningOverlay } from '../../components/Vision';
+import { CameraGuide, ARScanningOverlay, CaptureModeSelector, PlateReferenceSelector, ReferenceObjectSelector } from '../../components/Vision';
 import { estimateMeal } from '../../services/visionApi';
-import type { VisionRequest, VisionResponse, DeviceType, CaptureMode, CaptureAngle } from '../../types/vision';
+import type { VisionRequest, VisionResponse, DeviceType, CaptureMode, CaptureAngle, NormalCameraMode, PlateType, ReferenceObjectType } from '../../types/vision';
 import type { ExploreStackNavigationProp } from '../../navigation/types';
 
-type CaptureStep = 'select-mode' | 'capture-top' | 'capture-side' | 'ar-scanning' | 'preview';
+type CaptureStep = 'select-mode' | 'setup-reference' | 'capture-top' | 'capture-side' | 'ar-scanning' | 'preview';
 type ScanningStatus = 'initializing' | 'scanning' | 'processing' | 'complete' | 'error';
 
 export const CameraCaptureScreen: React.FC = () => {
@@ -51,8 +51,15 @@ export const CameraCaptureScreen: React.FC = () => {
   const [arCapable, setArCapable] = useState(false);
   
   // Capture mode state
-  const [captureMode, setCaptureMode] = useState<CaptureMode>('single');
+  const [captureMode, setCaptureMode] = useState<CaptureMode>('multi_angle');
+  const [normalCameraMode, setNormalCameraMode] = useState<NormalCameraMode>('multi_angle');
   const [currentStep, setCurrentStep] = useState<CaptureStep>('select-mode');
+
+  // Reference state for scale estimation
+  const [plateType, setPlateType] = useState<PlateType | null>(null);
+  const [plateDiameterCm, setPlateDiameterCm] = useState<number | null>(null);
+  const [referenceObjectType, setReferenceObjectType] = useState<ReferenceObjectType | null>(null);
+  const [referenceObjectSizeCm, setReferenceObjectSizeCm] = useState<number | null>(null);
   
   // AR/Depth scanning state (Phase 2)
   const [scanningStatus, setScanningStatus] = useState<ScanningStatus>('initializing');
@@ -116,8 +123,17 @@ export const CameraCaptureScreen: React.FC = () => {
   };
 
   const getDeviceType = (): DeviceType => {
-    if (Platform.OS === 'ios') return 'ios';
-    if (Platform.OS === 'android') return 'android';
+    if (Platform.OS === 'ios') {
+      const model = Device.modelName || '';
+      const isLiDAR =
+        model.includes('iPhone 12 Pro') ||
+        model.includes('iPhone 13 Pro') ||
+        model.includes('iPhone 14 Pro') ||
+        model.includes('iPhone 15 Pro') ||
+        model.includes('iPad Pro');
+      return isLiDAR ? 'ios_lidar' : 'iphone_camera';
+    }
+    if (Platform.OS === 'android') return 'android_camera';
     return 'unknown';
   };
 
@@ -269,6 +285,12 @@ export const CameraCaptureScreen: React.FC = () => {
         // Phase 2: Include depth data and intrinsics
         depth_data: captureMode === 'depth' ? depthData : undefined,
         camera_intrinsics: captureMode === 'depth' ? cameraIntrinsics : undefined,
+        // Normal-camera scale reference hints
+        normal_camera_mode: normalCameraMode,
+        plate_type: plateType ?? undefined,
+        plate_diameter_cm: plateDiameterCm ?? undefined,
+        reference_object_type: referenceObjectType ?? undefined,
+        reference_object_size_cm: referenceObjectSizeCm ?? undefined,
       };
 
       console.log('📸 [CameraCapture] Calling vision API...');
@@ -302,17 +324,36 @@ export const CameraCaptureScreen: React.FC = () => {
     setCameraIntrinsics(null);
     setScanProgress(0);
     setDepthQuality(0);
+    setPlateType(null);
+    setPlateDiameterCm(null);
+    setReferenceObjectType(null);
+    setReferenceObjectSizeCm(null);
     setCurrentStep('select-mode');
   };
 
-  const handleSelectMode = (mode: CaptureMode) => {
-    setCaptureMode(mode);
+  const handleSelectMode = (mode: CaptureMode | NormalCameraMode) => {
     if (mode === 'depth') {
-      // Start AR scanning
+      setCaptureMode('depth');
+      setNormalCameraMode('basic_single');
       setCurrentStep('ar-scanning');
       startARScanning();
+    } else if (mode === 'plate_reference') {
+      setCaptureMode('single');
+      setNormalCameraMode('plate_reference');
+      setCurrentStep('setup-reference');
+    } else if (mode === 'reference_object') {
+      setCaptureMode('single');
+      setNormalCameraMode('reference_object');
+      setCurrentStep('setup-reference');
+    } else if (mode === 'multi_angle') {
+      setCaptureMode('multi_angle');
+      setNormalCameraMode('multi_angle');
+      setCurrentStep('capture-top');
     } else {
-      setCurrentStep(mode === 'single' ? 'capture-top' : 'capture-top');
+      // basic_single / 'single'
+      setCaptureMode('single');
+      setNormalCameraMode('basic_single');
+      setCurrentStep('capture-top');
     }
   };
 
@@ -437,62 +478,54 @@ export const CameraCaptureScreen: React.FC = () => {
     <View style={styles.container}>
       {/* Step: Mode Selection */}
       {currentStep === 'select-mode' && (
-        <View style={styles.centerContainer}>
+        <ScrollView
+          style={{ flex: 1, backgroundColor: colors.background }}
+          contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 48, paddingBottom: 40 }}
+        >
           <Text style={styles.headerText}>Choose Capture Mode</Text>
           <Text style={styles.subtitleText}>
-            {depthCapable || arCapable 
-              ? 'AR scanning provides the most accurate results'
-              : 'Multi-angle mode provides more accurate calorie estimates'}
+            More info = more accurate calorie estimates
           </Text>
+          <CaptureModeSelector
+            selectedMode={normalCameraMode}
+            hasLiDAR={depthCapable}
+            onSelect={(mode) => handleSelectMode(mode as CaptureMode | NormalCameraMode)}
+          />
+        </ScrollView>
+      )}
 
-          <View style={styles.modeContainer}>
-            {/* Depth/AR Mode (Phase 2) - only show if device capable */}
-            {(depthCapable || arCapable) && (
-              <TouchableOpacity
-                style={[styles.modeCard, styles.modeCardFeatured]}
-                onPress={() => handleSelectMode('depth')}
-              >
-                <MaterialCommunityIcons name="cube-scan" size={48} color={colors.success} />
-                <View style={styles.badgeContainer}>
-                  <Text style={styles.badge}>BEST</Text>
-                </View>
-                <Text style={styles.modeTitle}>AR Scan</Text>
-                <Text style={styles.modeDescription}>
-                  3D depth scanning (2-3 sec)
-                </Text>
-                <Text style={[styles.modeAccuracy, { color: colors.success }]}>
-                  ~85-95% accuracy
-                </Text>
-              </TouchableOpacity>
-            )}
-
-            {/* Single Image Mode */}
+      {/* Step: Reference Setup (plate or object) */}
+      {currentStep === 'setup-reference' && (
+        <ScrollView style={{ flex: 1, backgroundColor: colors.background }}
+          contentContainerStyle={{ paddingBottom: 120 }}>
+          {normalCameraMode === 'plate_reference' ? (
+            <PlateReferenceSelector
+              selectedType={plateType}
+              customDiameterCm={plateDiameterCm}
+              onSelect={(type, diam) => { setPlateType(type); setPlateDiameterCm(diam); }}
+            />
+          ) : (
+            <ReferenceObjectSelector
+              selectedType={referenceObjectType}
+              customSizeCm={referenceObjectSizeCm}
+              onSelect={(type, size) => { setReferenceObjectType(type); setReferenceObjectSizeCm(size); }}
+            />
+          )}
+          <View style={{ paddingHorizontal: 16, gap: 12, marginTop: 8 }}>
             <TouchableOpacity
-              style={styles.modeCard}
-              onPress={() => handleSelectMode('single')}
+              style={[styles.button, styles.buttonPrimary]}
+              onPress={() => setCurrentStep('capture-top')}
             >
-              <MaterialCommunityIcons name="camera" size={48} color={colors.primary} />
-              <Text style={styles.modeTitle}>Quick Mode</Text>
-              <Text style={styles.modeDescription}>
-                Take 1 photo from above
-              </Text>
-              <Text style={styles.modeAccuracy}>~60-70% accuracy</Text>
+              <Text style={styles.buttonTextPrimary}>Next: Take Photo →</Text>
             </TouchableOpacity>
-
-            {/* Multi-Angle Mode */}
             <TouchableOpacity
-              style={styles.modeCard}
-              onPress={() => handleSelectMode('multi_angle')}
+              style={styles.backButton}
+              onPress={() => setCurrentStep('select-mode')}
             >
-              <MaterialCommunityIcons name="camera-burst" size={48} color={colors.warning} />
-              <Text style={styles.modeTitle}>Multi-Angle</Text>
-              <Text style={styles.modeDescription}>
-                Take 2 photos (top + side)
-              </Text>
-              <Text style={styles.modeAccuracy}>~75-85% accuracy</Text>
+              <Text style={styles.backText}>← Back</Text>
             </TouchableOpacity>
           </View>
-        </View>
+        </ScrollView>
       )}
 
       {/* Step: AR Scanning (Phase 2) */}
@@ -517,14 +550,21 @@ export const CameraCaptureScreen: React.FC = () => {
             {topImageUri ? (
               <Image source={{ uri: topImageUri }} style={styles.previewImage} />
             ) : (
-              <CameraGuide captureMode={captureMode} />
+              <>
+                <CameraGuide captureMode={captureMode as 'single' | 'multi_angle' | 'reference_object'} />
+                {/* Plate alignment circle overlay */}
+                <View pointerEvents="none" style={styles.plateGuideOverlay}>
+                  <View style={styles.plateGuideCircle} />
+                  <Text style={styles.plateGuideLabel}>Centre the plate</Text>
+                </View>
+              </>
             )}
           </View>
 
           <View style={styles.controlsContainer}>
             <Text style={styles.stepText}>
-              {captureMode === 'multi_angle' ? 'Step 1 of 2: ' : ''}
-              📸 Take a photo from directly above
+              {captureMode === 'multi_angle' ? 'Step 1 of 2 — ' : ''}
+              📸 Point camera straight down at your food
             </Text>
 
             <View style={styles.actionButtons}>
@@ -547,9 +587,15 @@ export const CameraCaptureScreen: React.FC = () => {
 
             <TouchableOpacity
               style={styles.backButton}
-              onPress={() => setCurrentStep('select-mode')}
+              onPress={() =>
+                setCurrentStep(
+                  normalCameraMode === 'plate_reference' || normalCameraMode === 'reference_object'
+                    ? 'setup-reference'
+                    : 'select-mode',
+                )
+              }
             >
-              <Text style={styles.backText}>← Back to Mode Selection</Text>
+              <Text style={styles.backText}>← Back</Text>
             </TouchableOpacity>
           </View>
         </>
@@ -572,7 +618,7 @@ export const CameraCaptureScreen: React.FC = () => {
                 </View>
               ) : (
                 <View style={styles.fullImageContainer}>
-                  <CameraGuide captureMode={captureMode} />
+                  <CameraGuide captureMode={captureMode as 'single' | 'multi_angle' | 'reference_object'} />
                 </View>
               )}
             </ScrollView>
@@ -580,7 +626,7 @@ export const CameraCaptureScreen: React.FC = () => {
 
           <View style={styles.controlsContainer}>
             <Text style={styles.stepText}>
-              Step 2 of 2: 📸 Take a photo from the side
+              Step 2 of 2 — 📸 Now tilt the camera ~45° to show the food height
             </Text>
 
             <View style={styles.actionButtons}>
@@ -736,6 +782,12 @@ function createStyles(colors: CV) {
     borderWidth: 3,
     backgroundColor: colors.success + '10',
   },
+  modeCardDisabled: {
+    borderColor: colors.border,
+    borderWidth: 2,
+    backgroundColor: colors.surface,
+    opacity: 0.55,
+  },
   badgeContainer: {
     position: 'absolute',
     top: Spacing.xs,
@@ -757,6 +809,9 @@ function createStyles(colors: CV) {
     marginTop: Spacing.md,
     marginBottom: Spacing.xs,
   },
+  modeTitleDisabled: {
+    color: colors.textSecondary,
+  },
   modeDescription: {
     ...Typography.caption,
     color: colors.textSecondary,
@@ -771,6 +826,34 @@ function createStyles(colors: CV) {
   previewContainer: {
     flex: 1,
     backgroundColor: colors.backgroundSecondary,
+    position: 'relative',
+  },
+  plateGuideOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  plateGuideCircle: {
+    width: 220,
+    height: 220,
+    borderRadius: 110,
+    borderWidth: 3,
+    borderColor: '#00D4AACC',
+    borderStyle: 'dashed',
+  },
+  plateGuideLabel: {
+    marginTop: 12,
+    fontSize: 13,
+    color: '#00D4AA',
+    fontWeight: '600',
+    backgroundColor: '#00000066',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 20,
   },
   previewImage: {
     width: '100%',

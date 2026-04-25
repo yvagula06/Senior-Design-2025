@@ -1,0 +1,75 @@
+# ─── Flow 4: History Tab ─────────────────────────────────────────────────────
+# Demonstrates: 7-day calorie chart, macro pie chart, list of past entries,
+#               search filter, and the left-swipe delete/favorite actions.
+
+# Navigate to History tab
+- tapOn:
+    text: "History"
+- waitForAnimationToEnd
+
+# Assert header
+- assertVisible:
+    text: "History"
+
+# Wait for list to load
+- waitForAnimationToEnd
+
+# Scroll down to reveal the 7-day chart
+- scroll:
+    direction: DOWN
+    duration: 700
+- waitForAnimationToEnd
+
+# Scroll to show macro pie chart
+- scroll:
+    direction: DOWN
+    duration: 700
+- waitForAnimationToEnd
+
+# Scroll to the first history entry card
+- scroll:
+    direction: DOWN
+    duration: 700
+- waitForAnimationToEnd
+
+# Scroll back up to the search bar
+- scroll:
+    direction: UP
+    duration: 1200
+- waitForAnimationToEnd
+
+# Type in the search field (placeholder: "Search past dishes…")
+- tapOn:
+    text: "Search past dishes"
+- inputText: "chicken"
+- waitForAnimationToEnd
+
+# Short pause so the filtered list is visible
+- waitForAnimationToEnd
+
+# Clear the search
+- tapOn:
+    text: "chicken"
+- clearText
+- hideKeyboard
+- waitForAnimationToEnd
+
+# Demonstrate swipe-to-delete on the first item:
+# Right-to-left swipe reveals Favorite + Delete buttons
+- scrollUntilVisible:
+    element:
+      text: "Butter Chicken with Basmati Rice"
+    direction: DOWN
+    timeout: 5000
+- swipe:
+    start: "85%, 65%"
+    end: "30%, 65%"
+    duration: 400
+- waitForAnimationToEnd
+
+# Close the swipe row without deleting (swipe back)
+- swipe:
+    start: "30%, 65%"
+    end: "85%, 65%"
+    duration: 400
+- waitForAnimationToEnd
