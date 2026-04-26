@@ -53,12 +53,27 @@ export const estimateMeal = async (request: VisionRequest): Promise<VisionRespon
     return response.data;
   } catch (error: any) {
     console.error('❌ [VisionAPI] Failed to estimate meal:', error);
-    
+
     // Extract error message from API response
     if (error.response?.data?.detail) {
-      throw new Error(`Vision API Error: ${error.response.data.detail}`);
+      const detail = error.response.data.detail;
+
+      // Pydantic validation errors come as an array of objects
+      if (Array.isArray(detail)) {
+        const messages = detail
+          .map((e: any) => `${(e.loc ?? []).join('.')} — ${e.msg}`)
+          .join('; ');
+        throw new Error(`Vision API Error: ${messages}`);
+      }
+
+      // String detail (e.g. non_food_detected, server-raised HTTPException)
+      if (typeof detail === 'string') {
+        throw new Error(`Vision API Error: ${detail}`);
+      }
+
+      throw new Error(`Vision API Error: ${JSON.stringify(detail)}`);
     }
-    
+
     throw new Error(`Failed to estimate meal: ${error.message}`);
   }
 };

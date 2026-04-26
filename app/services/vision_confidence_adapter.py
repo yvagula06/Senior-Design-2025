@@ -55,16 +55,12 @@ class VisionConfidenceAdapter:
         classification_confidence: float,
         estimation_mode: str,
         volume_uncertainty: float,
-<<<<<<< HEAD
         segmentation_quality: float = 0.75,
         # Extended factors
         image_quality_score: float = 0.75,
         num_images: int = 1,
         has_scale_reference: bool = False,
         normal_camera_mode: Optional[str] = None,
-=======
-        segmentation_quality: float = 0.85
->>>>>>> 67851a08e0a9f015fa6da7bb6e0417637d11eba3
     ) -> Dict[str, Any]:
         """
         Calculate overall confidence and range multiplier.
@@ -157,12 +153,8 @@ def calculate_confidence(
     classification_confidence: float,
     estimation_mode: str,
     volume_uncertainty: float,
-<<<<<<< HEAD
     segmentation_quality: float = 0.75,
     **kwargs: Any,
-=======
-    segmentation_quality: float = 0.85
->>>>>>> 67851a08e0a9f015fa6da7bb6e0417637d11eba3
 ) -> Dict[str, Any]:
     """
     Calculate confidence (convenience function).

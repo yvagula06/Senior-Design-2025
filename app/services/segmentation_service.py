@@ -225,13 +225,8 @@ class SegmentationService:
 
     def segment_food_enhanced(
         self,
-<<<<<<< HEAD
         images_base64: List[str],
     ) -> Dict[str, Any]:
-=======
-        images_base64: List[str]
-    ) -> List[Dict[str, Any]]:
->>>>>>> 67851a08e0a9f015fa6da7bb6e0417637d11eba3
         """
         Enhanced interface for the normal-camera pipeline.
 
@@ -288,7 +283,6 @@ def get_segmentation_service() -> SegmentationService:
 
 
 def segment_food(images_base64: List[str]) -> List[Dict[str, Any]]:
-<<<<<<< HEAD
     """Segment food regions – convenience wrapper (legacy interface)."""
     return get_segmentation_service().segment_food(images_base64)
 
@@ -296,16 +290,3 @@ def segment_food(images_base64: List[str]) -> List[Dict[str, Any]]:
 def segment_food_enhanced(images_base64: List[str]) -> Dict[str, Any]:
     """Enhanced segmentation returning plate+food masks and quality scores."""
     return get_segmentation_service().segment_food_enhanced(images_base64)
-=======
-    """
-    Segment food regions from images (convenience function).
-    
-    Args:
-        images_base64: List of base64-encoded images
-        
-    Returns:
-        List of mask metadata
-    """
-    service = get_segmentation_service()
-    return service.segment_food(images_base64)
->>>>>>> 67851a08e0a9f015fa6da7bb6e0417637d11eba3

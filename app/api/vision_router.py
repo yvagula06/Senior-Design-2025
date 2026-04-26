@@ -93,7 +93,13 @@ def estimate_meal(request: VisionRequest) -> VisionResponse:
         return response
         
     except ValueError as e:
-        # Validation errors
+        # Non-food detection gets a specific 422 with a machine-readable code
+        if str(e) == "non_food_detected":
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="non_food_detected",
+            )
+        # Other validation errors
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Invalid request: {str(e)}"

@@ -140,15 +140,18 @@ class DishClassifier:
             List of dish predictions
         """
         # Prepare prompt for OpenAI
-        prompt = f"""Analyze this food image and identify the dish(es). Return exactly {top_k} dish predictions.
+        prompt = f"""First, determine whether this image shows food or a meal that someone would eat.
+Non-food items include: beverages in sealed containers (bottles, cans, cartons), empty plates, household objects, people, scenery, etc.
 
-For each dish, provide:
-1. dish_name: The specific name of the dish (e.g., "Grilled Chicken Caesar Salad", "Spaghetti Carbonara")
-2. confidence: Your confidence score from 0.0 to 1.0 (be realistic, usually 0.6-0.9)
-3. category: Primary food category (e.g., "salad", "pasta", "meat", "seafood", "vegetarian", "dessert", "soup")
-
-Return ONLY valid JSON in this exact format:
+If the image does NOT show food/a meal, return:
 {{
+  "is_food": false,
+  "predictions": []
+}}
+
+If the image DOES show food/a meal, identify the dish(es) and return exactly {top_k} predictions:
+{{
+  "is_food": true,
   "predictions": [
     {{"dish_name": "...", "confidence": 0.85, "category": "..."}},
     {{"dish_name": "...", "confidence": 0.75, "category": "..."}},
@@ -156,7 +159,12 @@ Return ONLY valid JSON in this exact format:
   ]
 }}
 
-Be specific with dish names. If you see multiple components, name the main dish."""
+For each dish provide:
+- dish_name: specific name (e.g., "Grilled Chicken Caesar Salad")
+- confidence: 0.0–1.0 (be realistic, usually 0.6–0.9)
+- category: food category (e.g., "salad", "pasta", "meat", "seafood", "vegetarian", "dessert", "soup")
+
+Return ONLY valid JSON. Be specific with dish names."""
 
         # Call OpenAI Vision API
         response = self.openai_client.chat.completions.create(
@@ -214,6 +222,11 @@ Be specific with dish names. If you see multiple components, name the main dish.
                         return self._parse_natural_language(content, top_k)
             
             predictions = data.get("predictions", [])
+
+            # Non-food detection: classifier explicitly says it's not food
+            if not data.get("is_food", True):
+                logger.warning("🚫 OpenAI flagged image as non-food")
+                raise ValueError("non_food_detected")
             
             # Format predictions with IDs
             formatted = []

@@ -306,10 +306,20 @@ export const CameraCaptureScreen: React.FC = () => {
       navigation.navigate('EstimationResult', { response });
     } catch (error: any) {
       console.error('❌ [CameraCapture] Estimation failed:', error);
-      Alert.alert(
-        'Estimation Failed',
-        error.message || 'Failed to estimate meal. Please try again.'
-      );
+
+      const message: string = error.message ?? '';
+
+      if (message.includes('non_food_detected')) {
+        Alert.alert(
+          'Not Food Detected',
+          "That doesn't look like a meal. Please scan a plate or food item and try again."
+        );
+      } else {
+        Alert.alert(
+          'Estimation Failed',
+          message || 'Failed to estimate meal. Please try again.'
+        );
+      }
     } finally {
       setIsLoading(false);
     }
