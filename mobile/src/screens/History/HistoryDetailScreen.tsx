@@ -160,13 +160,13 @@ export const HistoryDetailScreen: React.FC = () => {
                 <MaterialCommunityIcons
                   name={getPrepStyleIcon()}
                   size={16}
-                  color={colors.mediumGray}
+                  color={colors.textSecondary}
                 />
                 <Text style={styles.metadataText}>{getPrepStyleLabel()}</Text>
                 <MaterialCommunityIcons
                   name="circle-small"
                   size={16}
-                  color={colors.mediumGray}
+                  color={colors.textSecondary}
                 />
                 <Text style={styles.metadataText}>{formatDate(dishData.date)}</Text>
               </View>
@@ -175,7 +175,7 @@ export const HistoryDetailScreen: React.FC = () => {
               <MaterialCommunityIcons
                 name={isFavorite ? 'star' : 'star-outline'}
                 size={28}
-                color={isFavorite ? colors.warning : colors.mediumGray}
+                color={isFavorite ? colors.warning : colors.textSecondary}
               />
             </TouchableOpacity>
           </View>
@@ -254,7 +254,7 @@ function createStyles(colors: CD) {
     gap: Spacing.md,
   },
   headerCard: {
-    backgroundColor: colors.white,
+    backgroundColor: colors.cardBackground,
     borderRadius: BorderRadius.lg,
     padding: Spacing.lg,
     ...Shadows.sm,
@@ -271,7 +271,7 @@ function createStyles(colors: CD) {
   dishName: {
     fontSize: Typography.fontSize.xxl,
     fontWeight: Typography.fontWeight.bold,
-    color: colors.darkGray,
+    color: colors.text,
     marginBottom: Spacing.sm,
   },
   metadataRow: {
@@ -281,13 +281,13 @@ function createStyles(colors: CD) {
   },
   metadataText: {
     fontSize: Typography.fontSize.sm,
-    color: colors.mediumGray,
+    color: colors.textSecondary,
   },
   favoriteButton: {
     padding: Spacing.xs,
   },
   summaryCard: {
-    backgroundColor: colors.white,
+    backgroundColor: colors.cardBackground,
     borderRadius: BorderRadius.lg,
     padding: Spacing.lg,
     ...Shadows.md,
@@ -295,7 +295,7 @@ function createStyles(colors: CD) {
   summaryTitle: {
     fontSize: Typography.fontSize.lg,
     fontWeight: Typography.fontWeight.semibold,
-    color: colors.darkGray,
+    color: colors.text,
     marginBottom: Spacing.md,
   },
   summaryGrid: {
@@ -309,11 +309,11 @@ function createStyles(colors: CD) {
   summaryValue: {
     fontSize: Typography.fontSize.xl,
     fontWeight: Typography.fontWeight.bold,
-    color: colors.darkGray,
+    color: colors.text,
   },
   summaryLabel: {
     fontSize: Typography.fontSize.xs,
-    color: colors.mediumGray,
+    color: colors.textSecondary,
     fontWeight: Typography.fontWeight.medium,
   },
   actionButtons: {
@@ -327,7 +327,7 @@ function createStyles(colors: CD) {
     alignItems: 'center',
     justifyContent: 'center',
     gap: Spacing.sm,
-    backgroundColor: colors.white,
+    backgroundColor: colors.cardBackground,
     paddingVertical: Spacing.md,
     borderRadius: BorderRadius.lg,
     borderWidth: 2,

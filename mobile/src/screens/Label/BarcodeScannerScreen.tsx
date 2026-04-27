@@ -269,7 +269,7 @@ export const BarcodeScannerScreen: React.FC = () => {
 
               {/* Macro chips */}
               <View style={styles.macroRow}>
-                <MacroChip label="Calories" value={product.nutrition.calories} unit=" kcal" />
+                <MacroChip label="Calories" value={product.nutrition.calories} unit=" cal" />
                 <MacroChip label="Protein" value={product.nutrition.protein_g} unit="g" />
                 <MacroChip label="Carbs" value={product.nutrition.carbs_g} unit="g" />
                 <MacroChip label="Fat" value={product.nutrition.fat_g} unit="g" />

@@ -17,7 +17,7 @@ import { Platform } from 'react-native';
 import * as Device from 'expo-device';
 
 // Your machine's LAN IP — update this if it changes (run `ipconfig` to find it)
-const DEV_MACHINE_IP = '192.168.1.191';
+const DEV_MACHINE_IP = '172.20.63.112';
 
 /**
  * Base URL Configuration
