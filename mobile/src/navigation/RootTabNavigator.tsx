@@ -120,7 +120,7 @@ export const RootTabNavigator: React.FC = () => {
     <Tab.Navigator
       tabBar={(props) => <AppTabBar {...props} />}
       sceneContainerStyle={{ backgroundColor: colors.background }}
-      screenOptions={{ headerShown: false, animation: 'fade' }}
+      screenOptions={{ headerShown: false, animation: 'none' }}
     >
       <Tab.Screen name="LabelStack"   component={LabelStackNavigator} />
       <Tab.Screen name="Today"        component={DailyConsumerScreen} />

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { LabelStackParamList } from './types';
 import { LabelHomeScreen } from '../screens/Label/LabelHomeScreen';
@@ -10,25 +10,17 @@ const Stack = createNativeStackNavigator<LabelStackParamList>();
 
 export const LabelStackNavigator: React.FC = () => {
   const { colors } = useAppTheme();
+  const screenOptions = useMemo(() => ({
+    headerStyle: { backgroundColor: colors.cardBackground },
+    headerTintColor: colors.text,
+    headerTitleStyle: { fontWeight: 'bold' as const, color: colors.text },
+    headerShadowVisible: false,
+    contentStyle: { backgroundColor: colors.background },
+    animation: 'slide_from_right' as const,
+    animationDuration: 300,
+  }), [colors]);
   return (
-    <Stack.Navigator
-      screenOptions={{
-        headerStyle: {
-          backgroundColor: colors.cardBackground,
-        },
-        headerTintColor: colors.text,
-        headerTitleStyle: {
-          fontWeight: 'bold',
-          color: colors.text,
-        },
-        headerShadowVisible: false,
-        contentStyle: {
-          backgroundColor: colors.background,
-        },
-        animation: 'slide_from_right',
-        animationDuration: 300,
-      }}
-    >
+    <Stack.Navigator screenOptions={screenOptions}>
       <Stack.Screen
         name="LabelHome"
         component={LabelHomeScreen}
@@ -47,4 +39,3 @@ export const LabelStackNavigator: React.FC = () => {
     </Stack.Navigator>
   );
 };
-

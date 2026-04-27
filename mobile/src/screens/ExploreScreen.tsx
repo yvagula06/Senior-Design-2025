@@ -5,7 +5,6 @@ import {
   Image,
   StyleSheet,
   ScrollView,
-  FlatList,
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
@@ -329,14 +328,15 @@ export const ExploreScreen: React.FC = () => {
   const hasNoResults = isFiltering && filteredAll.length === 0;
 
   const renderHorizontal = (dishes: DishCardData[]) => (
-    <FlatList
-      data={dishes}
-      renderItem={({ item }) => <DishCard dish={item} onPress={() => handleDishPress(item)} />}
-      keyExtractor={item => item.id}
+    <ScrollView
       horizontal
       showsHorizontalScrollIndicator={false}
       contentContainerStyle={styles.horizontalList}
-    />
+    >
+      {dishes.map(item => (
+        <DishCard key={item.id} dish={item} onPress={() => handleDishPress(item)} />
+      ))}
+    </ScrollView>
   );
 
   if (isLoading) {
@@ -357,6 +357,7 @@ export const ExploreScreen: React.FC = () => {
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        removeClippedSubviews={false}
         refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={() => loadFeaturedDishes(true)} tintColor={colors.accent} colors={[colors.accent]} />}
       >
         {/* ── Header ── */}

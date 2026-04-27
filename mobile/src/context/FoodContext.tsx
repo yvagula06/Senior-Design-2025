@@ -56,8 +56,6 @@ export const FoodProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [foodEntries, setFoodEntries] = useState<FoodEntry[]>([]);
   const [calorieGoal, setCalorieGoalState] = useState(2000);
   const [macroGoals, setMacroGoalsState] = useState<MacroGoals>({ protein: 150, carbs: 200, fat: 65 });
-  const [streak, setStreak] = useState(0);
-  const [recentEntries, setRecentEntries] = useState<RecentEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -90,8 +88,6 @@ export const FoodProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         timestamp: item.timestamp ? new Date(item.timestamp).getTime() : Date.now(),
       }));
       setFoodEntries(entries);
-      computeStreak(entries);
-      computeRecents(entries);
     } catch (e) {
       console.error('❌ [FoodContext] loadAll failed:', e);
     } finally {
@@ -116,31 +112,6 @@ export const FoodProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     } catch (e) {
       console.error('❌ [FoodContext] save failed:', e);
     }
-  };
-
-  /** Build consecutive-day streak from logged days */
-  const computeStreak = (entries: FoodEntry[]) => {
-    const days = new Set(entries.map((e) => e.date));
-    let count = 0;
-    const d = new Date();
-    while (days.has(d.toISOString().split('T')[0])) {
-      count++;
-      d.setDate(d.getDate() - 1);
-    }
-    setStreak(count);
-  };
-
-  /** Keep the 5 most recently added unique dish names */
-  const computeRecents = (entries: FoodEntry[]) => {
-    const seen = new Set<string>();
-    const recents: RecentEntry[] = [];
-    for (const e of [...entries].sort((a, b) => b.timestamp - a.timestamp)) {
-      if (!seen.has(e.foodName) && recents.length < 5) {
-        seen.add(e.foodName);
-        recents.push({ foodName: e.foodName, calories: e.calories, protein: e.protein, carbs: e.carbs, fats: e.fats });
-      }
-    }
-    setRecentEntries(recents);
   };
 
   const setCalorieGoal = async (goal: number) => {
@@ -178,30 +149,18 @@ export const FoodProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       date: todayDate(),
       timestamp: now,
     };
-    setFoodEntries((prev) => {
-      const next = [...prev, newEntry];
-      computeStreak(next);
-      computeRecents(next);
-      return next;
-    });
+    setFoodEntries((prev) => [...prev, newEntry]);
   }, []);
 
   const clearAllData = useCallback(async () => {
     setFoodEntries([]);
-    setRecentEntries([]);
-    setStreak(0);
     setCalorieGoalState(2000);
     setMacroGoalsState({ protein: 150, carbs: 200, fat: 65 });
     try { await saveFoodEntries([]); } catch {}
   }, []);
 
   const deleteFoodEntry = useCallback((id: string) => {
-    setFoodEntries((prev) => {
-      const next = prev.filter((e) => e.id !== id);
-      computeStreak(next);
-      computeRecents(next);
-      return next;
-    });
+    setFoodEntries((prev) => prev.filter((e) => e.id !== id));
   }, []);
 
   const getTotals = useCallback(() => {
@@ -219,11 +178,32 @@ export const FoodProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return foodEntries.filter((e) => e.date === today);
   }, [foodEntries]);
 
-  const contextValue = useMemo<FoodContextType>(() => ({
-    foodEntries, calorieGoal, macroGoals, setCalorieGoal, setMacroGoals,
-    clearAllData, addLabelEntry, deleteFoodEntry, getTotals, getTodayEntries,
-    streak, recentEntries, isLoading,
-  }), [foodEntries, calorieGoal, macroGoals, streak, recentEntries, isLoading,
+  const contextValue = useMemo<FoodContextType>(() => {
+    // Compute streak from foodEntries (no separate state needed)
+    const days = new Set(foodEntries.map((e) => e.date));
+    let streak = 0;
+    const d = new Date();
+    while (days.has(d.toISOString().split('T')[0])) {
+      streak++;
+      d.setDate(d.getDate() - 1);
+    }
+
+    // Compute recents from foodEntries (no separate state needed)
+    const seen = new Set<string>();
+    const recentEntries: RecentEntry[] = [];
+    for (const e of [...foodEntries].sort((a, b) => b.timestamp - a.timestamp)) {
+      if (!seen.has(e.foodName) && recentEntries.length < 5) {
+        seen.add(e.foodName);
+        recentEntries.push({ foodName: e.foodName, calories: e.calories, protein: e.protein, carbs: e.carbs, fats: e.fats });
+      }
+    }
+
+    return {
+      foodEntries, calorieGoal, macroGoals, setCalorieGoal, setMacroGoals,
+      clearAllData, addLabelEntry, deleteFoodEntry, getTotals, getTodayEntries,
+      streak, recentEntries, isLoading,
+    };
+  }, [foodEntries, calorieGoal, macroGoals, isLoading,
       setCalorieGoal, setMacroGoals, clearAllData, addLabelEntry, deleteFoodEntry, getTotals, getTodayEntries]);
 
   return (
