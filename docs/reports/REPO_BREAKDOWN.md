@@ -14,7 +14,7 @@
 **Text-Based Label Generation:** Enter a dish name like "chicken tikka masala" or "Big Mac" and get:
 - ✅ Full FDA-style nutrition label: **calories, protein_g, carbs_g, fat_g** (required) plus up to 12 nullable micronutrients: **fiber_g, sugar_g, sodium_mg, potassium_mg, saturated_fat_g, trans_fat_g, cholesterol_mg, vitamin_a_mcg, vitamin_c_mg, vitamin_d_mcg, calcium_mg, iron_mg**
 - ✅ Confidence score indicating reliability
-- ✅ Best match from 516+ dishes in database
+- ✅ Best match from 2,400,000+ dishes in database
 - ✅ Instant results via mobile app or API
 - ✅ Optional meal log creation: when `device_id` is provided the response includes a `meal_log_id`
 
@@ -83,7 +83,7 @@
 │                                                                  │
 │  ┌────────────────────┐    ┌─────────────────┐             │
 │  │      dishes          │◄──┤  dish_variants  │             │
-│  │  (516+ rows)         │   │   (778+ rows)   │             │
+│  │  (2.4M+ rows)        │   │  (2.4M+ rows)   │             │
 │  │ • calories+protein   │   │ • variant_text  │             │
 │  │ • fat_g + carbs_g    │   │ • embedding     │◄─ HNSW Index │
 │  │ • +12 micronutrients │   │   (VECTOR(384)) │             │
@@ -92,7 +92,7 @@
 ```
 
 ### Core Features
-- 🍽️ **516+ dishes** covering fast food, restaurants, home cooking, and international cuisines
+- 🍽️ **2,400,000+ dishes** covering fast food, restaurants, home cooking, and international cuisines (USDA + Open Food Facts + curated seed data)
 - 🔍 **Semantic search** - finds dishes even with typos, synonyms, or different phrasings
 - 📸 **Camera-based estimation** - take a photo to get nutrition estimates with volume detection
 - 📊 **Complete nutrition** - up to 16 FDA nutrients per dish (4 required macros + up to 12 nullable micronutrients: fiber, sugar, sodium, potassium, saturated fat, trans fat, cholesterol, vitamins A/C/D, calcium, iron)
@@ -270,7 +270,11 @@ Senior-Design-2025/
 │   │   │       ├── ARScanningOverlay.tsx
 │   │   │       ├── CalorieRangeDisplay.tsx
 │   │   │       ├── CameraGuide.tsx
+│   │   │       ├── CaptureModeSelector.tsx
 │   │   │       ├── DishPredictionList.tsx
+│   │   │       ├── PlateReferenceSelector.tsx
+│   │   │       ├── ReferenceObjectSelector.tsx
+│   │   │       ├── SegmentationPreview.tsx
 │   │   │       └── index.ts
 │   │   │
 │   │   ├── config/                    # App configuration
@@ -397,6 +401,8 @@ Senior-Design-2025/
 │   │   ├── __init__.py
 │   │   └── embeddings.py             # Sentence-transformer loader
 │   │
+│   ├── static/                        # Served static files (app-logo.png, etc.)
+│   │
 │   ├── tests/                         # Unit tests
 │   │   ├── test_confidence.py        # Confidence service tests
 │   │   ├── test_health.py            # Health endpoint tests
@@ -426,11 +432,14 @@ Senior-Design-2025/
 │   │       # All tables live in 0001_canonical; keeps revision chain intact
 │   └── env.py                         # Migration environment
 │
-├── 📊 data/                            # Datasets ⭐
+├── 📊 data/                            # Datasets ⭐ (gitignored — see Database section)
 │   ├── seed_dishes.csv               # Curated dishes (1 row)
 │   ├── fastfood.csv                  # Fast food items (515 rows)
-│   ├── usda_branded_foods.csv        # USDA database (full)
-│   └── usda_branded_foods_reduced.csv # USDA subset
+│   ├── usda_branded_foods.csv        # USDA database (full, ~2.4M entries)
+│   ├── usda_branded_foods_reduced.csv # USDA subset
+│   ├── foundation/                   # USDA Foundation Foods CSV set
+│   ├── sr_legacy/                    # USDA SR Legacy CSV set
+│   └── survey/                       # USDA FNDDS survey foods CSV set
 │
 ├── 📋 Implementation_Plans/            # Feature design documents
 │   └── Camera_Functionality_Plan.md  # Camera pipeline architecture plan
@@ -685,7 +694,7 @@ CREATE INDEX idx_users_device_id ON users (device_id);
 
 ---
 
-**`dishes` table** — Canonical nutrition knowledge base (516+ rows)
+**`dishes` table** — Canonical nutrition knowledge base (2,400,000+ rows)
 
 All nutrient values are per 100 g unless `serving_size_g` overrides the reference. The 4 macro columns are always required; the 12 micronutrient columns are nullable because source data may be incomplete.
 
@@ -730,7 +739,7 @@ CREATE INDEX idx_dishes_active      ON dishes (is_active) WHERE is_active = TRUE
 
 ---
 
-**`dish_variants` table** — Searchable text aliases with 384-dim embeddings (778+ rows)
+**`dish_variants` table** — Searchable text aliases with 384-dim embeddings (2,400,000+ rows)
 
 ```sql
 CREATE TABLE dish_variants (
@@ -918,25 +927,29 @@ App.tsx
 
 **State Management (FoodContext + ThemeContext):**
 ```typescript
-// FoodContext — global food entries and daily totals
+// FoodContext — global food entries, daily totals, and streaks
 const FoodContext = {
-  foods: [],                    // All food entries
-  dailyTotals: {                // Calculated totals
-    calories: 0,
-    protein: 0,
-    carbs: 0,
-    fat: 0
-  },
-  addFood: (food) => {},        // Add new entry
-  removeFood: (id) => {},       // Delete entry
-  updateFood: (id, updates) => {} // Edit entry
+  foodEntries: [],              // All FoodEntry[] objects
+  calorieGoal: 2000,            // User's daily calorie goal
+  macroGoals: {...},            // Protein/carbs/fat goals
+  streakDays: 0,                // Consecutive logging streak
+  recentEntries: [],            // Last 5 unique dish names
+  addLabelEntry: (entry) => {}, // Add from label/vision result
+  deleteFoodEntry: (id) => {},  // Delete by ID
+  clearAllData: () => {},       // Reset all entries
+  setCalorieGoal: (n) => {},    // Update calorie goal
+  setMacroGoals: (goals) => {}, // Update macro goals
+  getTodayEntries: () => [],    // Filter to today's entries
+  getTotals: () => ({}),        // Sum today's macros
 };
 
-// ThemeContext — dark/light mode preference
+// ThemeContext — dark/light mode preference with accent colours
 const ThemeContext = {
   isDark: false,                // Current theme mode
+  accentName: 'amber',          // Active accent: amber|emerald|sky|purple|rose
   toggleTheme: () => {},        // Switch between dark/light
-  colors: { ... }               // Active colour palette
+  setAccent: (name) => {},      // Change accent colour
+  colors: { ... }               // Active colour palette (buildColors(isDark, accent))
 };
 ```
 
@@ -1007,8 +1020,8 @@ Every call to `POST /vision/estimate` writes a row to `vision_estimates` regardl
 | History filtering by date range | 🚧 In Progress | `GET /meal-logs` returns newest 50; no date filter yet |
 | Pagination of meal history | 🚧 In Progress | No cursor/page param yet |
 | Daily calorie totals API | 🚧 In Progress | Aggregation not yet in backend; FoodContext handles client-side |
-| History detail screen (mobile) | 🚧 In Progress | `HistoryDetailScreen.tsx` exists but navigation is partial |
-| Camera-confirmed meal log (mobile) | 🚧 In Progress | `EstimationResultScreen.tsx` confirm flow not fully wired |
+| History detail screen (mobile) | ✅ Implemented | Full nutrition label displayed with real entry data; delete works |
+| Camera-confirmed meal log (mobile) | ✅ Implemented | `EstimationResultScreen.tsx` confirm flow wired to `addLabelEntry` in FoodContext |
 
 ---
 
@@ -1033,20 +1046,36 @@ docker-compose up -d --build        # Start containers
 docker-compose exec api alembic upgrade head  # Create schema
 ```
 
-**3. Populate database with 516 dishes**
+**3. Populate database**
+
+> ⚠️ The full database (~2.4M dishes) is not stored in git (datasets are gitignored due to size).
+> See the **Database Distribution** section below for how to get the pre-populated dump.
+
+If starting fresh with a small dataset for testing:
+```bash
+docker exec -it nutrition_api python /app/scripts/import_fastfood.py         # ~515 fast food items
+docker exec -it nutrition_api python /app/scripts/ingest_seed.py             # 1 seed dish
+```
+
+For the full USDA dataset (takes 20-60 min):
 ```bash
 docker exec -it nutrition_api python /app/scripts/import_usda_dishes.py
+docker exec -it nutrition_api python /app/scripts/import_openfoodfacts.py
 ```
-This takes 2-3 minutes and loads:
-- 1 seed dish (Chicken Tikka Masala)
-- 515 fast food items (McDonald's, Burger King, Subway, etc.)
-- 778 searchable variants with embeddings
 
-Alternative scripts available:
-```bash
-docker exec -it nutrition_api python /app/scripts/import_fastfood.py         # Fast food only
-docker exec -it nutrition_api python /app/scripts/import_usda_whole_foods.py # USDA whole foods
-docker exec -it nutrition_api python /app/scripts/import_openfoodfacts.py    # Open Food Facts
+### Database Distribution (pg_dump)
+
+The production database (2.4M dishes + embeddings) is distributed as a `pg_restore`-compatible dump.
+Share via Google Drive / OneDrive and restore with:
+```powershell
+# 1. Start the db container
+docker-compose up -d db
+
+# 2. Copy dump file into container
+docker cp nutrition_dump.dump nutrition_db:/tmp/
+
+# 3. Restore
+docker exec nutrition_db pg_restore -U postgres -d nutrition /tmp/nutrition_dump.dump
 ```
 
 **4. Configure mobile app**
@@ -1076,31 +1105,24 @@ See [QUICKSTART.md](../setup/QUICKSTART.md) for detailed instructions.
 
 ## 📊 Database Contents
 
-### Current Database (516 dishes, 778 variants)
-
-**By Category:**
-- Fast Food Burgers: ~80 dishes (Big Mac, Whopper, etc.)
-- Fast Food Chicken: ~70 dishes (McNuggets, Chicken Sandwich, etc.)
-- Fast Food Breakfast: ~50 dishes (Egg McMuffin, Hash Browns, etc.)
-- Fast Food Sides: ~60 dishes (Fries, Onion Rings, etc.)
-- Fast Food Salads: ~30 dishes (Caesar Salad, Garden Salad, etc.)
-- Fast Food Desserts: ~40 dishes (McFlurry, Apple Pie, etc.)
-- Fast Food Beverages: ~50 dishes (Coke, Shakes, etc.)
-- International: ~50 dishes (Tacos, Burritos, Pizza, etc.)
-- Home Cooking: ~86 dishes (various preparations)
+### Current Database (2,406,474 dishes, 2,406,474 variants)
 
 **Data Sources:**
-- `seed_dishes.csv` - 1 curated dish
-- `fastfood.csv` - 515 restaurant items
+- `seed_dishes.csv` — 1 curated seed dish
+- `fastfood.csv` — ~515 restaurant items
+- USDA Branded Foods — majority of entries (~2.4M)
+- USDA Foundation Foods, SR Legacy, Survey (FNDDS)
+- Open Food Facts (supplemental)
 
 **Coverage:**
-- ✅ McDonald's (full menu)
-- ✅ Burger King
-- ✅ Subway
-- ✅ Taco Bell
-- ✅ Pizza Hut
-- ✅ KFC
-- ✅ Other chains
+- ✅ McDonald's, Burger King, Subway, Taco Bell, Pizza Hut, KFC (full menus)
+- ✅ USDA branded & packaged foods
+- ✅ USDA whole foods & ingredients
+- ✅ International cuisines
+- ✅ Home cooking ingredients
+
+> ⚠️ All CSV data files are gitignored. The populated database is shared as a `pg_dump`
+> file. Contact the team or check the shared drive for `nutrition_dump.dump`.
 
 **Variant Examples:**
 ```
@@ -1321,28 +1343,23 @@ Create Database Schema
       │    user_portion_preferences
       │ Installs pgvector extension + HNSW cosine index
       ▼
-Run Ingestion Script
-      │ docker exec -it nutrition_api python /app/scripts/ingest_comprehensive.py
+Populate Database (choose one path)
       │
-      ├──> Load seed_dishes.csv (1 dish)
-      │      │
-      │      ├──> Parse CSV row
-      │      ├──> Insert into dishes table
-      │      ├──> Generate variants: ["chicken tikka masala", "tikka masala", "chicken tikka"]
-      │      ├──> Generate embeddings for each variant
-      │      └──> Insert into dish_variants table
+      ├── OPTION A: Restore from pg_dump (recommended — fastest)
+      │     docker cp nutrition_dump.dump nutrition_db:/tmp/
+      │     docker exec nutrition_db pg_restore -U postgres \
+      │       -d nutrition /tmp/nutrition_dump.dump
+      │     → Loads 2.4M dishes + embeddings in minutes
       │
-      └──> Load fastfood.csv (515 dishes)
-             │
-             ├──> Parse CSV rows
-             ├──> Insert into dishes table (bulk)
-             ├──> Generate variants for each dish
-             ├──> Generate embeddings (batch processing)
-             └──> Insert into dish_variants table
+      └── OPTION B: Run ingestion scripts from scratch
+            docker exec -it nutrition_api python /app/scripts/import_fastfood.py
+            docker exec -it nutrition_api python /app/scripts/import_usda_dishes.py
+            docker exec -it nutrition_api python /app/scripts/import_openfoodfacts.py
+            → Takes 20-60 min; generates all embeddings live
       ▼
 Database Ready ✓
-  • 516 dishes
-  • 778 variants with embeddings
+  • 2,406,474 dishes
+  • 2,406,474 variants with embeddings
   • HNSW indexes built
   • Ready for similarity search
 ```
@@ -1534,7 +1551,7 @@ const BASE_URL = 'http://YOUR_IP:8000';  // Update with your IP
 - [x] POST /vision/feedback — user correction submission
 - [x] GET /vision/personalization/{user_id} — personalization profile
 - [x] Database migrations with Alembic
-- [x] Comprehensive data ingestion (516+ dishes)
+- [x] Comprehensive data ingestion (2,400,000+ dishes)
 - [x] Unit & integration tests
 - [x] Docker containerization
 
@@ -1549,14 +1566,15 @@ const BASE_URL = 'http://YOUR_IP:8000';  // Update with your IP
 - [x] Platform-aware API configuration
 - [x] TypeScript type safety
 - [x] Material Design UI (React Native Paper)
-- [x] Dark/light theme support (ThemeContext)
+- [x] Dark/light theme support (ThemeContext) with 5 accent colour options (amber, emerald, sky, purple, rose)
+- [x] Theme-aware NutritionLabelCard (dark/light FDA label)
 
 **Data:**
-- [x] 516 dishes in database
-- [x] 778 searchable variants
-- [x] Embeddings for all variants
+- [x] 2,400,000+ dishes in database (USDA full + fast food + Open Food Facts)
+- [x] 2,400,000+ searchable variants with embeddings
 - [x] HNSW indexes for fast retrieval
-- [x] Fast food coverage (McDonald's, Burger King, etc.)
+- [x] Fast food coverage (McDonald's, Burger King, Subway, Taco Bell, etc.)
+- [x] USDA Foundation Foods, SR Legacy, and branded foods coverage
 
 **Documentation:**
 - [x] Complete setup guide (QUICKSTART.md)
@@ -1570,8 +1588,7 @@ const BASE_URL = 'http://YOUR_IP:8000';  // Update with your IP
 
 - [ ] History date-range filtering and pagination (GET /meal-logs currently returns newest 50 only)
 - [ ] Daily calorie totals endpoint (currently computed client-side in FoodContext)
-- [ ] HistoryDetailScreen — screen exists, navigation not fully wired
-- [ ] Camera-confirmed meal log (EstimationResultScreen confirm flow not fully wired to POST /meal-logs)
+- [ ] History date-range filtering and pagination (GET /meal-logs currently returns newest 50 only)
 - [ ] Explore tab improvements (browse by category, filters)
 - [ ] Profile tab enhancements (preferences, goals tracking)
 - [ ] Vision model optimization (faster inference, better accuracy)
@@ -1679,7 +1696,7 @@ chore: maintenance tasks
 
 **1. Semantic Search at Scale**
 - 384-dimensional embeddings with HNSW indexing
-- Sub-100ms query latency for 516+ dishes
+- Sub-100ms query latency for 2.4M+ dishes
 - Handles natural language variations, typos, and synonyms
 
 **2. Dual-Mode Estimation**
@@ -1708,7 +1725,7 @@ chore: maintenance tasks
 - Full academic report suite (proposal, midterm, final)
 
 ### Technical Achievements
-- ✅ 516+ dishes with 778+ searchable variants
+- ✅ 2,406,474 dishes with 2,406,474 searchable variants
 - ✅ pgvector HNSW indexes for fast similarity search
 - ✅ 95%+ confidence on exact matches
 - ✅ Camera-based meal estimation with multiple modes
