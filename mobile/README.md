@@ -86,6 +86,28 @@ mobile/
 - `npm run ios` - Run on iOS simulator (macOS only)
 - `npm run web` - Run in web browser
 
+## Troubleshooting
+
+Having issues? Check out our comprehensive **[Troubleshooting Guide](TROUBLESHOOTING.md)** for solutions to common problems:
+
+- 🔧 **"Dish not found" errors** - Clear cache and AsyncStorage
+- 🌐 **Network/connection issues** - Backend setup and ngrok configuration
+- 📦 **Cache problems** - Metro bundler and app data clearing
+- 🏗️ **Build failures** - Dependency and platform-specific issues
+- 📱 **Platform-specific problems** - iOS simulator and Android emulator fixes
+
+**Quick fixes:**
+```powershell
+# Clear cache and restart
+npx expo start --clear
+
+# Clear app data (run in app)
+import AsyncStorage from '@react-native-async-storage/async-storage';
+await AsyncStorage.clear();
+```
+
+For detailed solutions and diagnostic commands, see **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)**.
+
 ## API Configuration
 
 The app connects to your FastAPI backend. Update the API base URL in `src/services/api.ts`:

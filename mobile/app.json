@@ -18,7 +18,16 @@
       "infoPlist": {
         "NSCameraUsageDescription": "This app needs access to your camera to take photos of your meals for nutrition estimation.",
         "NSPhotoLibraryUsageDescription": "This app needs access to your photo library to select meal photos for nutrition estimation.",
-        "NSMicrophoneUsageDescription": "This app does not use the microphone."
+        "NSMicrophoneUsageDescription": "This app does not use the microphone.",
+        "NSAppTransportSecurity": {
+          "NSAllowsLocalNetworking": true,
+          "NSExceptionDomains": {
+            "192.168.1.191": {
+              "NSExceptionAllowsInsecureHTTPLoads": true,
+              "NSIncludesSubdomains": false
+            }
+          }
+        }
       }
     },
     "android": {

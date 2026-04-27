@@ -66,7 +66,7 @@ export const DishPredictionList: React.FC<DishPredictionListProps> = ({
                 styles.confidenceBarFill,
                 {
                   width: `${confidencePercent}%`,
-                  backgroundColor: getConfidenceColor(item.confidence),
+                  backgroundColor: getConfidenceColor(item.confidence, colors),
                 },
               ]}
             />
@@ -90,7 +90,7 @@ export const DishPredictionList: React.FC<DishPredictionListProps> = ({
   );
 };
 
-const getConfidenceColor = (confidence: number): string => {
+const getConfidenceColor = (confidence: number, colors: ReturnType<typeof useAppTheme>['colors']): string => {
   if (confidence >= 0.8) return colors.success;
   if (confidence >= 0.6) return colors.warning;
   return colors.error;
@@ -115,7 +115,7 @@ function createStyles(colors: CV) {
     paddingVertical: Spacing.sm,
   },
   predictionItemSelected: {
-    backgroundColor: colors.primaryLight + '10',
+    backgroundColor: colors.primary + '28',
     marginHorizontal: -Spacing.sm,
     paddingHorizontal: Spacing.sm,
     borderRadius: BorderRadius.md,

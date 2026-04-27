@@ -107,6 +107,13 @@ export const HistoryListScreen: React.FC = () => {
     navigation.navigate('HistoryDetail', {
       dishId: item.id,
       dishName: item.dishName,
+      calories: item.calories,
+      protein: item.protein,
+      carbs: item.carbs,
+      fats: item.fats,
+      confidence: item.confidence,
+      date: item.date,
+      prepStyle: item.prepStyle,
     });
   };
 

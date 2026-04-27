@@ -54,6 +54,7 @@ export function buildColors(isDark: boolean, accentName: AccentName) {
       darkRed: '#991B1B',
       brightGold: '#FBBF24',
       backgroundSecondary: '#141414',
+      textInverse: '#0C0C0C',
     };
   } else {
     return {
@@ -95,6 +96,7 @@ export function buildColors(isDark: boolean, accentName: AccentName) {
       darkRed: '#991B1B',
       brightGold: '#FBBF24',
       backgroundSecondary: '#FAFAFA',
+      textInverse: '#FFFFFF',
     };
   }
 }

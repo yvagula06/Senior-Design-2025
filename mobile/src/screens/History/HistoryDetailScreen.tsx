@@ -19,15 +19,17 @@ import {
 } from '../../components/Label';
 import { Spacing, Typography, BorderRadius, Shadows } from '../../theme';
 import { useAppTheme } from '../../context/ThemeContext';
+import { useFoodContext } from '../../context/FoodContext';
 
 type HistoryDetailRouteProp = RouteProp<HistoryStackParamList, 'HistoryDetail'>;
 
 export const HistoryDetailScreen: React.FC = () => {
   const { colors } = useAppTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
+  const { deleteFoodEntry } = useFoodContext();
   const route = useRoute<HistoryDetailRouteProp>();
   const navigation = useNavigation();
-  const { dishId, dishName } = route.params;
+  const { dishId, dishName, calories, protein, carbs, fats, confidence, date, prepStyle } = route.params;
   const [isFavorite, setIsFavorite] = useState(false);
 
   useEffect(() => {
@@ -47,29 +49,29 @@ export const HistoryDetailScreen: React.FC = () => {
     });
   }, [navigation]);
 
-  // Mock data - replace with actual data fetch based on dishId
+  // Build dishData from real navigation params
   const dishData = {
     dishName,
-    date: '2025-11-29',
-    prepStyle: 'restaurant',
-    confidence: 78,
+    date: date ?? new Date().toISOString().split('T')[0],
+    prepStyle: (prepStyle ?? 'home') as 'home' | 'restaurant',
+    confidence: confidence ?? 75,
     nutrition: {
-      servingSize: '1 serving (approx. 350g)',
-      calories: 520,
-      protein: 28,
-      totalCarbohydrate: 45,
-      totalFat: 24,
-      saturatedFat: 8,
-      transFat: 0.5,
-      sodium: 890,
-      totalSugars: 12,
-      addedSugars: 6,
-      dietaryFiber: 3,
-      cholesterol: 75,
-      vitaminD: 2.5,
-      calcium: 180,
-      iron: 3.2,
-      potassium: 650,
+      servingSize: '1 serving',
+      calories: calories ?? 0,
+      protein: protein ?? 0,
+      totalCarbohydrate: carbs ?? 0,
+      totalFat: fats ?? 0,
+      saturatedFat: 0,
+      transFat: 0,
+      sodium: 0,
+      totalSugars: 0,
+      addedSugars: 0,
+      dietaryFiber: 0,
+      cholesterol: 0,
+      vitaminD: 0,
+      calcium: 0,
+      iron: 0,
+      potassium: 0,
     } as NutritionData,
   };
 
@@ -134,7 +136,7 @@ export const HistoryDetailScreen: React.FC = () => {
           text: 'Delete',
           style: 'destructive',
           onPress: () => {
-            // TODO: Delete from storage/API
+            deleteFoodEntry(dishId);
             navigation.goBack();
           },
         },

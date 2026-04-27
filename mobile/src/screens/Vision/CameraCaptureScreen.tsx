@@ -29,6 +29,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import * as ImageManipulator from 'expo-image-manipulator';
 import * as Device from 'expo-device';
 import { Typography, Spacing, BorderRadius, Shadows } from '../../theme';
 import { useAppTheme } from '../../context/ThemeContext';
@@ -39,6 +40,19 @@ import type { ExploreStackNavigationProp } from '../../navigation/types';
 
 type CaptureStep = 'select-mode' | 'setup-reference' | 'capture-top' | 'capture-side' | 'ar-scanning' | 'preview';
 type ScanningStatus = 'initializing' | 'scanning' | 'processing' | 'complete' | 'error';
+
+/**
+ * Compress and resize an image URI to keep the base64 payload under ~1MB.
+ * Reduces to max 800px wide and JPEG quality 0.5 — more than enough for meal recognition.
+ */
+async function compressImage(uri: string): Promise<string> {
+  const result = await ImageManipulator.manipulateAsync(
+    uri,
+    [{ resize: { width: 800 } }],
+    { compress: 0.5, format: ImageManipulator.SaveFormat.JPEG, base64: true }
+  );
+  return result.base64!;
+}
 
 export const CameraCaptureScreen: React.FC = () => {
   const { colors } = useAppTheme();
@@ -236,15 +250,19 @@ export const CameraCaptureScreen: React.FC = () => {
     try {
       setIsLoading(true);
 
+      // Compress images before sending — raw iPhone photos (~4MB) exceed ngrok's 8MB limit
+      const compressedTop = topImageUri ? await compressImage(topImageUri) : topImageBase64!;
+      const compressedSide = sideImageUri ? await compressImage(sideImageUri) : sideImageBase64;
+
       // Build images array based on capture mode
       const images: Array<{data: string; angle: CaptureAngle; timestamp: string}> = [];
 
       if (captureMode === 'depth') {
         // For depth mode, we still need at least one RGB image
         // In production, this would be captured during AR scanning
-        if (topImageBase64) {
+        if (compressedTop) {
           images.push({
-            data: topImageBase64,
+            data: compressedTop,
             angle: 'top' as CaptureAngle,
             timestamp: new Date().toISOString(),
           });
@@ -259,15 +277,15 @@ export const CameraCaptureScreen: React.FC = () => {
       } else {
         // Regular image-based modes
         images.push({
-          data: topImageBase64!,
+          data: compressedTop,
           angle: 'top' as CaptureAngle,
           timestamp: new Date().toISOString(),
         });
 
         // Add side image if in multi-angle mode
-        if (captureMode === 'multi_angle' && sideImageBase64) {
+        if (captureMode === 'multi_angle' && compressedSide) {
           images.push({
-            data: sideImageBase64,
+            data: compressedSide,
             angle: 'side' as CaptureAngle,
             timestamp: new Date().toISOString(),
           });

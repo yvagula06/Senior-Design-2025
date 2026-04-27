@@ -44,7 +44,7 @@ export const EstimationResultScreen: React.FC = () => {
   const navigation = useNavigation<ExploreStackNavigationProp>();
   const route = useRoute<EstimationResultRouteProp>();
   const { response } = route.params;
-  const { addFoodEntry } = useFoodContext();
+  const { addLabelEntry } = useFoodContext();
   const [isLogging, setIsLogging] = useState(false);
   const [isLogged, setIsLogged] = useState(false);
   
@@ -130,12 +130,14 @@ export const EstimationResultScreen: React.FC = () => {
       const estimatedFats = Math.round(adjustedCalories * 0.30 / 9); // 30% from fats
 
       // Add to local FoodContext (appears in History)
-      addFoodEntry({
-        foodName: selectedDish.dish_name,
+      addLabelEntry({
+        dishName: selectedDish.dish_name,
+        matchedDish: selectedDish.dish_name,
         calories: adjustedCalories,
         protein: estimatedProtein,
         carbs: estimatedCarbs,
         fats: estimatedFats,
+        confidence: selectedDish.confidence,
       });
 
       // Log to backend (stub implementation for now)
@@ -304,12 +306,15 @@ export const EstimationResultScreen: React.FC = () => {
               selectedValue={selectedDishId}
               onValueChange={(itemValue) => setSelectedDishId(itemValue)}
               style={styles.picker}
+              dropdownIconColor={colors.text}
             >
               {response.dish_predictions.map((pred) => (
                 <Picker.Item
                   key={pred.dish_id}
                   label={`${pred.dish_name} (${Math.round(pred.confidence * 100)}%)`}
                   value={pred.dish_id}
+                  color={colors.text}
+                  style={{ backgroundColor: colors.backgroundSecondary }}
                 />
               ))}
             </Picker>
@@ -732,6 +737,8 @@ interface FactorItemProps {
 }
 
 const FactorItem: React.FC<FactorItemProps> = ({ label, value }) => {
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const percentage = Math.round(value * 100);
   const color = value >= 0.7 ? colors.success : value >= 0.5 ? colors.warning : colors.error;
 
@@ -799,6 +806,7 @@ function createStyles(colors: CV) {
   },
   picker: {
     width: '100%',
+    color: colors.text,
   },
   portionContainer: {
     backgroundColor: colors.surface,

@@ -140,10 +140,13 @@ export const LabelHomeScreen: React.FC = () => {
       setLabelResult(response);
 
     } catch (error) {
-      console.error('[Label] Failed to generate label:', error);
+      const errorMessage = String(error);
+      console.error('[Label] Failed to generate label:', errorMessage);
       
-      // Set user-friendly error message
-      setApiError(String(error));
+      // Only show error UI for user-initiated requests (not background/prefill attempts)
+      if (dishName.trim()) {
+        setApiError(errorMessage);
+      }
     } finally {
       setIsGenerating(false);
     }

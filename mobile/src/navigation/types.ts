@@ -33,6 +33,13 @@ export type HistoryStackParamList = {
   HistoryDetail: {
     dishId: string;
     dishName: string;
+    calories?: number;
+    protein?: number;
+    carbs?: number;
+    fats?: number;
+    confidence?: number;
+    date?: string;
+    prepStyle?: 'home' | 'restaurant';
   };
 };
 

@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
-import { AppColors, Spacing, Typography, BorderRadius, Shadows } from '../../theme';
+import { Spacing, Typography, BorderRadius, Shadows } from '../../theme';
+import { useAppTheme } from '../../context/ThemeContext';
 
 export interface NutritionData {
   servingSize: string;
@@ -37,6 +38,9 @@ export const NutritionLabelCard: React.FC<NutritionLabelCardProps> = ({
   compact = false,
   scrollable = true,
 }) => {
+  const { colors, isDark } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors, isDark), [colors, isDark]);
+
   const renderNutrientRow = (
     label: string,
     value: string | number,
@@ -161,12 +165,22 @@ export const NutritionLabelCard: React.FC<NutritionLabelCardProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+type CD = ReturnType<typeof useAppTheme>['colors'];
+
+function createStyles(colors: CD, isDark: boolean) {
+  // In dark mode we invert the FDA label: dark bg + light text/dividers
+  // In light mode we keep the authentic black-on-white look
+  const bg = isDark ? colors.surface : '#FFFFFF';
+  const ink = isDark ? colors.text : '#111111';
+  const sectionBg = colors.backgroundSecondary;
+  const subtle = colors.textSecondary;
+
+  return StyleSheet.create({
   container: {
-    backgroundColor: AppColors.white,
+    backgroundColor: bg,
     borderRadius: BorderRadius.lg,
     borderWidth: 2,
-    borderColor: AppColors.darkGray,
+    borderColor: ink,
     overflow: 'hidden',
     ...Shadows.md,
   },
@@ -177,11 +191,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: Typography.fontSize.xxxl,
     fontWeight: Typography.fontWeight.bold,
-    color: AppColors.darkGray,
+    color: ink,
   },
   headerDivider: {
     height: 1,
-    backgroundColor: AppColors.darkGray,
+    backgroundColor: ink,
     marginVertical: Spacing.xs,
   },
   servingRow: {
@@ -190,19 +204,19 @@ const styles = StyleSheet.create({
   servingLabel: {
     fontSize: Typography.fontSize.md,
     fontWeight: Typography.fontWeight.medium,
-    color: AppColors.darkGray,
+    color: ink,
   },
   thickDivider: {
     height: 10,
-    backgroundColor: AppColors.darkGray,
+    backgroundColor: ink,
   },
   mediumDivider: {
     height: 5,
-    backgroundColor: AppColors.darkGray,
+    backgroundColor: ink,
   },
   thinDivider: {
     height: 1,
-    backgroundColor: AppColors.darkGray,
+    backgroundColor: ink,
   },
   caloriesSection: {
     paddingHorizontal: Spacing.md,
@@ -216,12 +230,12 @@ const styles = StyleSheet.create({
   caloriesLabel: {
     fontSize: Typography.fontSize.xxl,
     fontWeight: Typography.fontWeight.bold,
-    color: AppColors.darkGray,
+    color: ink,
   },
   caloriesValue: {
     fontSize: Typography.fontSize.display,
     fontWeight: Typography.fontWeight.bold,
-    color: AppColors.darkGray,
+    color: ink,
   },
   dvHeader: {
     paddingHorizontal: Spacing.md,
@@ -231,7 +245,7 @@ const styles = StyleSheet.create({
   dvHeaderText: {
     fontSize: Typography.fontSize.xs,
     fontWeight: Typography.fontWeight.bold,
-    color: AppColors.darkGray,
+    color: ink,
   },
   nutrientsContainer: {
     maxHeight: 400,
@@ -244,23 +258,23 @@ const styles = StyleSheet.create({
   },
   nutrientLabel: {
     fontSize: Typography.fontSize.md,
-    color: AppColors.darkGray,
+    color: ink,
     flex: 1,
   },
   nutrientLabelBold: {
     fontSize: Typography.fontSize.md,
     fontWeight: Typography.fontWeight.bold,
-    color: AppColors.darkGray,
+    color: ink,
     flex: 1,
   },
   nutrientValue: {
     fontSize: Typography.fontSize.md,
-    color: AppColors.darkGray,
+    color: ink,
   },
   nutrientValueBold: {
     fontSize: Typography.fontSize.md,
     fontWeight: Typography.fontWeight.bold,
-    color: AppColors.darkGray,
+    color: ink,
   },
   footer: {
     padding: Spacing.md,
@@ -268,18 +282,19 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: Typography.fontSize.xs,
-    color: AppColors.mediumGray,
+    color: subtle,
     lineHeight: Typography.lineHeight.normal * Typography.fontSize.xs,
   },
   sectionHeaderContainer: {
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
-    backgroundColor: AppColors.lightGray,
+    backgroundColor: sectionBg,
   },
   sectionHeaderText: {
     fontSize: Typography.fontSize.xs,
     fontWeight: Typography.fontWeight.bold,
-    color: AppColors.mediumGray,
+    color: subtle,
     letterSpacing: 0.5,
   },
-});
+  });
+}

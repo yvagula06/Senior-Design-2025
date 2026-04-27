@@ -262,7 +262,47 @@ The backend implements several ML services that work together:
 - **`confidence_service.py`**: Estimates prediction uncertainty
 - **`rebalance_service.py`**: Adjusts nutrition totals to match known calories
 
-## 👥 Team
+## � Troubleshooting
+
+Having issues? We've got you covered with comprehensive troubleshooting guides:
+
+### Quick Reference
+📋 **[Quick Troubleshooting Guide](docs/QUICK_TROUBLESHOOTING.md)** - Common errors and immediate solutions
+
+**Common issues:**
+- 🚨 "Dish not found" errors → Clear cache: `npx expo start --clear`
+- 🌐 "Unable to connect to server" → Check backend URL and ngrok
+- 🧹 Stale data/cache → Clear Metro + AsyncStorage
+- 🔌 Connection issues → Verify network and backend binding
+
+### Detailed Guides
+📚 **[Mobile App Troubleshooting](mobile/TROUBLESHOOTING.md)** - Complete mobile app troubleshooting guide
+- API & Backend Issues
+- Cache & Data Problems  
+- Build & Development Issues
+- Network & Connection Problems
+- Platform-Specific Solutions (iOS/Android)
+- Diagnostic Commands & Nuclear Options
+
+### Quick Diagnostic Commands
+```powershell
+# Check backend health
+curl http://localhost:8000/health
+
+# Check database
+python scripts/check_db_status.py
+
+# Check dishes count
+python scripts/check_dishes.py
+
+# Clear mobile cache
+cd mobile && npx expo start --clear
+
+# Run Expo diagnostics
+cd mobile && npx expo-doctor
+```
+
+## �👥 Team
 
 - Raj
 - Harry

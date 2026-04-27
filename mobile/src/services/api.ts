@@ -4,23 +4,20 @@
  * Central axios instance for all API requests.
  * Configured with platform-aware base URL and timeout.
  * 
- * USAGE:
- * import { apiClient } from './api';
- * const response = await apiClient.post('/label', data);
- * 
  * DEV NOTES:
  * - Android Emulator: Uses 10.0.2.2:8000 (special alias to host machine)
  * - iOS Simulator: Uses localhost:8000
- * - Physical Device: Update PHYSICAL_DEVICE_IP with your machine's LAN IP
- *   Find it with: ipconfig (Windows) or ifconfig (Mac/Linux)
+ * - Physical Device: Uses your machine's LAN IP (same WiFi required)
+ *   Update DEV_MACHINE_IP if your IP changes: run `ipconfig` and look for
+ *   the IPv4 Address under your WiFi adapter.
  */
 
 import axios from 'axios';
 import { Platform } from 'react-native';
 import * as Device from 'expo-device';
 
-// Ngrok tunnel URL — update this when you restart ngrok
-const NGROK_URL = 'https://captive-chosen-approach.ngrok-free.dev';
+// Your machine's LAN IP — update this if it changes (run `ipconfig` to find it)
+const DEV_MACHINE_IP = '192.168.1.191';
 
 /**
  * Base URL Configuration
@@ -31,8 +28,8 @@ const API_BASE_URL = (() => {
 
   if (__DEV__) {
     if (isDevice) {
-      // Physical device (iOS or Android) — use ngrok tunnel
-      return NGROK_URL;
+      // Physical device — use machine's LAN IP (phone must be on same WiFi)
+      return `http://${DEV_MACHINE_IP}:8000`;
     } else if (Platform.OS === 'android') {
       // Android emulator
       return 'http://10.0.2.2:8000';
@@ -51,7 +48,7 @@ const API_BASE_URL = (() => {
  * 
  * Pre-configured with:
  * - Platform-aware base URL
- * - 10 second timeout
+ * - 30 second timeout
  * - JSON content type
  */
 export const apiClient = axios.create({
@@ -64,5 +61,21 @@ export const apiClient = axios.create({
 
 // Log the API base URL for debugging
 console.log(`🌐 [API] Base URL: ${API_BASE_URL}`);
+
+/**
+ * Fetch featured dishes from the backend
+ * Note: Currently returns empty array as endpoint is not implemented
+ */
+export async function fetchFeaturedDishes(): Promise<any[]> {
+  try {
+    // TODO: Implement /dishes/featured endpoint on backend
+    // const response = await apiClient.get('/dishes/featured');
+    // return response.data;
+    return [];
+  } catch (error) {
+    console.error('[API] Failed to fetch featured dishes:', error);
+    return [];
+  }
+}
 
 //Test 2
