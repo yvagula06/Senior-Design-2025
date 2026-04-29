@@ -16,6 +16,7 @@ import {
   StyleSheet,
   ScrollView,
 } from 'react-native';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import type { PlateType } from '../../types/vision';
 
 interface PlateOption {
@@ -23,7 +24,9 @@ interface PlateOption {
   label: string;
   subtitle: string;
   diameterCm: number;
-  emoji: string;
+  icon: string;
+  iconSize: number;
+  iconLib: 'ionicons' | 'mci';
 }
 
 const PLATE_OPTIONS: PlateOption[] = [
@@ -32,42 +35,54 @@ const PLATE_OPTIONS: PlateOption[] = [
     label: 'Small Plate',
     subtitle: '~20 cm',
     diameterCm: 20,
-    emoji: '🍽',
+    icon: 'restaurant-outline',
+    iconSize: 22,
+    iconLib: 'ionicons',
   },
   {
     type: 'medium_plate',
     label: 'Dinner Plate',
     subtitle: '~25 cm',
     diameterCm: 25,
-    emoji: '🍽',
+    icon: 'restaurant-outline',
+    iconSize: 26,
+    iconLib: 'ionicons',
   },
   {
     type: 'large_plate',
     label: 'Large Plate',
     subtitle: '~30 cm',
     diameterCm: 30,
-    emoji: '🍽',
+    icon: 'restaurant-outline',
+    iconSize: 30,
+    iconLib: 'ionicons',
   },
   {
     type: 'bowl',
     label: 'Bowl',
     subtitle: '~15 cm',
     diameterCm: 15,
-    emoji: '🥣',
+    icon: 'bowl-outline',
+    iconSize: 26,
+    iconLib: 'mci',
   },
   {
     type: 'cup',
     label: 'Cup / Mug',
     subtitle: '~8 cm',
     diameterCm: 8,
-    emoji: '☕',
+    icon: 'coffee-outline',
+    iconSize: 26,
+    iconLib: 'mci',
   },
   {
     type: 'container',
     label: 'Container',
     subtitle: 'custom size',
     diameterCm: 18,
-    emoji: '📦',
+    icon: 'package-variant-closed',
+    iconSize: 26,
+    iconLib: 'mci',
   },
 ];
 
@@ -126,7 +141,21 @@ export const PlateReferenceSelector: React.FC<Props> = ({
               onPress={() => handleSelect(opt)}
               activeOpacity={0.7}
             >
-              <Text style={styles.emoji}>{opt.emoji}</Text>
+              {opt.iconLib === 'ionicons' ? (
+                <Ionicons
+                  name={opt.icon as any}
+                  size={opt.iconSize}
+                  color={isSelected ? '#00D4AA' : '#AAA'}
+                  style={styles.icon}
+                />
+              ) : (
+                <MaterialCommunityIcons
+                  name={opt.icon as any}
+                  size={opt.iconSize}
+                  color={isSelected ? '#00D4AA' : '#AAA'}
+                  style={styles.icon}
+                />
+              )}
               <Text style={[styles.cardLabel, isSelected && styles.cardLabelSelected]}>
                 {opt.label}
               </Text>
@@ -189,8 +218,7 @@ const styles = StyleSheet.create({
     borderColor: '#00D4AA',
     backgroundColor: '#0D1F2D',
   },
-  emoji: {
-    fontSize: 28,
+  icon: {
     marginBottom: 6,
   },
   cardLabel: {

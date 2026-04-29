@@ -6,7 +6,7 @@
  * Results can be saved directly to the daily food log.
  */
 
-import React, { useCallback, useEffect, useState, useMemo } from 'react';
+import React, { useCallback, useEffect, useRef, useState, useMemo } from 'react';
 import {
   ActivityIndicator,
   Image,
@@ -39,6 +39,8 @@ export const BarcodeScannerScreen: React.FC = () => {
   const [permission, requestPermission] = useCameraPermissions();
   const [scanState, setScanState] = useState<ScanState>('scanning');
   const [lastScanned, setLastScanned] = useState<string | null>(null);
+  const isProcessingRef = useRef(false);
+  const lastScannedRef = useRef<string | null>(null);
   const [product, setProduct] = useState<BarcodeProduct | null>(null);
   const [errorMsg, setErrorMsg] = useState('');
   const [isSaved, setIsSaved] = useState(false);
@@ -53,7 +55,9 @@ export const BarcodeScannerScreen: React.FC = () => {
 
   const handleBarcode = useCallback(
     async (barcode: string) => {
-      if (scanState !== 'scanning' || barcode === lastScanned) return;
+      if (isProcessingRef.current || barcode === lastScannedRef.current) return;
+      isProcessingRef.current = true;
+      lastScannedRef.current = barcode;
       setLastScanned(barcode);
       setScanState('loading');
       try {
@@ -63,9 +67,11 @@ export const BarcodeScannerScreen: React.FC = () => {
       } catch (err) {
         setErrorMsg(typeof err === 'string' ? err : 'Lookup failed. Try again.');
         setScanState('error');
+      } finally {
+        isProcessingRef.current = false;
       }
     },
-    [scanState, lastScanned],
+    [],
   );
 
   const onBarcodeScanned = useCallback(
@@ -102,6 +108,8 @@ export const BarcodeScannerScreen: React.FC = () => {
   };
 
   const resetScanner = () => {
+    isProcessingRef.current = false;
+    lastScannedRef.current = null;
     setProduct(null);
     setLastScanned(null);
     setErrorMsg('');

@@ -14,7 +14,7 @@
  * - Navigation to result screen
  */
 
-import React, { useState, useEffect , useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
   View,
   Text,
@@ -29,6 +29,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import { CameraView } from 'expo-camera';
 import * as Device from 'expo-device';
 import { Typography, Spacing, BorderRadius, Shadows } from '../../theme';
 import { useAppTheme } from '../../context/ThemeContext';
@@ -77,6 +78,7 @@ export const CameraCaptureScreen: React.FC = () => {
   const [cameraIntrinsics, setCameraIntrinsics] = useState<any>(null);
   
   const [isLoading, setIsLoading] = useState(false);
+  const cameraRef = useRef<CameraView>(null);
 
   useEffect(() => {
     requestPermissions();
@@ -210,6 +212,29 @@ export const CameraCaptureScreen: React.FC = () => {
     } catch (error) {
       console.error('❌ [Camera] Failed to pick image:', error);
       Alert.alert('Error', 'Failed to select image. Please try again.');
+    }
+  };
+
+  const capturePhoto = async () => {
+    if (!cameraRef.current) return;
+    try {
+      const photo = await cameraRef.current.takePictureAsync({ base64: true, quality: 0.8 });
+      if (!photo) return;
+      if (currentStep === 'capture-top' || captureMode === 'single') {
+        setTopImageUri(photo.uri);
+        setTopImageBase64(photo.base64 || null);
+        if (captureMode === 'multi_angle') {
+          setCurrentStep('capture-side');
+        } else {
+          setCurrentStep('preview');
+        }
+      } else if (currentStep === 'capture-side') {
+        setSideImageUri(photo.uri);
+        setSideImageBase64(photo.base64 || null);
+        setCurrentStep('preview');
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to capture photo. Please try again.');
     }
   };
 
@@ -490,7 +515,7 @@ export const CameraCaptureScreen: React.FC = () => {
       {currentStep === 'select-mode' && (
         <ScrollView
           style={{ flex: 1, backgroundColor: colors.background }}
-          contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 48, paddingBottom: 40 }}
+          contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 40 }}
         >
           <Text style={styles.headerText}>Choose Capture Mode</Text>
           <Text style={styles.subtitleText}>
@@ -560,21 +585,20 @@ export const CameraCaptureScreen: React.FC = () => {
             {topImageUri ? (
               <Image source={{ uri: topImageUri }} style={styles.previewImage} />
             ) : (
-              <>
-                <CameraGuide captureMode={captureMode as 'single' | 'multi_angle' | 'reference_object'} />
-                {/* Plate alignment circle overlay */}
+              <CameraView ref={cameraRef} style={StyleSheet.absoluteFill} facing="back">
                 <View pointerEvents="none" style={styles.plateGuideOverlay}>
                   <View style={styles.plateGuideCircle} />
-                  <Text style={styles.plateGuideLabel}>Centre the plate</Text>
+                  <Text style={styles.plateGuideLabel}>
+                    {captureMode === 'multi_angle' ? 'Step 1 of 2 — Centre the plate' : 'Centre the plate'}
+                  </Text>
                 </View>
-              </>
+              </CameraView>
             )}
           </View>
 
           <View style={styles.controlsContainer}>
             <Text style={styles.stepText}>
-              {captureMode === 'multi_angle' ? 'Step 1 of 2 — ' : ''}
-              📸 Point camera straight down at your food
+              Point camera straight down at your food
             </Text>
 
             <View style={styles.actionButtons}>
@@ -588,10 +612,10 @@ export const CameraCaptureScreen: React.FC = () => {
 
               <TouchableOpacity
                 style={[styles.button, styles.buttonPrimary]}
-                onPress={pickImageFromCamera}
+                onPress={capturePhoto}
               >
                 <MaterialCommunityIcons name="camera" size={24} color={colors.textInverse} />
-                <Text style={styles.buttonTextPrimary}>Take Photo</Text>
+                <Text style={styles.buttonTextPrimary}>Capture</Text>
               </TouchableOpacity>
             </View>
 
@@ -628,7 +652,7 @@ export const CameraCaptureScreen: React.FC = () => {
                 </View>
               ) : (
                 <View style={styles.fullImageContainer}>
-                  <CameraGuide captureMode={captureMode as 'single' | 'multi_angle' | 'reference_object'} />
+                  <CameraView ref={cameraRef} style={StyleSheet.absoluteFill} facing="back" />
                 </View>
               )}
             </ScrollView>
@@ -650,10 +674,10 @@ export const CameraCaptureScreen: React.FC = () => {
 
               <TouchableOpacity
                 style={[styles.button, styles.buttonPrimary]}
-                onPress={pickImageFromCamera}
+                onPress={capturePhoto}
               >
                 <MaterialCommunityIcons name="camera" size={24} color={colors.textInverse} />
-                <Text style={styles.buttonTextPrimary}>Take Photo</Text>
+                <Text style={styles.buttonTextPrimary}>Capture</Text>
               </TouchableOpacity>
             </View>
 

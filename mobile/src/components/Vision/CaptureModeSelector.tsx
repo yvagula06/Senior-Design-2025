@@ -19,6 +19,7 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from 'react-native';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import type { CaptureMode, NormalCameraMode } from '../../types/vision';
 
 type AnyMode = CaptureMode | NormalCameraMode;
@@ -27,7 +28,8 @@ interface ModeConfig {
   id: AnyMode;
   label: string;
   description: string;
-  emoji: string;
+  icon: string;
+  iconLib: 'ionicons' | 'mci';
   accuracyLabel: string;
   accuracyColor: string;
   requiresLiDAR?: boolean;
@@ -38,7 +40,8 @@ const MODE_CONFIGS: ModeConfig[] = [
     id: 'depth',
     label: 'Depth Scan',
     description: 'Uses LiDAR for the most accurate 3-D volume',
-    emoji: '📡',
+    icon: 'cube-scan',
+    iconLib: 'mci',
     accuracyLabel: 'Highest',
     accuracyColor: '#00D4AA',
     requiresLiDAR: true,
@@ -47,7 +50,8 @@ const MODE_CONFIGS: ModeConfig[] = [
     id: 'plate_reference',
     label: 'Plate Reference',
     description: 'Tell us the plate size — great everyday accuracy',
-    emoji: '🍽',
+    icon: 'restaurant-outline',
+    iconLib: 'ionicons',
     accuracyLabel: 'High',
     accuracyColor: '#4CAF50',
   },
@@ -55,7 +59,8 @@ const MODE_CONFIGS: ModeConfig[] = [
     id: 'reference_object',
     label: 'Reference Object',
     description: 'Place a card or utensil next to the food',
-    emoji: '💳',
+    icon: 'crop-outline',
+    iconLib: 'ionicons',
     accuracyLabel: 'High',
     accuracyColor: '#4CAF50',
   },
@@ -63,7 +68,8 @@ const MODE_CONFIGS: ModeConfig[] = [
     id: 'multi_angle',
     label: 'Multi-Angle',
     description: 'Take a top shot + one angled photo',
-    emoji: '📐',
+    icon: 'aperture-outline',
+    iconLib: 'ionicons',
     accuracyLabel: 'Medium',
     accuracyColor: '#FFA726',
   },
@@ -71,7 +77,8 @@ const MODE_CONFIGS: ModeConfig[] = [
     id: 'basic_single',
     label: 'Quick Snap',
     description: 'Single photo — fastest but less precise',
-    emoji: '📸',
+    icon: 'phone-portrait-outline',
+    iconLib: 'ionicons',
     accuracyLabel: 'Estimate',
     accuracyColor: '#EF5350',
   },
@@ -104,7 +111,21 @@ export const CaptureModeSelector: React.FC<Props> = ({
           onPress={() => !disabled && onSelect(cfg.id)}
           activeOpacity={disabled ? 1 : 0.75}
         >
-          <Text style={styles.emoji}>{cfg.emoji}</Text>
+          {cfg.iconLib === 'mci' ? (
+            <MaterialCommunityIcons
+              name={cfg.icon as any}
+              size={26}
+              color={disabled ? '#555' : isSelected ? cfg.accuracyColor : '#AAA'}
+              style={styles.icon}
+            />
+          ) : (
+            <Ionicons
+              name={cfg.icon as any}
+              size={26}
+              color={disabled ? '#555' : isSelected ? cfg.accuracyColor : '#AAA'}
+              style={styles.icon}
+            />
+          )}
           <View style={styles.textBlock}>
             <Text
               style={[
@@ -164,8 +185,7 @@ const styles = StyleSheet.create({
   cardDisabled: {
     opacity: 0.4,
   },
-  emoji: {
-    fontSize: 26,
+  icon: {
     width: 34,
     textAlign: 'center',
   },
